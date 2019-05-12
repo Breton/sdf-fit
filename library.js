@@ -437,7 +437,7 @@
      count = Math.floor(Math.min(weights.length, instructions.length, count));
 
      async function sample(idx, r, g, b) {
-         let mscore, nscore, oscore;
+         let mscore, nscore;
          let mscorep, nscorep;
          ctx.globalCompositeOperation = 'source-atop';
          ctx.drawImage(canvassmall, 0, 0, 256, 256);
@@ -449,7 +449,7 @@
          let scores = await Promise.all([mscorep, nscorep]);
          mscore = (Math.abs(1 - Math.sqrt(scores[0]) / lowestScorePerIndex[idx]));
          nscore = (Math.sqrt((scores[1])) / lowestScorePerIndex[idx]);
-         return Math.sqrt(nscore*nscore * mscore*mscore);
+         return nscore * nscore + mscore * mscore;
 
      }
 
@@ -528,24 +528,26 @@
              }
              if (diff < 0) {
                  counter += 10;
-             } else {
-                counter +=30;
-             }
+             }  else {
+
+                
 
 
-             while (diff >= -0.001 && counter > 0) {
+             while (diff >= 0 && counter > 0) {
                  counter--;
                  //convert the counter to 3 digits of -1, 0 or 1.
-                [rslope,gslope,bslope] = ('000'+(updatecount + Math.floor(counter) ).toString(5)).slice(-3).split('').map(x=>+(x-2))
-                 rinc /= phi;
-                 ginc /= phi;
-                 binc /= phi;
+                [rslope,gslope,bslope] = ('000'+(counter).toString(3)).slice(-3).split('').map(x=>+x-1)
+                 rinc *= 1.0000000025821745;
+                 ginc *= 1.0000000025821745;
+                 binc *= 1.0000000025821745;
 
 
                  diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
                  debug("wenumerate slope", rslope, gslope, bslope, counter, diff);
              }
-
+             if (diff < 0) {
+                counter += 10;
+             }
 
          }
 
@@ -696,7 +698,7 @@
         binc *= phi;
         diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
      }
-     if(diff < 0) {
+     if(diff !== 0) {
       counter += 10;
      }
      debug("pxsamples a", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
@@ -718,9 +720,9 @@
             counter--;
             //convert the counter to 3 digits of -1, 0 or 1.
             [rslope,gslope,bslope] = ('000'+(updatecount + counter).toString(5)).slice(-3).split('').map(x=>+x-2)
-            rinc *= Math.sqrt(Math.sqrt(2));
-            ginc *= Math.sqrt(Math.sqrt(2));
-            binc *= Math.sqrt(Math.sqrt(2));
+            rinc *= 1.0000000025821745;
+            ginc *= 1.0000000025821745;
+            binc *= 1.0000000025821745;
 
 
 
@@ -871,7 +873,7 @@
       //nscores.push(nscore)
       nscorep = scoreAsync(ctx);
       nscoreps.push(nscorep);
-      oscores.push(oscore);
+      
       //nscore = (Math.sqrt((nscore)) / lowestScorePerIndex[scoreidx]);
       //newscore += nscore * nscore + mscore * mscore;
     }
@@ -880,8 +882,8 @@
     nscores = await Promise.all(nscoreps);
     oscore = oscore*count/lowestScorePerIndex.reduce((a, b) => a + b);
     oscore = oscore/100;
-    mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).reduce((a, b) => a + b);
-    nscore = nscores.map((x, idx) => (Math.sqrt((x)) / lowestScorePerIndex[idx])).reduce((a, b) => a + b);
+    mscore = mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).map(x => x * x).reduce((a, b) => a + b);
+    nscore = nscore = nscores.map((x, idx) => (Math.sqrt((x)) / lowestScorePerIndex[idx])).map(x => x * x).reduce((a, b) => a + b);
     //console.log('scoring instructions and weights', newscore, mscore, nscore, nscore+mscore,nscore+mscore-newscore);
     
     return (Math.sqrt(nscore+mscore+oscore)) * 1000 / count;

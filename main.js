@@ -213,8 +213,8 @@ async function main() {
 
 
     if (willAdjustWeights) {
-        newweights = perturbWeights(weights);
-        newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, newweights, instructions,(updatecount%instructions.length),1);
+        //newweights = perturbWeights(weights);
+        newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(updatecount%instructions.length),1);
     } else {
         onepixel = updatePixel(onepixel, oldscore-olderscore);
         await optimisePixelForWeights(ctx, ctxsmall, weights, instructions, onepixel);
@@ -223,8 +223,8 @@ async function main() {
 
     
     newdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
-    ctxsmall.putImageData(bestdata, 0, 0);
-    bestScore = await scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
+//    ctxsmall.putImageData(bestdata, 0, 0);
+  //  bestScore = await scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
     // bestScore = bestScore - await scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
     ctxsmall.putImageData(newdata, 0, 0);
     newscore = await scoreLoopAsync(ctx, ctxsmall, newweights, instructions, 0, letterCounter);
