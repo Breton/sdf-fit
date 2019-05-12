@@ -38,6 +38,8 @@ olddata = null;
 recentimprovements = [];
 
 gradient = [0, 0, 0]; // (r,g,b,r,g,b...)
+gradient.length = 256;
+gradient.fill(1);
 enhancementLoopCount = 0;
 anneal = 0;
 maxri = 0;
@@ -142,24 +144,28 @@ function scoreLoopAsync(ctx, ctxsmall, weights, instructions, start, letterCount
 }
 smoothduration = 1000;
 /* outer gradient */
-function updatePixel(onepixel) {
-    gindex = (gradient.map((x, i) => ((x) > 0 ? i : 0))).filter(x => x);
-    let highgindex = (gradient.map((x, i) => ((x) > 1 ? i : 0))).filter(x => x);
-    if (highgindex.length > 0) {
-        onepixel = Math.floor(highgindex[Math.floor(Math.random() * highgindex.length)] / 3);
-    } else if (gindex.length > 0 && Math.random() > 0.5) {
-        onepixel = Math.floor(gindex[Math.floor(Math.random() * gindex.length)] / 3);
+function updatePixel(onepixel,diff=0) {
+    let gmax = (gradient.reduce((a, b) => Math.max(a,b) ));
+    let gmin = (gradient.reduce((a, b) => Math.min(a,b) ));
+    let grange = gmax-gmin;
+
+    debug('gindex', gmin, gmax, grange, (gmin + grange*0.50), gindex.length);
+    debug('diff', diff);
+    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.50) ? i : 0))).filter(x => x);
+    
+    if (gindex.length > 10 && diff >= 0) {
+        onepixel = Math.floor(gindex[Math.floor(Math.random() * gindex.length)] );
     } else {
-      onepixel += 1;
+        onepixel += ([2,1,32,16,16,1,16,1])[Math.floor(Math.random()*8)];
     }
 
 
-    return onepixel;
+    return Math.abs(onepixel);
 }
 async function main() {
 
     time = new Date() - starttime;
-
+    updatecount+=1
 
 
     if (!bestdata) {
@@ -175,18 +181,18 @@ async function main() {
     let idx = onepixel % (bestdata.data.length / 4);
 
     
-    if (weightFail - weightSuccess > 0) {
-        modebias = 0.9;
-        weightFail = 0;
-        //smoothduration=500;
-        weightSuccess = 0;
-    }
-    if (pixelFail - pixelSuccess > 0) {
-        modebias = 0.1;
-        pixelFail = 0;
-        //smoothduration=500;
-        pixelSuccess = 0;
-    }
+    // if (weightFail - weightSuccess > 0) {
+    //     modebias = 0.9;
+    //     weightFail = 0;
+    //     //smoothduration=500;
+    //     weightSuccess = 0;
+    // }
+    // if (pixelFail - pixelSuccess > 0) {
+    //     modebias = 0.1;
+    //     pixelFail = 0;
+    //     //smoothduration=500;
+    //     pixelSuccess = 0;
+    // }
 
     //modebias = Math.sin(time * Math.PI / 10000 ) * 0.25 + 0.75;
 
@@ -207,22 +213,19 @@ async function main() {
 
 
     if (willAdjustWeights) {
-       // newweights = perturbWeights(weights);
-        newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions);
+        newweights = perturbWeights(weights);
+        newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, newweights, instructions,(updatecount%instructions.length),1);
     } else {
-        onepixel = updatePixel(onepixel);
+        onepixel = updatePixel(onepixel, oldscore-olderscore);
         await optimisePixelForWeights(ctx, ctxsmall, weights, instructions, onepixel);
     }
 
 
-
+    
     newdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
-    
-
-    
-    
-    
-
+    ctxsmall.putImageData(bestdata, 0, 0);
+    bestScore = await scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
+    // bestScore = bestScore - await scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
     ctxsmall.putImageData(newdata, 0, 0);
     newscore = await scoreLoopAsync(ctx, ctxsmall, newweights, instructions, 0, letterCounter);
 
@@ -255,11 +258,13 @@ async function main() {
             modebias *= 0.9;
         } else {
             weightFail += 1;
+            modebias = 1 * 0.1 + modebias * 0.9
             
         }
     } else {
         if (newscore < oldscore) {
             pixelSuccess += 1;
+            modebias = 1 * 0.1 + modebias * 0.9
             
         } else {
             pixelFail += 1;
@@ -273,16 +278,14 @@ async function main() {
         //if newscore is greater than oldscore, 
         //that's worse, so invert whatever was just done to the pixel.
         //if newscore is less, then that's better, do it again.
-        let dir =  (oldscore - newscore)*100;
+        let dir =  (oldscore - newscore) > 0 ? 1 : -1;
 
-        gradient[(onepixel % 256) * 3 + 0] = (gradient[(onepixel % 256) * 3 + 0] || 0) + dir;
-        gradient[(onepixel % 256) * 3 + 1] = (gradient[(onepixel % 256) * 3 + 1] || 0) + dir;
-        gradient[(onepixel % 256) * 3 + 2] = (gradient[(onepixel % 256) * 3 + 2] || 0) + dir;
+        gradient[onepixel % 256] = (gradient[onepixel % 256] || 0) + dir;
+        
+        
 
         if(dir === 0) {
-          gradient[(onepixel % 256) * 3 + 0] = 0;
-          gradient[(onepixel % 256) * 3 + 1] = 0;
-          gradient[(onepixel % 256) * 3 + 2] = 0;
+          gradient[(onepixel % 256)] = 0;
         }
 
         //gradient = gradient.map(x =>  x*0.9 );
@@ -299,7 +302,7 @@ async function main() {
         lowestever = globalscore;
     }
 
-
+    globalscore = Math.max(newscore,globalscore);
     
 
     //sctx.drawImage(ocanvas,0,0);
@@ -336,6 +339,19 @@ async function main() {
   gindex.length ${gindex.length}
   gradient
   ${(gradient.map((x,i)=>( !!x ?(i+ ":" + x):0  ) )).filter(x=>x).join(' ')}
+    
+  grdient 2
+
+${
+    ((gmax,gmin) => (
+      (gradient.map((x, i) => ((x) > (gmin + (gmax-gmin)*0.5) ? i : 0))).filter(x => x)
+    ))(
+      (gradient.reduce((a, b) => Math.max(a,b) )),
+      (gradient.reduce((a, b) => Math.min(a,b) ))
+    )
+
+    
+}
 
 
   `)
@@ -344,7 +360,7 @@ async function main() {
     time = new Date() - starttime;
     duration = time - lasttime;
     smoothduration = smoothduration * 0.99 + duration * 0.01;
-    setTimeout(main, smoothduration);
+    setTimeout(main, 0);
 }
 
 setTimeout(main, 10);

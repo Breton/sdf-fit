@@ -136,8 +136,9 @@
      return dataobj;
  }
 
- function scoreAsync(ctx) {
+ function scoreAsync(ctx,x,y,width,height) {
      let dataobj, w, h;
+
      if (ctx.data !== undefined) {
          dataobj = ctx;
          w = ctx.width;
@@ -433,10 +434,10 @@
      // evalCanvas
      let time = new Date();
 
-     count = Math.floor(Math.min(weights.length, instructions.length, count) - start);
+     count = Math.floor(Math.min(weights.length, instructions.length, count));
 
      async function sample(idx, r, g, b) {
-         let mscore, nscore;
+         let mscore, nscore, oscore;
          let mscorep, nscorep;
          ctx.globalCompositeOperation = 'source-atop';
          ctx.drawImage(canvassmall, 0, 0, 256, 256);
@@ -448,7 +449,7 @@
          let scores = await Promise.all([mscorep, nscorep]);
          mscore = (Math.abs(1 - Math.sqrt(scores[0]) / lowestScorePerIndex[idx]));
          nscore = (Math.sqrt((scores[1])) / lowestScorePerIndex[idx]);
-         return nscore * nscore + mscore * mscore;
+         return Math.sqrt(nscore*nscore * mscore*mscore);
 
      }
 
@@ -458,7 +459,7 @@
          newweights[i][0] = r, newweights[i][1] = g, newweights[i][2] = b;
      }
      //start = Math.floor(Math.random()*(count-1));
-     for (let i = start; i < count; i += 1) {
+     for (let i = start; i < count+start; i += 1) {
 
          let tmpdata;
 
@@ -501,18 +502,20 @@
          minscore = await sample(i, r, g, b);
          diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
 
-         let phi = Math.sqrt(2);
+         let phi = Math.sqrt(2);// 1.0000000025821745;
          while (diff === 0 && counter > 0) {
              counter--;
-             rinc *= 2 * phi;
-             ginc *= 2 * phi;
-             binc *= 2 * phi;
+             rinc *= phi;
+             ginc *= phi;
+             binc *= phi;
              diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
          }
          if (diff !==0) {
              counter += 10;
          }
          debug("wsamples a", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
+         
+
          while (diff > 0 && counter > 0) {
              counter--;
              let samples = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc);
@@ -525,26 +528,27 @@
              }
              if (diff < 0) {
                  counter += 10;
+             } else {
+                counter +=30;
              }
 
-             while (diff >= 0 && counter > 0) {
+
+             while (diff >= -0.001 && counter > 0) {
                  counter--;
                  //convert the counter to 3 digits of -1, 0 or 1.
-                 [rslope, gslope, bslope] = ('000' + (counter).toString(3)).slice(-3).split('').map(x => +x - 1)
-                 rinc *= 1 + 1 / 27;
-                 ginc *= 1 + 1 / 27;
-                 binc *= 1 + 1 / 27;
-
+                [rslope,gslope,bslope] = ('000'+(updatecount + Math.floor(counter) ).toString(5)).slice(-3).split('').map(x=>+(x-2))
+                 rinc /= phi;
+                 ginc /= phi;
+                 binc /= phi;
 
 
                  diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
                  debug("wenumerate slope", rslope, gslope, bslope, counter, diff);
              }
-             if (diff < 0) {
-                 counter += 10;
-             }
+
 
          }
+
          debug("wsamples b", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
          while (diff < 0 && counter > 0) {
              let newscore;
@@ -558,9 +562,9 @@
                  r = r + rslope * rinc;
                  g = g + gslope * ginc;
                  b = b + bslope * binc;
-                 rinc *= 2 * phi;
-                 ginc *= 2 * phi;
-                 binc *= 2 * phi;
+                 rinc *= phi;
+                 ginc *= phi;
+                 binc *= phi;
                  diff = newscore - minscore;
                  minscore = newscore;
                  counter += 0.5;
@@ -574,7 +578,7 @@
          }
          debug("wsamples d", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
 
-         if (counter > 0) {
+         if (counter > 0 ) {
              newweights[i][0] = r, newweights[i][1] = g, newweights[i][2] = b;
          }
 
@@ -614,7 +618,48 @@
          return 1000 * (await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions));
      }
 
-     r = d[i * 4 + 0], g = d[i * 4 + 1], b = d[i * 4 + 2];
+
+     r = [], g = [], b = [];
+
+     r = [ d[(i + 0) * 4 + 0],
+           d[(i + 1) * 4 + 0],
+           d[(i - 1) * 4 + 0],
+           d[(i +16) * 4 + 0],
+           d[(i -16) * 4 + 0],
+           d[(i +17) * 4 + 0],
+           d[(i -17) * 4 + 0],
+           d[(i +15) * 4 + 0],
+           d[(i -15) * 4 + 0]  ];
+     
+     g = [ d[(i + 0) * 4 + 1],
+           d[(i + 1) * 4 + 1],
+           d[(i - 1) * 4 + 1],
+           d[(i +16) * 4 + 1],
+           d[(i -16) * 4 + 1],
+           d[(i +17) * 4 + 1],
+           d[(i -17) * 4 + 1],
+           d[(i +15) * 4 + 1],
+           d[(i -15) * 4 + 1]  ];
+
+     b = [ d[(i + 0) * 4 + 2],
+           d[(i + 1) * 4 + 2],
+           d[(i - 1) * 4 + 2],
+           d[(i +16) * 4 + 2],
+           d[(i -16) * 4 + 2],
+           d[(i +17) * 4 + 2],
+           d[(i -17) * 4 + 2],
+           d[(i +15) * 4 + 2],
+           d[(i -15) * 4 + 2]  ];
+     
+     r = r.filter(x=>(!!x));
+     g = g.filter(x=>(!!x));
+     b = b.filter(x=>(!!x));
+
+     r = r.reduce( (a,b)=>( a+b ), 0 ) / r.length;
+     g = g.reduce( (a,b)=>( a+b ), 0 ) / g.length;
+     b = b.reduce( (a,b)=>( a+b ), 0 ) / b.length;
+
+
      let or = d[i * 4 + 0],
          og = d[i * 4 + 1],
          ob = d[i * 4 + 2];
@@ -643,15 +688,15 @@
      minscore = await sample(i, r, g, b);
      diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
      
-     let phi = Math.sqrt(2);
+     let phi = (Math.sqrt(2));
      while(diff===0 && counter > 0) {
         counter--;
-        rinc *= 2*phi;
-        ginc *= 2*phi;
-        binc *= 2*phi;
+        rinc *= phi;
+        ginc *= phi;
+        binc *= phi;
         diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
      }
-     if(diff !== 0) {
+     if(diff < 0) {
       counter += 10;
      }
      debug("pxsamples a", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
@@ -668,13 +713,14 @@
          if(diff < 0) {
           counter += 10;
          }
+
          while(diff>=0 && counter > 0) {
             counter--;
             //convert the counter to 3 digits of -1, 0 or 1.
-            [rslope,gslope,bslope] = ('000'+(counter).toString(3)).slice(-3).split('').map(x=>+x-1)
-            rinc *= 1 + 1/27;
-            ginc *= 1 + 1/27;
-            binc *= 1 + 1/27;
+            [rslope,gslope,bslope] = ('000'+(updatecount + counter).toString(5)).slice(-3).split('').map(x=>+x-2)
+            rinc *= Math.sqrt(Math.sqrt(2));
+            ginc *= Math.sqrt(Math.sqrt(2));
+            binc *= Math.sqrt(Math.sqrt(2));
 
 
 
@@ -699,9 +745,9 @@
           r = r + rslope * rinc;
           g = g + gslope * ginc;
           b = b + bslope * binc;
-          rinc *= 2*phi;
-          ginc *= 2*phi;
-          binc *= 2*phi;
+          rinc *= phi;
+          ginc *= phi;
+          binc *= phi;
           diff = newscore-minscore;
           minscore = newscore;
           counter += 0.5;
@@ -783,8 +829,10 @@
     let newscore = 0;
     let mscore = 14100;
     let nscore = 14100;
+    let oscore = 0;
     let mscores = [];
     let nscores = [];
+    let oscores = [];
     let mscoreps = [];
     let nscoreps = [];
     //outer functions:
@@ -808,7 +856,7 @@
       ctx.globalCompositeOperation = 'source-atop';
       ctx.globalAlpha = 1;
       ctx.drawImage(canvassmall, 0, 0, 256, 256);         
-
+      if(!oscore) { oscore = score(ctx) };
       tmpdata = await thresholdAsync(ctx, weights[i][0], weights[i][1], weights[i][2]);
       //mscore = score(tmpdata);
       mscorep = scoreAsync(tmpdata);
@@ -823,18 +871,20 @@
       //nscores.push(nscore)
       nscorep = scoreAsync(ctx);
       nscoreps.push(nscorep);
-
+      oscores.push(oscore);
       //nscore = (Math.sqrt((nscore)) / lowestScorePerIndex[scoreidx]);
       //newscore += nscore * nscore + mscore * mscore;
     }
     
     mscores = await Promise.all(mscoreps);
     nscores = await Promise.all(nscoreps);
-
-    mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).map(x => x * x).reduce((a, b) => a + b);
-    nscore = nscores.map((x, idx) => (Math.sqrt((x)) / lowestScorePerIndex[idx])).map(x => x * x).reduce((a, b) => a + b);
+    oscore = oscore*count/lowestScorePerIndex.reduce((a, b) => a + b);
+    oscore = oscore/100;
+    mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).reduce((a, b) => a + b);
+    nscore = nscores.map((x, idx) => (Math.sqrt((x)) / lowestScorePerIndex[idx])).reduce((a, b) => a + b);
     //console.log('scoring instructions and weights', newscore, mscore, nscore, nscore+mscore,nscore+mscore-newscore);
-    return (Math.sqrt(nscore+mscore)) * 1000 / count;
+    
+    return (Math.sqrt(nscore+mscore+oscore)) * 1000 / count;
   }
 
  function evalCanvas(ctx, instructions, variables) {
