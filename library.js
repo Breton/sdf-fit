@@ -489,7 +489,7 @@ function indexOfMin(arr) {
      let nscore = 14100;
      let r, g, b;
      weightRange = Math.abs(Math.random()*(weightMax-weightMin)*2+weightMin-(weightMax-weightMin)/2);
-     let inc = Math.random()*weightRange;
+     let inc = weightRange;
      let f = (x) => (Math.floor(x * 1000) / 1000);
      let minr = 1000000,
          ming = 1000000,
