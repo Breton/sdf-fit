@@ -1,6 +1,7 @@
+weightscores = [];
 // Library local variables
 let lowestScorePerIndex = [];
-
+scoreInstructionsAndWeightsScoresDebug = [];
  //library functions
 
  let debugbuffer = "";
@@ -13,6 +14,8 @@ let lowestScorePerIndex = [];
      if (str === 'clear') {
          document.getElementById('debug').value = debugbuffer;
          debugbuffer = ""
+     } else if (str === 'log') {
+        console.log(debugbuffer);
      } else {
          debugbuffer += str + "\n";
          if (rest && rest.length) {
@@ -23,6 +26,55 @@ let lowestScorePerIndex = [];
 
  }
 
+ function debugCanvas(ctx,id){
+    id=id.trim().replace(' ','');
+    let el = document.getElementById('img-'+id.trim());
+    if(!el) {
+        let p = document.getElementById('debugImages');
+
+        el = document.createElement("IMG");
+        el.setAttribute("id", "img-"+id.trim());
+        p.appendChild(el);
+    }
+    ctx.canvas.toBlob((x)=>(el.setAttribute('src', URL.createObjectURL(x) )));
+     
+
+ }
+
+function indexOfMax(arr) {
+    if (arr.length === 0) {
+        return -1;
+    }
+
+    var max = arr[0];
+    var maxIndex = 0;
+
+    for (var i = 1; i < arr.length; i++) {
+        if (arr[i] > max) {
+            maxIndex = i;
+            max = arr[i];
+        }
+    }
+
+    return maxIndex;
+}
+function indexOfMin(arr) {
+    if (arr.length === 0) {
+        return -1;
+    }
+
+    var min = arr[0];
+    var minIndex = 0;
+
+    for (var i = 1; i < arr.length; i++) {
+        if (arr[i] < min) {
+            minIndex = i;
+            min = arr[i];
+        }
+    }
+
+    return minIndex;
+}
 
 //todo, put scheduler inside makeAsync, so that workerpool wrangling code is not needed.
 //find out whether a particular worker is currently active or not so inactive workers can be prioritised. 
@@ -416,6 +468,19 @@ let lowestScorePerIndex = [];
  }
 
  samplecache = {}
+ let weightRange=0.3;
+ let weightMin=0.5;
+ let weightMax=0.5;
+ let idealWeightRange=0.5;
+ let badWeightRange=0.5;
+ let weightModeSuccess=0;
+ let weightModeFail=0;
+
+  weightRange = 0.2631938863867924
+  weightMin = 0.22992320121199716
+  weightMax = 0.4925443195765025
+  idealWeightRange = 0.41404139707510956
+  badWeightRange = 0.37087509410127856
 
  async function optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions, start = 0, count = 1000) {
      /* outer: lowestScorePerIndex */
@@ -423,13 +488,15 @@ let lowestScorePerIndex = [];
      let mscore = 14100;
      let nscore = 14100;
      let r, g, b;
-     let inc = Math.random();
+     weightRange = Math.abs(Math.random()*(weightMax-weightMin)*2+weightMin-(weightMax-weightMin)/2);
+     let inc = Math.random()*weightRange;
      let f = (x) => (Math.floor(x * 1000) / 1000);
      let minr = 1000000,
          ming = 1000000,
          minb = 1000000;
      let minscore = 1000000;
      let newweights = [];
+     let oldscore = 0;
      ctx.globalAlpha = 1;
      //outer functions:
      // threshold
@@ -439,7 +506,7 @@ let lowestScorePerIndex = [];
 
      count = Math.floor(Math.min(weights.length, instructions.length, count));
      //candidate for moving out of this function and into initilisation routine
-     ctx.globalCompositeOperation = 'source-atop';
+     ctx.globalCompositeOperation = 'source-over';
      for (let i = 0; i < instructions.length; i++){
         if (!lowestScorePerIndex[i]) {
              evalCanvas(ctx, instructions[i]);
@@ -449,7 +516,7 @@ let lowestScorePerIndex = [];
      async function sample(idx, r, g, b) {
          let mscore, nscore;
          let mscorep, nscorep;
-         ctx.globalCompositeOperation = 'source-atop';
+         ctx.globalCompositeOperation = 'source-over';
          ctx.drawImage(canvassmall, 0, 0, 256, 256);
          let tmpdata =  threshold(ctx, r, g, b);
          mscorep = scoreAsync(tmpdata);
@@ -487,10 +554,10 @@ let lowestScorePerIndex = [];
          bsample = 0;
 
 
-         let counter = 5;
-         let rslope = Math.round(Math.random() * 3 - 1.5);
-         let gslope = Math.round(Math.random() * 3 - 1.5);
-         let bslope = Math.round(Math.random() * 3 - 1.5);
+         let counter = 10;
+         let rslope = Math.sign(Math.random()-0.5);
+         let gslope = Math.sign(Math.random()-0.5);
+         let bslope = Math.sign(Math.random()-0.5);
 
          let rinc = inc,
              binc = inc,
@@ -506,15 +573,26 @@ let lowestScorePerIndex = [];
          // we want to use m to adjust x to minimize y.
          let scale = 1;
 
-         minscore = await sample(i, r, g, b);
+         oldscore = minscore = await sample(i, r, g, b);
          diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
 
-         let phi = Math.sqrt(2);// 1.0000000025821745;
+         let phi = Math.sqrt(2);// 
          while (diff === 0 && counter > 0) {
              counter--;
-             rinc *= phi;
-             ginc *= phi;
-             binc *= phi;
+             
+            switch (Math.floor(Math.random()*3)) {
+                case 0:
+                 binc *= phi;
+                 
+                case 1:
+                 binc *= phi;
+                 
+                case 2:
+                 binc *= phi;
+                 
+             }
+
+
              diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
          }
          if (diff !==0) {
@@ -542,16 +620,16 @@ let lowestScorePerIndex = [];
                  counter--;
                  //convert the counter to 3 digits of -1, 0 or 1.
                 [rslope,gslope,bslope] = ('000'+(counter+updatecount).toString(3)).slice(-3).split('').map(x=>+x-1)
-                 rinc *= 1.0000000025821745;
-                 ginc *= 1.0000000025821745;
-                 binc *= 1.0000000025821745;
+
 
 
                  diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
-                 debug("wenumerate slope", rslope, gslope, bslope, counter, diff);
+                 debug("wenumerate slope", rinc,ginc,binc, rslope, gslope, bslope, counter, diff);
              }
              if (diff < 0) {
                 counter += 10;
+             } else {
+                debug('log');
              }
 
          }
@@ -569,9 +647,9 @@ let lowestScorePerIndex = [];
                  r = r + rslope * rinc;
                  g = g + gslope * ginc;
                  b = b + bslope * binc;
-                 rinc *= phi;
-                 ginc *= phi;
-                 binc *= phi;
+                 rinc /= phi;
+                 ginc /= phi;
+                 binc /= phi;
                  diff = newscore - minscore;
                  minscore = newscore;
                  counter += 0.5;
@@ -583,16 +661,29 @@ let lowestScorePerIndex = [];
              debug("wsamples c", i, counter, r, g, b, rinc, ginc, binc, rslope, gslope, bslope, newscore, minscore, diff);
 
          }
-        
-         console.log("weight score 0",i, newscore,lowestScorePerIndex[idx],counter);
+         weightscores[i]=await sample(i, r, g, b);
+         //console.log("weight score",i, weightSuccess,weightFail,  weightscores[i],oldscore, weightscores[i]-oldscore,lowestScorePerIndex[i],counter);
          
          debug("wsamples d", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
 
          if (counter > 0 ) {
+             weightModeSuccess += 1;
+             //0.35909182331488354
+             //0.17960296863446265
+             idealWeightRange = idealWeightRange*0.99 + weightRange*0.01
              newweights[i][0] = r, newweights[i][1] = g, newweights[i][2] = b;
+             weightMin = weightMin-inc > 0.1?weightMin*0.99 + inc * 0.01:weightMin;
+             weightMax = weightMax-inc < 0.1?weightMax*0.99 + inc * 0.01:weightMax;
+
+         } else {
+            badWeightRange = badWeightRange*0.99 + weightRange*0.01
+            weightRange = Math.abs(Math.random()*(weightMax-weightMin)*2+weightMin-(weightMax-weightMin)/2);
+            weightModeFail += 1;
          }
 
      }
+    
+
      return newweights;
  }
  async function optimisePixelForWeights(ctx, ctxsmall, weights, instructions, idx) {
@@ -834,8 +925,9 @@ let lowestScorePerIndex = [];
      return (Math.sqrt(newscore)) * 1000 / count;
  }
  */
+ //maybe this can have its own ctx and small ctx, tkin only weights and instructions.
 
-  async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000) {
+  async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000, debug = false) {
     let newscore = 0;
     let mscore = 14100;
     let nscore = 14100;
@@ -858,20 +950,20 @@ let lowestScorePerIndex = [];
      }
     count = Math.min(weights.length, instructions.length, count);
 
-    for (let i = start; i < count; i += 1) {
+    for (let i = start; i < count+start; i += 1) {
       let scoreidx = i;
       let tmpdata;
-      ctx.globalCompositeOperation = 'source-atop';
+ 
       ctx.globalAlpha = 1;
-
-      ctx.globalCompositeOperation = 'source-atop';
-      ctx.globalAlpha = 1;
-      ctx.drawImage(canvassmall, 0, 0, 256, 256);         
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(canvassmall, 0, 0, 256, 256);  
+      //debugCanvas(ctx,'oscore-'+i);       
       if(!oscore) { oscore = score(ctx) };
       tmpdata = await thresholdAsync(ctx, weights[i][0], weights[i][1], weights[i][2]);
       //mscore = score(tmpdata);
+      //debugCanvas(ctx,'mscore-'+i);
       mscorep = scoreAsync(tmpdata);
-      mscoreps.push(mscorep);
+      mscoreps[i-start]=(mscorep);
 
       //mscores.push(mscore);
       //mscore = (Math.abs(1 - Math.sqrt(mscore) / lowestScorePerIndex[scoreidx]));
@@ -880,9 +972,14 @@ let lowestScorePerIndex = [];
       evalCanvas(ctx, instructions[i]);
       //nscore = score(ctx);
       //nscores.push(nscore)
+      if(debug){
+        debugCanvas(ctx,'nscore-'+i);
+      }
       nscorep = scoreAsync(ctx);
-      nscoreps.push(nscorep);
+
+      nscoreps[i-start]=(nscorep);
       
+
       //nscore = (Math.sqrt((nscore)) / lowestScorePerIndex[scoreidx]);
       //newscore += nscore * nscore + mscore * mscore;
     }
@@ -890,10 +987,11 @@ let lowestScorePerIndex = [];
     mscores = await Promise.all(mscoreps);
     nscores = await Promise.all(nscoreps);
     oscore = lowestScorePerIndex.map(x=>Math.sqrt(oscore)/x).map(x=>x*x).reduce((a, b) => a + b);
-    //oscore = oscore/100;
+    oscore = oscore/10;
     mscore = mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).map(x => x * x).reduce((a, b) => a + b);
     nscore = nscore = nscores.map((x, idx) => (Math.sqrt((x)) / lowestScorePerIndex[idx])).map(x => x * x).reduce((a, b) => a + b);
-    console.log('scoring instructions and weights', newscore, mscore, nscore, oscore, nscore+mscore+oscore,Math.sqrt(nscore+mscore+oscore) * 1000 / count);
+    
+    scoreInstructionsAndWeightsScoresDebug = ['scoreweights', newscore, 'mscores', mscores.toString(), "nscores", nscores.toString(), oscore, nscore+mscore+oscore,Math.sqrt(nscore+mscore+oscore) * 1000 / count];
     
     return (Math.sqrt(nscore+mscore+oscore)) * 1000 / count;
   }

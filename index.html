@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
 	<title>Fit SDF</title>
 	<style>
 		canvas {
@@ -18,10 +20,20 @@ img {
   border: 1px solid black;
   
 }
-
+#panel {
+  height: 60vh;
+  width: 100vw;
+  position: fixed;
+  top:0;
+  left:0px;
+  right:0px;
+  margin: 0;
+  overflow: scroll;
+  
+}
 textarea {
   
-  height: 40%;
+  height: 40vh;
   width: 100vw;
   position: fixed;
   bottom:0;
@@ -34,25 +46,30 @@ textarea {
 	</style>
 </head>
 <body>
+<div id="panel">
 	<button id='up' onclick='up()'>up</button>
-<button id='down' onclick='down()'>down</button>
-<button id='randomweights' onclick='randomweights()'>randomweights</button>
-<button id='increase' onclick='increase()'>increase</button>
-<button id='decrease' onclick='decrease()'>decrease</button>
-<button id='save' onclick='save()'>save</button>
-<button id='load' onclick='load()'>load</button>
-<button id='blur' onclick='blurButton()'>blur</button>
-<button id='randomize' onclick='randomize()'>randomize</button>
+  <button id='down' onclick='down()'>down</button>
+  <button id='randomweights' onclick='randomweights()'>randomweights</button>
+  <button id='increase' onclick='increase()'>increase</button>
+  <button id='decrease' onclick='decrease()'>decrease</button>
+  <button id='save' onclick='save()'>save</button>
+  <button id='load' onclick='load()'>load</button>
+  <button id='blur' onclick='blurButton()'>blur</button>
+  <button id='randomize' onclick='randomize()'>randomize</button>
 
-<button id='loadWeights' onclick='loadWeights()'>loadWeights</button>
-<button id='saveDataPoint' onclick='saveDataPoint()'>saveDataPoint</button>
-<button id='loadAndAverage' onclick='loadAndAverage()'>loadAndAverage</button>
+  <button id='loadWeights' onclick='loadWeights()'>loadWeights</button>
+  <button id='saveDataPoint' onclick='saveDataPoint()'>saveDataPoint</button>
+  <button id='loadAndAverage' onclick='loadAndAverage()'>loadAndAverage</button>
 
-<br>
-<canvas width="256" height="256" style="display:none"></canvas>
-<canvas class="dsize" width="16" height="16"></canvas>
-<img src="">
-<canvas width="256" height="256"></canvas>
+  <br>
+  <canvas width="256" height="256" style="display:none"></canvas>
+  <canvas class="dsize" width="16" height="16"></canvas>
+  <img src="">
+  <canvas width="256" height="256"></canvas>
+  <div id="debugImages">
+    
+  </div>
+</div>
 <textarea name="debug" id="debug" cols="30" rows="10"></textarea>
 <script>
   //buttons

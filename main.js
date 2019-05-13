@@ -16,6 +16,7 @@ listd = 0;
 
 weightSuccess = 1;
 weightFail = 1;
+
 pixelSuccess = 1;
 pixelFail = 1;
 oldscore = 0;
@@ -81,6 +82,7 @@ for (let i = 0; i < letters.length; i++) {
 weights.length = letters.length
 weightsDiff = [];
 
+
 lowestScorePerLetter = {};
 nscores = [];
 mscores = [];
@@ -125,8 +127,8 @@ ctxsmall.globalCompositeOperation = "screen";
 ctxsmall.drawImage(canvas, 0, 0, canvassmall.width, canvassmall.height);
 
 
-ctx.globalCompositeOperation = "source-atop";
-ctxsmall.globalCompositeOperation = "source-atop";
+ctx.globalCompositeOperation = "source-over";
+ctxsmall.globalCompositeOperation = "source-over";
 ctx.fillStyle = 'white';
 ctx.font = "256px sans-serif";
 ctx.textAlign = "center";
@@ -139,7 +141,7 @@ ctx.textAlign = "center";
 function scoreLoopAsync(ctx, ctxsmall, weights, instructions, start, letterCounter) {
     ctx.clearRect(0,0,256,256);
     return new Promise(function(res, err) {
-        res(scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, 0, letterCounter));
+        res(scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, 0, letterCounter,true));
     });
 }
 smoothduration = 1000;
@@ -163,7 +165,7 @@ function updatePixel(onepixel,diff=0) {
     return Math.abs(onepixel);
 }
 async function main() {
-
+    
     time = new Date() - starttime;
     updatecount+=1
 
@@ -210,11 +212,12 @@ async function main() {
     newweights = weights;
     
 
-
+    debug('maxweightscore',indexOfMax(weightscores),weightscores);
 
     if (willAdjustWeights) {
         // newweights = perturbWeights(weights);
-        newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(updatecount%instructions.length),1);
+
+        newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(weightscores.length && Math.random()>0.9)?indexOfMax(weightscores):(((weightSuccess)%instructions.length)),1);
     } else {
         onepixel = updatePixel(onepixel, oldscore-olderscore);
         await optimisePixelForWeights(ctx, ctxsmall, weights, instructions, onepixel);
@@ -228,6 +231,7 @@ async function main() {
     // bestScore = bestScore - await scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
     ctxsmall.putImageData(newdata, 0, 0);
     newscore = await scoreLoopAsync(ctx, ctxsmall, newweights, instructions, 0, letterCounter);
+
 
     if (newscore < oldscore) {
       debug('scores', newscore,oldscore,olderscore,globalscore,'small improvement', newscore - oldscore);
@@ -310,6 +314,12 @@ async function main() {
     debug(`
   weightSuccess ${weightSuccess}
   weightFail ${weightFail}
+  weightRange ${weightRange}
+  weightMin ${weightMin}
+  weightMax ${weightMax}
+  idealWeightRange ${idealWeightRange}
+  badWeightRange ${badWeightRange}
+
   pixelSuccess ${pixelSuccess}
   pixelFail ${pixelFail}
   duration ${duration}
