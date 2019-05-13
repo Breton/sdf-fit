@@ -213,7 +213,7 @@ async function main() {
 
 
     if (willAdjustWeights) {
-        //newweights = perturbWeights(weights);
+        // newweights = perturbWeights(weights);
         newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(updatecount%instructions.length),1);
     } else {
         onepixel = updatePixel(onepixel, oldscore-olderscore);
@@ -360,7 +360,7 @@ ${
     time = new Date() - starttime;
     duration = time - lasttime;
     smoothduration = smoothduration * 0.99 + duration * 0.01;
-    setTimeout(main, 0);
+    setTimeout(main, 10);
 }
 
 setTimeout(main, 10);
