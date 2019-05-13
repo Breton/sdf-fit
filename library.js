@@ -1,6 +1,8 @@
 weightscores = [];
 // Library local variables
 let lowestScorePerIndex = [];
+let scorecount = 0;
+let samplecount = 0;
 scoreInstructionsAndWeightsScoresDebug = [];
  //library functions
 
@@ -193,6 +195,7 @@ function indexOfMin(arr) {
 
  function scoreAsync(ctx,x,y,width,height) {
      let dataobj, w, h;
+     scorecount+=1;
 
      if (ctx.data !== undefined) {
          dataobj = ctx;
@@ -434,6 +437,7 @@ function indexOfMin(arr) {
 
  function score(ctx) {
      let dataobj, width, height;
+     scorecount+=1;
      if (ctx.data !== undefined) {
          dataobj = ctx;
          width = ctx.width;
@@ -470,24 +474,36 @@ function indexOfMin(arr) {
  samplecache = {}
  let weightRange=0.3;
  let weightMin=0;
- let weightMax=1;
+ let weightMax=0.1;
  let idealWeightRange=0.5;
  let badWeightRange=0.5;
  let weightModeSuccess=0;
  let weightModeFail=0;
 
   
-  let badWeightMin = 0
-  let badWeightMax = 1
-
+  let badWeightMin = 0;
+  let badWeightMax = 0.1;
+  
+  
+    weightRange = 0.7344391287324465
+    weightMin = 0.39694611650427863
+    weightMax = 0.9580428786143742
+    badWeightMin = 0.25066576484409453
+    badWeightMax = 0.6068729488644931
+    idealWeightRange = 0.5267173138001187
+    badWeightRange = 0.6620852594223549
+  
+  
  async function optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions, start = 0, count = 1000) {
      /* outer: lowestScorePerIndex */
      let newscore = 0;
      let mscore = 14100;
      let nscore = 14100;
      let r, g, b;
-     weightRange = Math.abs(Math.random()*(weightMax-weightMin)*1.5+weightMin-(weightMax-weightMin)/4);
-     let inc = weightRange;
+     let phi = Math.sqrt(2);// 
+     let range = (weightMax-weightMin);
+     weightRange = Math.random()*range + weightMin + Math.random()*(range)-(range/2);
+     let inc = (weightRange*0.5+idealWeightRange*0.5).mod(1);
      let f = (x) => (Math.floor(x * 1000) / 1000);
      let minr = 1000000,
          ming = 1000000,
@@ -514,6 +530,7 @@ function indexOfMin(arr) {
      async function sample(idx, r, g, b) {
          let mscore, nscore;
          let mscorep, nscorep;
+         samplecount+=1;
          ctx.globalCompositeOperation = 'source-over';
          ctx.drawImage(canvassmall, 0, 0, 256, 256);
          let tmpdata =  threshold(ctx, r, g, b);
@@ -552,7 +569,7 @@ function indexOfMin(arr) {
          bsample = 0;
 
 
-         let counter = 10;
+         let counter = 40;
          let rslope = Math.sign(Math.random()-0.5);
          let gslope = Math.sign(Math.random()-0.5);
          let bslope = Math.sign(Math.random()-0.5);
@@ -574,7 +591,7 @@ function indexOfMin(arr) {
          oldscore = minscore = await sample(i, r, g, b);
          diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
 
-         let phi = Math.sqrt(2);// 
+         
          while (diff === 0 && counter > 0) {
              counter--;
              
@@ -593,9 +610,7 @@ function indexOfMin(arr) {
 
              diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
          }
-         if (diff !==0) {
-             counter += 10;
-         }
+      
          debug("wsamples a", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
          
 
@@ -609,9 +624,7 @@ function indexOfMin(arr) {
                  diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
                  debug("wswapslope", counter, diff);
              }
-            if(diff>-0.001){
-                counter += 10;
-            }
+       
 
 
              while (diff >= -0.0001 && counter > 0) {
@@ -624,11 +637,7 @@ function indexOfMin(arr) {
                  diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
                  debug("wenumerate slope", rinc,ginc,binc, rslope, gslope, bslope, counter, diff);
              }
-             if (diff < 0) {
-                counter += 10;
-             } else {
-                debug('log');
-             }
+    
 
          }
 
@@ -650,7 +659,7 @@ function indexOfMin(arr) {
                  binc /= phi;
                  diff = newscore - minscore;
                  minscore = newscore;
-                 counter += 0.5;
+                 
              } else {
                  newscore = await sample(i, r, g, b);
                  diff = newscore - minscore;
@@ -666,20 +675,33 @@ function indexOfMin(arr) {
 
          if (counter > 0 ) {
              weightModeSuccess += 1;
+             let iw = (1/weightModeSuccess)*(counter/50)*Math.abs(newscore-oldscore);
+             let w = 1-iw;
+             let range = weightMax-weightMin;
+    
              //0.35909182331488354
              //0.17960296863446265
-             idealWeightRange = idealWeightRange*0.99 + weightRange*0.01
-             newweights[i][0] = r, newweights[i][1] = g, newweights[i][2] = b;
-             weightMin = weightMin-inc > 0.1?weightMin*0.99 + inc * 0.01:weightMin;
-             weightMax = weightMax-inc < 0.1?weightMax*0.99 + inc * 0.01:weightMax;
+
+
+
+             console.log("weightblend",inc,range/4,(inc-range/4),(inc+range/4),weightMin,weightMax,samplecount,iw,w,weightModeSuccess,Math.abs(newscore-oldscore));
+             console.log("weightblend2",idealWeightRange,Math.min(rinc,binc,ginc),iw,w);
+             idealWeightRange = idealWeightRange*w + weightRange*iw
+             newweights[i][0] = r.mod(1), newweights[i][1] = g.mod(1), newweights[i][2] = b.mod(1);
+             weightMin = weightMin > (inc-range/(4)) ? weightMin*w + inc*iw : weightMin;
+             weightMax = weightMax < (inc+range/(4)) ? weightMax*w + inc*iw : weightMax;
 
          } else {
-            badWeightRange = badWeightRange*0.99 + weightRange*0.01
-            badWeightMin = badWeightMin-inc > 0.1?badWeightMin*0.99 + inc * 0.01:badWeightMin;
-            badWeightMax = badWeightMax-inc < 0.1?badWeightMax*0.99 + inc * 0.01:badWeightMax;
+            weightModeFail += 1;
+            let iw = (1/weightModeFail);
+            let w = 1-iw;
+            let range = badWeightMax-badWeightMin;
+            console.log("badweightblend",inc,(inc-range/(2*phi)),(inc+range/(2*phi)),weightMin,weightMax,samplecount,iw,w,weightModeSuccess);
+            badWeightRange = badWeightRange*w + weightRange*iw
+            badWeightMin = badWeightMin > (inc-range/(2))? badWeightMin * w + inc * iw : badWeightMin;
+            badWeightMax = badWeightMax < (inc+range/(2))? badWeightMax * w + inc * iw : badWeightMax;
 
             
-            weightModeFail += 1;
          }
 
      }
@@ -712,6 +734,7 @@ function indexOfMin(arr) {
      let time = new Date();
 
      async function sample(pixelidx, r, g, b) {
+
          d[pixelidx * 4 + 0] = 255*(1 - Math.abs((r/255).mod(2) - 1));
          d[pixelidx * 4 + 1] = 255*(1 - Math.abs((g/255).mod(2) - 1));
          d[pixelidx * 4 + 2] = 255*(1 - Math.abs((b/255).mod(2) - 1));
@@ -954,7 +977,7 @@ function indexOfMin(arr) {
     for (let i = start; i < count+start; i += 1) {
       let scoreidx = i;
       let tmpdata;
- 
+      samplecount +=1;
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
       ctx.drawImage(canvassmall, 0, 0, 256, 256);  

@@ -165,7 +165,8 @@ function updatePixel(onepixel,diff=0) {
     return Math.abs(onepixel);
 }
 async function main() {
-    
+    samplecount = 0;
+    scorecount = 0;
     time = new Date() - starttime;
     updatecount+=1
 
@@ -321,7 +322,9 @@ async function main() {
   badWeightMax ${badWeightMax}
   idealWeightRange ${idealWeightRange}
   badWeightRange ${badWeightRange}
-
+  
+  samplecount ${samplecount}
+  scorecount ${scorecount}
   pixelSuccess ${pixelSuccess}
   pixelFail ${pixelFail}
   duration ${duration}
