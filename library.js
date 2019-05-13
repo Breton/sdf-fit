@@ -1,3 +1,6 @@
+// Library local variables
+let lowestScorePerIndex = [];
+
  //library functions
 
  let debugbuffer = "";
@@ -415,10 +418,10 @@
  samplecache = {}
 
  async function optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions, start = 0, count = 1000) {
+     /* outer: lowestScorePerIndex */
      let newscore = 0;
      let mscore = 14100;
      let nscore = 14100;
-     let lowestScorePerIndex = [];
      let r, g, b;
      let inc = Math.random();
      let f = (x) => (Math.floor(x * 1000) / 1000);
@@ -435,7 +438,14 @@
      let time = new Date();
 
      count = Math.floor(Math.min(weights.length, instructions.length, count));
-
+     //candidate for moving out of this function and into initilisation routine
+     ctx.globalCompositeOperation = 'source-atop';
+     for (let i = 0; i < instructions.length; i++){
+        if (!lowestScorePerIndex[i]) {
+             evalCanvas(ctx, instructions[i]);
+             lowestScorePerIndex[i] = Math.sqrt(score(ctx));
+         }
+     }
      async function sample(idx, r, g, b) {
          let mscore, nscore;
          let mscorep, nscorep;
@@ -458,18 +468,15 @@
          newweights[i] = [];
          newweights[i][0] = r, newweights[i][1] = g, newweights[i][2] = b;
      }
+
      //start = Math.floor(Math.random()*(count-1));
      for (let i = start; i < count+start; i += 1) {
 
          let tmpdata;
 
 
-         ctx.globalCompositeOperation = 'source-atop';
 
-         if (!lowestScorePerIndex[i]) {
-             evalCanvas(ctx, instructions[i]);
-             lowestScorePerIndex[i] = Math.sqrt(score(ctx));
-         }
+
          r = weights[i][0], g = weights[i][1], b = weights[i][2];
          newweights[i] = [];
          newweights[i][0] = r, newweights[i][1] = g, newweights[i][2] = b;
@@ -589,10 +596,10 @@
      return newweights;
  }
  async function optimisePixelForWeights(ctx, ctxsmall, weights, instructions, idx) {
+     /* outer: lowestScorePErIndex */
      let newscore = 0;
      let mscore = 14100;
      let nscore = 14100;
-     let lowestScorePerIndex = [];
      let r, g, b;
      let diff;
      let inc = 1;
@@ -778,7 +785,7 @@
  //we are evaluating the fitness of ctxsmall combined with threshold and weights
  //for matching the shapes in instructions.
  // ctx is used as scratch for doing the scoring.
- lowestScorePerIndex = [];
+ 
  let targetDataObjects = [];
  /*
  async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000) {
@@ -838,11 +845,17 @@
     let oscores = [];
     let mscoreps = [];
     let nscoreps = [];
+    
     //outer functions:
     // threshold
     // score
     // evalCanvas
-
+     for (let i = 0; i < instructions.length; i++){
+        if (!lowestScorePerIndex[i]) {
+             evalCanvas(ctx, instructions[i]);
+             lowestScorePerIndex[i] = Math.sqrt(score(ctx));
+         }
+     }
     count = Math.min(weights.length, instructions.length, count);
 
     for (let i = start; i < count; i += 1) {
@@ -850,12 +863,7 @@
       let tmpdata;
       ctx.globalCompositeOperation = 'source-atop';
       ctx.globalAlpha = 1;
-      if (!lowestScorePerIndex[scoreidx]) {
-        evalCanvas(ctx, instructions[i]);
 
-
-        lowestScorePerIndex[scoreidx] = Math.sqrt(score(ctx));
-      }
       ctx.globalCompositeOperation = 'source-atop';
       ctx.globalAlpha = 1;
       ctx.drawImage(canvassmall, 0, 0, 256, 256);         
@@ -881,11 +889,11 @@
     
     mscores = await Promise.all(mscoreps);
     nscores = await Promise.all(nscoreps);
-    oscore = oscore*count/lowestScorePerIndex.reduce((a, b) => a + b);
-    oscore = oscore/100;
+    oscore = lowestScorePerIndex.map(x=>sqrt(oscore)/x).map(x=>x*x).reduce((a, b) => a + b);
+    //oscore = oscore/100;
     mscore = mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).map(x => x * x).reduce((a, b) => a + b);
     nscore = nscore = nscores.map((x, idx) => (Math.sqrt((x)) / lowestScorePerIndex[idx])).map(x => x * x).reduce((a, b) => a + b);
-    //console.log('scoring instructions and weights', newscore, mscore, nscore, nscore+mscore,nscore+mscore-newscore);
+    console.log('scoring instructions and weights', newscore, mscore, nscore, oscore, nscore+mscore+oscore,Math.sqrt(nscore+mscore+oscore) * 1000 / count);
     
     return (Math.sqrt(nscore+mscore+oscore)) * 1000 / count;
   }
