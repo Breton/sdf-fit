@@ -889,7 +889,7 @@ let lowestScorePerIndex = [];
     
     mscores = await Promise.all(mscoreps);
     nscores = await Promise.all(nscoreps);
-    oscore = lowestScorePerIndex.map(x=>sqrt(oscore)/x).map(x=>x*x).reduce((a, b) => a + b);
+    oscore = lowestScorePerIndex.map(x=>Math.sqrt(oscore)/x).map(x=>x*x).reduce((a, b) => a + b);
     //oscore = oscore/100;
     mscore = mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).map(x => x * x).reduce((a, b) => a + b);
     nscore = nscore = nscores.map((x, idx) => (Math.sqrt((x)) / lowestScorePerIndex[idx])).map(x => x * x).reduce((a, b) => a + b);
