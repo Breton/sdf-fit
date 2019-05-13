@@ -551,7 +551,7 @@
 
          debug("wsamples b", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
          while (diff < 0 && counter > 0) {
-             let newscore;
+             
              counter--;
 
 
@@ -577,7 +577,7 @@
 
          }
         
-            console.log("weight score 0",i, newscore,lowestScorePerIndex[idx],counter);
+         console.log("weight score 0",i, newscore,lowestScorePerIndex[idx],counter);
          
          debug("wsamples d", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
 
