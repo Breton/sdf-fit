@@ -578,6 +578,9 @@
              debug("wsamples c", i, counter, r, g, b, rinc, ginc, binc, rslope, gslope, bslope, newscore, minscore, diff);
 
          }
+         if(i===0){
+            console.log("weight score 0", newscore,lowestScorePerIndex[idx],counter);
+         }
          debug("wsamples d", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
 
          if (counter > 0 ) {
