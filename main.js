@@ -317,6 +317,8 @@ async function main() {
   weightRange ${weightRange}
   weightMin ${weightMin}
   weightMax ${weightMax}
+  badWeightMin ${badWeightMin}
+  badWeightMax ${badWeightMax}
   idealWeightRange ${idealWeightRange}
   badWeightRange ${badWeightRange}
 

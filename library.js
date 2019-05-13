@@ -469,18 +469,16 @@ function indexOfMin(arr) {
 
  samplecache = {}
  let weightRange=0.3;
- let weightMin=0.5;
- let weightMax=0.5;
+ let weightMin=0;
+ let weightMax=1;
  let idealWeightRange=0.5;
  let badWeightRange=0.5;
  let weightModeSuccess=0;
  let weightModeFail=0;
 
-  weightRange = 0.2631938863867924
-  weightMin = 0.22992320121199716
-  weightMax = 0.4925443195765025
-  idealWeightRange = 0.41404139707510956
-  badWeightRange = 0.37087509410127856
+  
+  let badWeightMin = 0
+  let badWeightMax = 1
 
  async function optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions, start = 0, count = 1000) {
      /* outer: lowestScorePerIndex */
@@ -488,7 +486,7 @@ function indexOfMin(arr) {
      let mscore = 14100;
      let nscore = 14100;
      let r, g, b;
-     weightRange = Math.abs(Math.random()*(weightMax-weightMin)*2+weightMin-(weightMax-weightMin)/2);
+     weightRange = Math.abs(Math.random()*(weightMax-weightMin)*1.5+weightMin-(weightMax-weightMin)/4);
      let inc = weightRange;
      let f = (x) => (Math.floor(x * 1000) / 1000);
      let minr = 1000000,
@@ -677,7 +675,10 @@ function indexOfMin(arr) {
 
          } else {
             badWeightRange = badWeightRange*0.99 + weightRange*0.01
-            weightRange = Math.abs(Math.random()*(weightMax-weightMin)*2+weightMin-(weightMax-weightMin)/2);
+            badWeightMin = badWeightMin-inc > 0.1?badWeightMin*0.99 + inc * 0.01:badWeightMin;
+            badWeightMax = badWeightMax-inc < 0.1?badWeightMax*0.99 + inc * 0.01:badWeightMax;
+
+            
             weightModeFail += 1;
          }
 
