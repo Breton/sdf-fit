@@ -526,17 +526,15 @@
                  diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
                  debug("wswapslope", counter, diff);
              }
-             if (diff < 0) {
-                 counter += 10;
-             }  else {
-
-                
+            if(diff>-0.001){
+                counter += 10;
+            }
 
 
-             while (diff >= 0 && counter > 0) {
+             while (diff >= -0.0001 && counter > 0) {
                  counter--;
                  //convert the counter to 3 digits of -1, 0 or 1.
-                [rslope,gslope,bslope] = ('000'+(counter).toString(3)).slice(-3).split('').map(x=>+x-1)
+                [rslope,gslope,bslope] = ('000'+(counter+updatecount).toString(3)).slice(-3).split('').map(x=>+x-1)
                  rinc *= 1.0000000025821745;
                  ginc *= 1.0000000025821745;
                  binc *= 1.0000000025821745;
