@@ -142,16 +142,20 @@ function indexOfMin(arr) {
  }
 
  function thresholdKernel(d, r, g, b) {
+      Number.prototype.mod = function(n) {
+          return ((this%n)+n)%n;
+      };
+
      const pi = Math.PI;
 
-     const o = Math.sin(r * pi * 2) * 0.5 + 0.5;
-     const s = Math.sin(g * pi * 2) * 0.5 + 0.5;
-     const w = Math.sin(b * pi * 2) * 0.5 + 0.5;
+     const o = (+r).mod(1);
+     const s = (+g).mod(1);
+     const w = (+b).mod(1);
 
 
-     const x = Math.sin((o - s - w) * pi * 2) * 0.5 + 0.5;
-     const y = Math.sin((o + 0 - w) * pi * 2) * 0.5 + 0.5;
-     const z = Math.sin((o + s - w) * pi * 2) * 0.5 + 0.5;
+     const x = (o - s - w).mod(1)
+     const y = (o + 0 - w).mod(1)
+     const z = (o + s - w).mod(1)
 
      for (let i = 0; i < d.length; i += 4) {
          d[i] = d[i + 1] = d[i + 2] = ((Math.min(Math.min(
@@ -215,27 +219,8 @@ function indexOfMin(arr) {
  function threshold(ctx, r = 1, g = 1, b = 1) {
      let dataobj;
      dataobj = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-     const d = dataobj.data;
-     const pi = Math.PI;
-
-     const o = Math.sin(r * pi * 2) * 0.5 + 0.5;
-     const s = Math.sin(g * pi * 2) * 0.5 + 0.5;
-     const w = Math.sin(b * pi * 2) * 0.5 + 0.5;
-
-
-     const x = Math.sin((o - s - w) * pi * 2) * 0.5 + 0.5;
-     const y = Math.sin((o + 0 - w) * pi * 2) * 0.5 + 0.5;
-     const z = Math.sin((o + s - w) * pi * 2) * 0.5 + 0.5;
-
-     for (let i = 0; i < d.length; i += 4) {
-         d[i] = d[i + 1] = d[i + 2] = ((Math.min(Math.min(
-                 ((d[i + 0] / 255 - 1 + x * 2) / w) * 255,
-                 ((d[i + 1] / 255 - 1 + y * 2) / w) * 255),
-             ((d[i + 2] / 255 - 1 + z * 2) / w) * 255))) + 127;
-     }
-
+     dataobj.data = thresholdKernel(dataobj.data,r,g,b);
      ctx.putImageData(dataobj, 0, 0);
-
      return dataobj;
  }
 
