@@ -157,11 +157,17 @@ function indexOfMin(arr) {
      const y = (o + 0 - w).mod(1)
      const z = (o + s - w).mod(1)
 
+
+
      for (let i = 0; i < d.length; i += 4) {
-         d[i] = d[i + 1] = d[i + 2] = ((Math.min(Math.min(
-                 ((d[i + 0] / 255 - 1 + x * 2) / w) * 255,
-                 ((d[i + 1] / 255 - 1 + y * 2) / w) * 255),
-             ((d[i + 2] / 255 - 1 + z * 2) / w) * 255))) + 127;
+        let r = d[i + 0] / 255;
+        let g = d[i + 1] / 255;
+        let b = d[i + 2] / 255;
+
+         d[i] = d[i + 1] = d[i + 2] =  Math.min(
+             (r - 1 + x * 2) / w + 0.5,
+             (g - 1 + y * 2) / w + 0.5,
+             (b - 1 + z * 2) / w + 0.5 ) * 255;
      }
      return d;
  }
@@ -469,15 +475,13 @@ function indexOfMin(arr) {
   let badWeightMin = 0;
   let badWeightMax = 0.1;
   
-  
-    weightRange = 0.7344391287324465
-    weightMin = 0.39694611650427863
-    weightMax = 0.9580428786143742
-    badWeightMin = 0.25066576484409453
-    badWeightMax = 0.6068729488644931
-    idealWeightRange = 0.5267173138001187
-    badWeightRange = 0.6620852594223549
-  
+  weightRange =  0.8374180869593246;
+  weightMin =  0.40159586891945365;
+  weightMax =  0.9396346289882747;
+  badWeightMin =  0.28551310343576697;
+  badWeightMax =  0.6876465487998825;
+  idealWeightRange =  0.6870444967275899;
+  badWeightRange =  0.6710823695909522;
   
  async function optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions, start = 0, count = 1000) {
      /* outer: lowestScorePerIndex */
