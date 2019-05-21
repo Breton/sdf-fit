@@ -147,27 +147,27 @@ function indexOfMin(arr) {
       };
 
      const pi = Math.PI;
-
-     const o = (+r).mod(1);
-     const s = (+g).mod(1);
+     const min = Math.min;
+     const cos = Math.cos;
+     const sin = Math.sin;
+     const u = (+r).mod(1);
+     const v = (+g).mod(1);
      const w = (+b).mod(1);
 
-
-     const x = (o - s - w).mod(1)
-     const y = (o + 0 - w).mod(1)
-     const z = (o + s - w).mod(1)
-
-
+     const S = (x) => x;
+     const R = (a,z) => (((a) + (2*u-1)*cos(2*pi*(z/3 + a)) + (2*v-1)*sin(2*pi*(z/3 + a)) )/w + 0.5)
+     //const R = (a,z,m) => ((m + (2*u-1)*cos(2*pi*(z/3 + a)) + (2*v-1)*sin(2*pi*(z/3 + a)) )/w + 0.5)
+     
+     const C = (r,g,b) => {const m = (r+g+b)/3; return min(R(r,1,m),R(g,2,m),R(b,3,m)) };
+     const T = (x) => max(0,min(1,x));
+     //given a particular u,v,w,
+     //the function y=T(C(x,g,b)) gives which r values will get closer to target per pixel. 
+     // so for a sset of u,v,w values, they're trying to match a target value for a pixel. 
+     // which C(r,g,b,u,v,w) = 
 
      for (let i = 0; i < d.length; i += 4) {
-        let r = d[i + 0] / 255;
-        let g = d[i + 1] / 255;
-        let b = d[i + 2] / 255;
 
-         d[i] = d[i + 1] = d[i + 2] =  Math.min(
-             (r - 1 + x * 2) / w + 0.5,
-             (g - 1 + y * 2) / w + 0.5,
-             (b - 1 + z * 2) / w + 0.5 ) * 255;
+         d[i] = d[i + 1] = d[i + 2] =  C(d[i + 0] / 255,d[i + 1] / 255,d[i + 2] / 255) * 255;
      }
      return d;
  }
