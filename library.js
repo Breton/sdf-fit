@@ -143,21 +143,72 @@ function indexOfMin(arr) {
 
  function thresholdKernel(d, r, g, b) {
      const pi = Math.PI;
+     Number.prototype.mod = function(n) {
+      return ((this%n)+n)%n;
+     };
+     const sin = Math.sin;
+     const cos = Math.cos;
 
-     const o = Math.sin(r * pi * 2) * 0.5 + 0.5;
-     const s = Math.sin(g * pi * 2) * 0.5 + 0.5;
-     const w = Math.sin(b * pi * 2) * 0.5 + 0.5;
+     const old = false;
+     if(old) {
+      //  const o = r;
+      // const s = g;
+      // const w = b/3;
 
+      // const x = (o - s - w);
+      // const y = (o + 0 - w);
+      // const z = (o + s - w);
 
-     const x = Math.sin((o - s - w) * pi * 2) * 0.5 + 0.5;
-     const y = Math.sin((o + 0 - w) * pi * 2) * 0.5 + 0.5;
-     const z = Math.sin((o + s - w) * pi * 2) * 0.5 + 0.5;
+     const u = r*2-1//g*Math.cos(r*pi*2);
+     const v = g*2-1;//g*Math.sin(r*pi*2);
+     const w = (b)/3;
+     const o = Math.sqrt(u*u+v*v);
+     const s = Math.atan2(u,v);
+     const t = Math.cos(Math.atan2(u,v))*(1-Math.min(1,2*o))/2;
+     //const S = (x)=>( x ) ;
+     const S = (x)=>( 3*(Math.max(Math.min(x,1),0)**2) - 2*(Math.max(Math.min(x,1),0)**3) ) ;
+        //const R = (x,v)=>( ((x - 1 + (o + s*(v-1) - w) * 2) / w ) ); 
 
-     for (let i = 0; i < d.length; i += 4) {
-         d[i] = d[i + 1] = d[i + 2] = ((Math.min(Math.min(
-                 ((d[i + 0] / 255 - 1 + x * 2) / w) * 255,
-                 ((d[i + 1] / 255 - 1 + y * 2) / w) * 255),
-             ((d[i + 2] / 255 - 1 + z * 2) / w) * 255))) + 127;
+         const R = (x,z)=>S( 
+            ( x + t - o * Math.cos(s-(2*z*pi)/3) + w/2 )
+            /w
+         ) ;
+
+        for (let i = 0; i < d.length; i += 4) {
+            let r = d[i + 0] / 255;
+            let g = d[i + 1] / 255;
+            let b = d[i + 2] / 255;
+            d[i] = d[i + 1] = d[i + 2] = Math.min(
+                R(r, 1) ,
+                R(g, 2) ,
+                R(b, 3) ) * 255 ;
+        }
+     } else {
+
+         const u = r*2-1//g*Math.cos(r*pi*2);
+         const v = g*2-1;//g*Math.sin(r*pi*2);
+         const w = (b)/3;
+         //const o = Math.sqrt(u*u+v*v);
+         //const s = Math.atan2(u,v);
+         //const t = Math.cos(Math.atan2(u,v))*(1-Math.min(1,2*o))/2;
+         //const S = (x)=>( 3*(Math.max(Math.min(x,0),1)**2) - 2*(Math.max(Math.min(x,0),1)**3) ) ;
+         const S = (x)=>( x ) ;
+         // const R = (x,z)=>S( 
+         //    ( x - t - o * Math.cos(s-(2*z*pi)/3) + w/2 - 0.5 )
+         //    /w
+         // ) ;
+         const R = (a,z)=>( ( a + u * cos( 2*pi*z/3 ) + v * sin( 2*pi*z/3 ) )/w+1.5 )
+        //console.log('threshold',u,v,w,o,s,t,[0,0.1,0.5,0.9,1].map(S));
+
+         const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
+
+         for (let i = 0; i < d.length; i += 4) {
+             let r = d[i + 0] / 255;
+             let g = d[i + 1] / 255;
+             let b = d[i + 2] / 255;
+             d[i + 0] = d[i + 1] = d[i + 2] = Math.min( R(r, 1), R(g, 2), R(b, 3) ) * 255;
+                   
+         }
      }
      return d;
  }
@@ -215,25 +266,11 @@ function indexOfMin(arr) {
  function threshold(ctx, r = 1, g = 1, b = 1) {
      let dataobj;
      dataobj = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-     const d = dataobj.data;
-     const pi = Math.PI;
 
-     const o = Math.sin(r * pi * 2) * 0.5 + 0.5;
-     const s = Math.sin(g * pi * 2) * 0.5 + 0.5;
-     const w = Math.sin(b * pi * 2) * 0.5 + 0.5;
+     let w = ctx.canvas.width;
+     let h = ctx.canvas.height;
 
-
-     const x = Math.sin((o - s - w) * pi * 2) * 0.5 + 0.5;
-     const y = Math.sin((o + 0 - w) * pi * 2) * 0.5 + 0.5;
-     const z = Math.sin((o + s - w) * pi * 2) * 0.5 + 0.5;
-
-     for (let i = 0; i < d.length; i += 4) {
-         d[i] = d[i + 1] = d[i + 2] = ((Math.min(Math.min(
-                 ((d[i + 0] / 255 - 1 + x * 2) / w) * 255,
-                 ((d[i + 1] / 255 - 1 + y * 2) / w) * 255),
-             ((d[i + 2] / 255 - 1 + z * 2) / w) * 255))) + 127;
-     }
-
+     dataobj = new ImageData(thresholdKernel(dataobj.data, r, g, b), w, h);
      ctx.putImageData(dataobj, 0, 0);
 
      return dataobj;
