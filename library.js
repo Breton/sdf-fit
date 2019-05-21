@@ -140,8 +140,8 @@ function indexOfMin(arr) {
      }
      return score / length;
  }
+ function thresholdKernelOld(d, r, g, b) {
 
- function thresholdKernel(d, r, g, b) {
      const pi = Math.PI;
      Number.prototype.mod = function(n) {
       return ((this%n)+n)%n;
@@ -149,8 +149,7 @@ function indexOfMin(arr) {
      const sin = Math.sin;
      const cos = Math.cos;
 
-     const old = false;
-     if(old) {
+
       //  const o = r;
       // const s = g;
       // const w = b/3;
@@ -183,7 +182,51 @@ function indexOfMin(arr) {
                 R(g, 2) ,
                 R(b, 3) ) * 255 ;
         }
-     } else {
+    
+     return d;
+ }
+ function thresholdKernelWeird(d, r, g, b) {
+
+      Number.prototype.mod = function(n) {
+          return ((this%n)+n)%n;
+      };
+
+     const pi = Math.PI;
+     const min = Math.min;
+     const cos = Math.cos;
+     const sin = Math.sin;
+     const u = (+r).mod(1);
+     const v = (+g).mod(1);
+     const w = (+b).mod(1);
+
+     const S = (x) => x;
+     const R = (a,z) => (((a) + (2*u-1)*cos(2*pi*(z/3 + a)) + (2*v-1)*sin(2*pi*(z/3 + a)) )/w + 0.5)
+     //const R = (a,z,m) => ((m + (2*u-1)*cos(2*pi*(z/3 + a)) + (2*v-1)*sin(2*pi*(z/3 + a)) )/w + 0.5)
+     
+     const C = (r,g,b) => {const m = (r+g+b)/3; return min(R(r,1,m),R(g,2,m),R(b,3,m)) };
+     const T = (x) => max(0,min(1,x));
+     //given a particular u,v,w,
+     //the function y=T(C(x,g,b)) gives which r values will get closer to target per pixel. 
+     // so for a sset of u,v,w values, they're trying to match a target value for a pixel. 
+     // which C(r,g,b,u,v,w) = 
+
+     for (let i = 0; i < d.length; i += 4) {
+
+         d[i] = d[i + 1] = d[i + 2] =  C(d[i + 0] / 255,d[i + 1] / 255,d[i + 2] / 255) * 255;
+
+     }
+     return d;
+ }
+ function thresholdKernel(d, r, g, b) {
+
+     const pi = Math.PI;
+     Number.prototype.mod = function(n) {
+      return ((this%n)+n)%n;
+     };
+     const sin = Math.sin;
+     const cos = Math.cos;
+
+     
 
          const u = r*2-1//g*Math.cos(r*pi*2);
          const v = g*2-1;//g*Math.sin(r*pi*2);
@@ -208,8 +251,7 @@ function indexOfMin(arr) {
              let b = d[i + 2] / 255;
              d[i + 0] = d[i + 1] = d[i + 2] = Math.min( R(r, 1), R(g, 2), R(b, 3) ) * 255;
                    
-         }
-     }
+        }
      return d;
  }
 
@@ -266,13 +308,16 @@ function indexOfMin(arr) {
  function threshold(ctx, r = 1, g = 1, b = 1) {
      let dataobj;
      dataobj = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+<<<<<<< HEAD
 
      let w = ctx.canvas.width;
      let h = ctx.canvas.height;
 
      dataobj = new ImageData(thresholdKernel(dataobj.data, r, g, b), w, h);
+=======
+     dataobj.data = thresholdKernel(dataobj.data,r,g,b);
+>>>>>>> 00bd478bad6ed8be2f62551102a5205cd483dabd
      ctx.putImageData(dataobj, 0, 0);
-
      return dataobj;
  }
 
@@ -521,15 +566,13 @@ function indexOfMin(arr) {
   let badWeightMin = 0;
   let badWeightMax = 0.1;
   
-  
-    weightRange = 0.7344391287324465
-    weightMin = 0.39694611650427863
-    weightMax = 0.9580428786143742
-    badWeightMin = 0.25066576484409453
-    badWeightMax = 0.6068729488644931
-    idealWeightRange = 0.5267173138001187
-    badWeightRange = 0.6620852594223549
-  
+  weightRange =  0.8374180869593246;
+  weightMin =  0.40159586891945365;
+  weightMax =  0.9396346289882747;
+  badWeightMin =  0.28551310343576697;
+  badWeightMax =  0.6876465487998825;
+  idealWeightRange =  0.6870444967275899;
+  badWeightRange =  0.6710823695909522;
   
  async function optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions, start = 0, count = 1000) {
      /* outer: lowestScorePerIndex */
