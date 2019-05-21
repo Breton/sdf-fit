@@ -308,15 +308,13 @@ function indexOfMin(arr) {
  function threshold(ctx, r = 1, g = 1, b = 1) {
      let dataobj;
      dataobj = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-<<<<<<< HEAD
+
 
      let w = ctx.canvas.width;
      let h = ctx.canvas.height;
 
      dataobj = new ImageData(thresholdKernel(dataobj.data, r, g, b), w, h);
-=======
-     dataobj.data = thresholdKernel(dataobj.data,r,g,b);
->>>>>>> 00bd478bad6ed8be2f62551102a5205cd483dabd
+
      ctx.putImageData(dataobj, 0, 0);
      return dataobj;
  }
