@@ -49,7 +49,7 @@ time = 0;
 duration = 0;
 
 letters = '0123456789ABCDEFGHIJKLMNOP';
-letters = '01234';
+letters = '0123456789';
 
 letterCounter = letters.length;
 fonts = [
@@ -151,9 +151,9 @@ function updatePixel(onepixel,diff=0) {
     let gmin = (gradient.reduce((a, b) => Math.min(a,b) ));
     let grange = gmax-gmin;
 
-    debug('gindex', gmin, gmax, grange, (gmin + grange*0.50), gindex.length);
+    debug('gindex', gmin, gmax, grange, (gmin + grange*0.90), gindex.length);
     debug('diff', diff);
-    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.50) ? i : 0))).filter(x => x);
+    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.90) ? i : 0))).filter(x => x);
     
     if (gindex.length > 0) {
         onepixel = gindex[updatecount%gindex.length];
@@ -233,7 +233,7 @@ async function main() {
     // bestScore = bestScore - await scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
     ctxsmall.putImageData(newdata, 0, 0);
     newscore = await scoreLoopAsync(ctx, ctxsmall, newweights, instructions, 0, letterCounter);
-    gradient = newscore.bins.map((x,i)=> Math.floor(x*0.1+gradient[i]*0.9) );
+    gradient = newscore.bins.map((x,i)=> Math.floor(x*0.5+gradient[i]*0.5) );
 
     newscore = newscore.score;
 
@@ -362,7 +362,7 @@ async function main() {
 
 ${
     ((gmax,gmin) => (
-      (gradient.map((x, i) => ((x) > (gmin + (gmax-gmin)*0.5) ? i : 0))).filter(x => x)
+      (gradient.map((x, i) => ((x) > (gmin + (gmax-gmin)*0.9) ? i : 0))).filter(x => x)
     ))(
       (gradient.reduce((a, b) => Math.max(a,b) )),
       (gradient.reduce((a, b) => Math.min(a,b) ))
