@@ -269,7 +269,13 @@ function indexOfMin(arr) {
          let r = d[i + 0] / 255;
          let g = d[i + 1] / 255;
          let b = d[i + 2] / 255;
-         d[i + 0] = d[i + 1] = d[i + 2] = Math.min( R(r, 1), R(g, 2), R(b, 3) ) * 255;
+         d[i + 0] = d[i + 1] = d[i + 2] = 
+         Math.min( 
+            (( r + u * cos( 2*pi*1/3 ) + v * sin( 2*pi*1/3 ) )/w+0.5 ),
+            (( g + u * cos( 2*pi*2/3 ) + v * sin( 2*pi*2/3 ) )/w+0.5 ),
+            (( b + u * cos( 2*pi*3/3 ) + v * sin( 2*pi*3/3 ) )/w+0.5 )
+            
+         ) * 255;
                
     }
     return d;
@@ -920,7 +926,7 @@ function indexOfMin(arr) {
 
 
 
-     let counter = 5;
+     let counter = 10;
      let rslope = Math.round(Math.random()*3-1.5);
      let gslope = Math.round(Math.random()*3-1.5);
      let bslope = Math.round(Math.random()*3-1.5);
@@ -964,26 +970,22 @@ function indexOfMin(arr) {
              diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
              debug("swapslope", counter, diff);
          }
-         if(diff < 0) {
-          counter += 10;
-         }
+
 
          while(diff>=0 && counter > 0) {
             counter--;
             //convert the counter to 3 digits of -1, 0 or 1.
             [rslope,gslope,bslope] = ('000'+(updatecount + counter).toString(5)).slice(-3).split('').map(x=>+x-2)
-            rinc *= 1.0000000025821745;
-            ginc *= 1.0000000025821745;
-            binc *= 1.0000000025821745;
+            rinc *= phi;
+            ginc *= phi;
+            binc *= phi;
 
 
 
             diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
             debug("enumerate slope", rslope, gslope, bslope, counter, diff);
          }
-         if(diff < 0) {
-          counter += 10;
-         }
+
         
      }
      debug("pxsamples b", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);

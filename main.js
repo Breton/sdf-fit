@@ -63,8 +63,9 @@ for (let i = 0; i < letters.length; i++) {
         ["fillRect", 0, 0, 256, 256],
         ["fillStyle", "white"],
         ["translate", 128, 128],
-        ["rotate", i * (0.5 * Math.PI / (letters.length - 1))],
-        ["fillRect", 0, 0, 96, 96]
+        // ["rotate", i * (0.5 * Math.PI / (letters.length - 1))],
+        // ["fillRect", 0, 0, 96, 96]
+        ["fillText", letters[i], 20, 90, 256]
     ];
 }
 
@@ -151,9 +152,9 @@ function updatePixel(onepixel,diff=0) {
     let gmin = (gradient.reduce((a, b) => Math.min(a,b) ));
     let grange = gmax-gmin;
 
-    debug('gindex', gmin, gmax, grange, (gmin + grange*0.90), gindex.length);
+    debug('gindex', gmin, gmax, grange, (gmin + grange*0.50), gindex.length);
     debug('diff', diff);
-    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.90) ? i : 0))).filter(x => x);
+    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.50) ? i : 0))).filter(x => x);
     
     if (gindex.length > 0) {
         onepixel = gindex[updatecount%gindex.length];
@@ -362,7 +363,7 @@ async function main() {
 
 ${
     ((gmax,gmin) => (
-      (gradient.map((x, i) => ((x) > (gmin + (gmax-gmin)*0.9) ? i : 0))).filter(x => x)
+      (gradient.map((x, i) => ((x) > (gmin + (gmax-gmin)*0.5) ? i : 0))).filter(x => x)
     ))(
       (gradient.reduce((a, b) => Math.max(a,b) )),
       (gradient.reduce((a, b) => Math.min(a,b) ))
@@ -392,7 +393,7 @@ let prv = 0;
   const wel = document.getElementById('w');
   const iel = document.getElementById('i');
 
-  let u=0,v=0,w=0,i=0;
+  let u=0,v=0,w=0,i=0,l=0;
 
   uel.onchange=uel.onmousemove=function () { u= +(this.value); preview(this.name, +this.value); }
   vel.onchange=vel.onmousemove=function () { v= +(this.value); preview(this.name, +this.value); }
@@ -403,40 +404,42 @@ let prv = 0;
 
   let idx=0;
   async function preview (name,value) {
-      
-      if(name==="i"){
-        idx=value;
+      let time=new Date();
+      if(time-l > 10){
+        l = time;
+        if(name==="i"){
+          idx=value;
+        } 
+        idx = idx % Math.min(letterCounter, weights.length);
+        console.log('preview',name,value);
+
+        ctxresult.globalAlpha = 1;
+        ctxresult.drawImage(canvassmall, 0, 0, 256, 256);
+        
+        
+        if(name==="i"){
+          threshold(ctxresult, ...weights[idx]);
+          uel.value=weights[idx][0]; u = weights[idx][0];
+          vel.value=weights[idx][1]; v = weights[idx][1];
+          wel.value=weights[idx][2]; w = weights[idx][2];
+
+
+        } else {
+          threshold(ctxresult, u,v,w);
+          //threshold(ctxresult, ...weights[idx]);
+        }
+        
+        ctxresult.font = "16px sans-serif";
+        ctxresult.fillStyle = 'white';
+        ctxresult.textAlign = 'center'
+        ctxresult.save();
+        ctxresult.scale(0.2, 0.2);
+        ctxresult.translate(0, 0);
+        evalCanvas(ctxresult, instructions[idx]);
+        ctxresult.restore();
+
+        ctxresult.fillText(letters[idx] + " " + fonts[idx % fonts.length], 128, 20, 256);
       } 
-      idx = idx % Math.min(letterCounter, weights.length);
-      console.log('preview',name,value);
-
-      ctxresult.globalAlpha = 1;
-      ctxresult.drawImage(canvassmall, 0, 0, 256, 256);
-      
-      
-      if(name==="i"){
-        threshold(ctxresult, ...weights[idx]);
-        uel.value=weights[idx][0]; u = weights[idx][0];
-        vel.value=weights[idx][1]; v = weights[idx][1];
-        wel.value=weights[idx][2]; w = weights[idx][2];
-
-
-      } else {
-        threshold(ctxresult, u,v,w);
-        //threshold(ctxresult, ...weights[idx]);
-      }
-      
-      ctxresult.font = "16px sans-serif";
-      ctxresult.fillStyle = 'white';
-      ctxresult.textAlign = 'center'
-      ctxresult.save();
-      ctxresult.scale(0.2, 0.2);
-      ctxresult.translate(0, 0);
-      evalCanvas(ctxresult, instructions[idx]);
-      ctxresult.restore();
-
-      ctxresult.fillText(letters[idx] + " " + fonts[idx % fonts.length], 128, 20, 256);
-      
   }
 }
 // setInterval(preview, 100);
