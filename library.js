@@ -128,17 +128,37 @@ function indexOfMin(arr) {
  tmin = 100000;
 
 
- function scoreKernel(d) {
+ function scoreKernel(d,withbins=false) {
      let length = d.length / 4;
      let score = 0;
+
+     let bins = []; //256 bins;
      for (let i = 0; i < d.length; i += 4) {
+        if(withbins){
+            let i2 = i/4;
+            let y2 = Math.floor(i2/256);
+            let x2 = i2%256;
+            let y3 = Math.floor(y2/16);
+            let x3 = Math.floor(x2/16);
+            let i3 = x3 + y3 * 16;
+            bins[i3] = bins[i3] || 0;
+            bins[i3] += d[i];
+        }
+
          score += d[i] * d[i];
+
          let x = d[i] / 255;
          let g = ((-Math.cos(x * Math.PI * 2) * 0.5 + 0.5) * 255)
              //penalize graytones.
          score += g * g;
+
+
      }
-     return score / length;
+     if(withbins){
+        return {score: score / length, bins:bins};
+     } else {
+        return score / length;
+     }
  }
  function thresholdKernelOld(d, r, g, b) {
 
@@ -228,31 +248,31 @@ function indexOfMin(arr) {
 
      
 
-         const u = r*2-1//g*Math.cos(r*pi*2);
-         const v = g*2-1;//g*Math.sin(r*pi*2);
-         const w = (b)/3;
-         //const o = Math.sqrt(u*u+v*v);
-         //const s = Math.atan2(u,v);
-         //const t = Math.cos(Math.atan2(u,v))*(1-Math.min(1,2*o))/2;
-         //const S = (x)=>( 3*(Math.max(Math.min(x,0),1)**2) - 2*(Math.max(Math.min(x,0),1)**3) ) ;
-         const S = (x)=>( x ) ;
-         // const R = (x,z)=>S( 
-         //    ( x - t - o * Math.cos(s-(2*z*pi)/3) + w/2 - 0.5 )
-         //    /w
-         // ) ;
-         const R = (a,z)=>( ( a + u * cos( 2*pi*z/3 ) + v * sin( 2*pi*z/3 ) )/w+1.5 )
-        //console.log('threshold',u,v,w,o,s,t,[0,0.1,0.5,0.9,1].map(S));
+     const u = r*2-1//g*Math.cos(r*pi*2);
+     const v = g*2-1;//g*Math.sin(r*pi*2);
+     const w = (b)/3;
+     //const o = Math.sqrt(u*u+v*v);
+     //const s = Math.atan2(u,v);
+     //const t = Math.cos(Math.atan2(u,v))*(1-Math.min(1,2*o))/2;
+     //const S = (x)=>( 3*(Math.max(Math.min(x,0),1)**2) - 2*(Math.max(Math.min(x,0),1)**3) ) ;
+     const S = (x)=>( x ) ;
+     // const R = (x,z)=>S( 
+     //    ( x - t - o * Math.cos(s-(2*z*pi)/3) + w/2 - 0.5 )
+     //    /w
+     // ) ;
+     const R = (a,z)=>( ( a + u * cos( 2*pi*z/3 ) + v * sin( 2*pi*z/3 ) )/w+0.5 )
+    //console.log('threshold',u,v,w,o,s,t,[0,0.1,0.5,0.9,1].map(S));
 
-         const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
+     const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
 
-         for (let i = 0; i < d.length; i += 4) {
-             let r = d[i + 0] / 255;
-             let g = d[i + 1] / 255;
-             let b = d[i + 2] / 255;
-             d[i + 0] = d[i + 1] = d[i + 2] = Math.min( R(r, 1), R(g, 2), R(b, 3) ) * 255;
-                   
-        }
-     return d;
+     for (let i = 0; i < d.length; i += 4) {
+         let r = d[i + 0] / 255;
+         let g = d[i + 1] / 255;
+         let b = d[i + 2] / 255;
+         d[i + 0] = d[i + 1] = d[i + 2] = Math.min( R(r, 1), R(g, 2), R(b, 3) ) * 255;
+               
+    }
+    return d;
  }
 
  robin = 0;
@@ -286,7 +306,7 @@ function indexOfMin(arr) {
      return dataobj;
  }
 
- function scoreAsync(ctx,x,y,width,height) {
+ function scoreAsync(ctx,withbins=false) {
      let dataobj, w, h;
      scorecount+=1;
 
@@ -302,8 +322,10 @@ function indexOfMin(arr) {
 
      srobin += 1;
      let scoreKernel = swpool[srobin % swpool.length];
-     return scoreKernel(dataobj.data);
+
+     return scoreKernel(dataobj.data,withbins);
  }
+
 
  function threshold(ctx, r = 1, g = 1, b = 1) {
      let dataobj;
@@ -357,17 +379,25 @@ function indexOfMin(arr) {
 
  function darken(ctx) {
      let dataobj = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+     
      let d = dataobj.data;
-     const amount = 1 - Math.random() / 32;
+     let amount = 0.5;
      for (let i = 0; i < d.length / 4; i += 1) {
          d[i * 4 + 0] *= amount;
          d[i * 4 + 1] *= amount;
          d[i * 4 + 2] *= amount;
 
-         d[i * 4 + 0] += (255 - 255 * amount) / 2;
-         d[i * 4 + 1] += (255 - 255 * amount) / 2;
-         d[i * 4 + 2] += (255 - 255 * amount) / 2;
+        
      }
+     amount = 1/amount;
+     for (let i = 0; i < weights.length; i++) {
+        weights[0][0] = (((weights[0][0]*2-1)*amount)+1)/2
+        weights[0][1] = (((weights[0][1]*2-1)*amount)+1)/2
+        weights[0][2] = (((weights[0][2]*2-1)*amount)+1)/2
+        
+     }
+     olderdata=olddata=bestdata=dataobj;
+     oldderweights=oldweights=bestweights=newweights=weights;
      ctx.putImageData(dataobj, 0, 0);
  }
 
@@ -471,6 +501,25 @@ function indexOfMin(arr) {
  }
 
  function perturbWeights(weights, count = 1) {
+     let a = [];
+     let idx = Math.min(count - 1, Math.random() * weights.length | 0);
+     for (let i = 0; i < weights.length; i++) {
+         a[i] = [];
+         a[i][0] = weights[i][0];
+         a[i][1] = weights[i][1];
+         a[i][2] = weights[i][2];
+         if (i < count) {
+             a[i][2] = weights[i][2] + Math.random() * 0.01 - 0.005;
+             a[i][0] = weights[i][0] + Math.random() * 0.01 - 0.005;
+             a[i][1] = weights[i][1] + Math.random() * 0.01 - 0.005;
+         }
+
+
+     }
+     return a
+ }
+
+ function perturbWeights2(weights, count = 1) {
      let a = [];
      let idx = Math.min(count - 1, Math.random() * weights.length | 0);
      for (let i = 0; i < weights.length; i++) {
@@ -762,8 +811,8 @@ function indexOfMin(arr) {
 
 
 
-             console.log("weightblend",inc,range/4,(inc-range/4),(inc+range/4),weightMin,weightMax,samplecount,iw,w,weightModeSuccess,Math.abs(newscore-oldscore));
-             console.log("weightblend2",idealWeightRange,Math.min(rinc,binc,ginc),iw,w);
+             // console.log("weightblend",inc,range/4,(inc-range/4),(inc+range/4),weightMin,weightMax,samplecount,iw,w,weightModeSuccess,Math.abs(newscore-oldscore));
+             // console.log("weightblend2",idealWeightRange,Math.min(rinc,binc,ginc),iw,w);
              idealWeightRange = idealWeightRange*w + weightRange*iw
              newweights[i][0] = r.mod(1), newweights[i][1] = g.mod(1), newweights[i][2] = b.mod(1);
              weightMin = weightMin > (inc-range/(4)) ? weightMin*w + inc*iw : weightMin;
@@ -774,7 +823,7 @@ function indexOfMin(arr) {
             let iw = (1/weightModeFail);
             let w = 1-iw;
             let range = badWeightMax-badWeightMin;
-            console.log("badweightblend",inc,(inc-range/(2*phi)),(inc+range/(2*phi)),weightMin,weightMax,samplecount,iw,w,weightModeSuccess);
+            // console.log("badweightblend",inc,(inc-range/(2*phi)),(inc+range/(2*phi)),weightMin,weightMax,samplecount,iw,w,weightModeSuccess);
             badWeightRange = badWeightRange*w + weightRange*iw
             badWeightMin = badWeightMin > (inc-range/(2))? badWeightMin * w + inc * iw : badWeightMin;
             badWeightMax = badWeightMax < (inc+range/(2))? badWeightMax * w + inc * iw : badWeightMax;
@@ -818,7 +867,9 @@ function indexOfMin(arr) {
          d[pixelidx * 4 + 2] = 255*(1 - Math.abs((b/255).mod(2) - 1));
 
          ctxsmall.putImageData(dataobj, 0, 0);
-         return 1000 * (await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions));
+         let score = await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions);
+
+         return 1000 * (score.score);
      }
 
 
@@ -980,54 +1031,6 @@ function indexOfMin(arr) {
  // ctx is used as scratch for doing the scoring.
  
  let targetDataObjects = [];
- /*
- async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000) {
-     let newscore = 0;
-     let mscore, nscore;
-     let mscorep, nscorep;
-     let tmpdata;
-     let mscoreps = [];
-     let nscoreps = [];
-     //outer functions:
-     // threshold
-     // score
-     // evalCanvas
-
-     count = Math.min(weights.length, instructions.length, count);
-
-     for (let i = start; i < count; i += 1) {
-         ctx.globalCompositeOperation = 'source-atop';
-         ctx.globalAlpha = 1;
-         if (!lowestScorePerIndex[i]) {
-             evalCanvas(ctx, instructions[i]);
-             lowestScorePerIndex[i] = Math.sqrt(score(ctx));
-         }
-     }
-     for (let i = start; i < count; i += 1) {
-         ctx.globalAlpha = 1;
-         ctx.globalCompositeOperation = 'source-atop';
-         ctx.drawImage(canvassmall, 0, 0, 256, 256);
-
-         tmpdata = await thresholdAsync(ctx, weights[i][0], weights[i][1], weights[i][2]);
-         mscorep = scoreAsync(tmpdata);
-         ctx.globalCompositeOperation = 'difference';
-         evalCanvas(ctx, instructions[idx]);
-         nscorep = scoreAsync(ctx);
-         nscoreps.push(nscorep);
-         mscoreps.push(mscorep);
-
-     }
-
-     let mscores = await Promise.all(mscoreps);
-     let nscores = await Promise.all(nscoreps);
-
-     mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).map(x => x * x).reduce((a, b) => a + b);
-     nscore = nscores.map((x, idx) => (Math.sqrt((x)) / lowestScorePerIndex[idx])).map(x => x * x).reduce((a, b) => a + b);
-     newscore = mscore + nscore;
-     return (Math.sqrt(newscore)) * 1000 / count;
- }
- */
- //maybe this can have its own ctx and small ctx, tkin only weights and instructions.
 
   async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000, debug = false) {
     let newscore = 0;
@@ -1077,7 +1080,7 @@ function indexOfMin(arr) {
       if(debug){
         debugCanvas(ctx,'nscore-'+i);
       }
-      nscorep = scoreAsync(ctx);
+      nscorep = scoreAsync(ctx,true);
 
       nscoreps[i-start]=(nscorep);
       
@@ -1085,17 +1088,23 @@ function indexOfMin(arr) {
       //nscore = (Math.sqrt((nscore)) / lowestScorePerIndex[scoreidx]);
       //newscore += nscore * nscore + mscore * mscore;
     }
-    
+    const binsreduce = (a,b)=>( 
+            a.map((x,i)=>(x+b[i]))
+    )
+
+ 
     mscores = await Promise.all(mscoreps);
     nscores = await Promise.all(nscoreps);
     oscore = lowestScorePerIndex.map(x=>Math.sqrt(oscore)/x).map(x=>x*x).reduce((a, b) => a + b);
     oscore = oscore/10;
     mscore = mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).map(x => x * x).reduce((a, b) => a + b);
-    nscore = nscore = nscores.map((x, idx) => (Math.sqrt((x)) / lowestScorePerIndex[idx])).map(x => x * x).reduce((a, b) => a + b);
+    nscore = nscore = nscores.map((x, idx) => (Math.sqrt((x.score)) / lowestScorePerIndex[idx])).map(x => x * x).reduce((a, b) => a + b);
+    nscorebins = nscores.map(x=>x.bins).reduce(binsreduce).map(x=>x);
+
     
     scoreInstructionsAndWeightsScoresDebug = ['scoreweights', newscore, 'mscores', mscores.toString(), "nscores", nscores.toString(), oscore, nscore+mscore+oscore,Math.sqrt(nscore+mscore+oscore) * 1000 / count];
     
-    return (Math.sqrt(nscore+mscore+oscore)) * 1000 / count;
+    return {score:(Math.sqrt(nscore+mscore+oscore)) * 1000 / count, bins:nscorebins} ;
   }
 
  function evalCanvas(ctx, instructions, variables) {

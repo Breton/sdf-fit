@@ -49,7 +49,7 @@ time = 0;
 duration = 0;
 
 letters = '0123456789ABCDEFGHIJKLMNOP';
-letters = '0123456789';
+letters = '01234';
 
 letterCounter = letters.length;
 fonts = [
@@ -155,10 +155,11 @@ function updatePixel(onepixel,diff=0) {
     debug('diff', diff);
     gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.50) ? i : 0))).filter(x => x);
     
-    if (gindex.length > 10 && diff >= 0) {
-        onepixel = Math.floor(gindex[Math.floor(Math.random() * gindex.length)] );
+    if (gindex.length > 0) {
+        onepixel = gindex[updatecount%gindex.length];
+        onepixel += ([-1,1,-16,16,-16,-1,16,1,0,0,0,0,0,0,0,0])[Math.floor(Math.random()*16)];
     } else {
-        onepixel += ([2,1,32,16,16,1,16,1])[Math.floor(Math.random()*8)];
+        onepixel += ([2,1,32,16,16,1,16,1,0,0,0,0,0,0,0,0])[Math.floor(Math.random()*16)];
     }
 
 
@@ -232,7 +233,9 @@ async function main() {
     // bestScore = bestScore - await scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
     ctxsmall.putImageData(newdata, 0, 0);
     newscore = await scoreLoopAsync(ctx, ctxsmall, newweights, instructions, 0, letterCounter);
+    gradient = newscore.bins.map((x,i)=> Math.floor(x*0.1+gradient[i]*0.9) );
 
+    newscore = newscore.score;
 
     if (newscore < oldscore) {
       debug('scores', newscore,oldscore,olderscore,globalscore,'small improvement', newscore - oldscore);
@@ -279,13 +282,13 @@ async function main() {
 
 
 
-    if (!willAdjustWeights ) {
+    if (false && !willAdjustWeights ) {
         //if newscore is greater than oldscore, 
         //that's worse, so invert whatever was just done to the pixel.
         //if newscore is less, then that's better, do it again.
         let dir =  (oldscore - newscore) > 0 ? 1 : -1;
 
-        gradient[onepixel % 256] = (gradient[onepixel % 256] || 0) + dir;
+        //gradient[onepixel % 256] = (gradient[onepixel % 256] || 0) + dir;
         
         
 
@@ -382,26 +385,58 @@ setTimeout(main, 10);
 
 let idx = 0;
 let prv = 0;
-async function preview () {
-    idx = prv / 1 | 0;
-    idx = idx % Math.min(letterCounter, weights.length);
+
+{
+  const uel = document.getElementById('u');
+  const vel = document.getElementById('v');
+  const wel = document.getElementById('w');
+  const iel = document.getElementById('i');
+
+  let u=0,v=0,w=0,i=0;
+
+  uel.onchange=uel.onmousemove=function () { u= +(this.value); preview(this.name, +this.value); }
+  vel.onchange=vel.onmousemove=function () { v= +(this.value); preview(this.name, +this.value); }
+  wel.onchange=wel.onmousemove=function () { w= +(this.value); preview(this.name, +this.value); }
+  iel.onchange=iel.onmousemove=function () { i= +(this.value); preview(this.name, +this.value); }
+  iel.setAttribute('max', weights.length);
+  iel.setAttribute('min', 0);
+
+  let idx=0;
+  async function preview (name,value) {
+      
+      if(name==="i"){
+        idx=value;
+      } 
+      idx = idx % Math.min(letterCounter, weights.length);
+      console.log('preview',name,value);
+
+      ctxresult.globalAlpha = 1;
+      ctxresult.drawImage(canvassmall, 0, 0, 256, 256);
+      
+      
+      if(name==="i"){
+        threshold(ctxresult, ...weights[idx]);
+        uel.value=weights[idx][0]; u = weights[idx][0];
+        vel.value=weights[idx][1]; v = weights[idx][1];
+        wel.value=weights[idx][2]; w = weights[idx][2];
 
 
-    ctxresult.globalAlpha = 1;
-    ctxresult.drawImage(canvassmall, 0, 0, 256, 256);
-    if (weights.length !== 0);
-    
-    threshold(ctxresult, ...weights[idx]);
-    ctxresult.font = "16px sans-serif";
-    ctxresult.fillStyle = 'white';
-    ctxresult.textAlign = 'center'
-    ctxresult.save();
-    ctxresult.scale(0.2, 0.2);
-    ctxresult.translate(0, 0);
-    evalCanvas(ctxresult, instructions[idx]);
-    ctxresult.restore();
+      } else {
+        threshold(ctxresult, u,v,w);
+        //threshold(ctxresult, ...weights[idx]);
+      }
+      
+      ctxresult.font = "16px sans-serif";
+      ctxresult.fillStyle = 'white';
+      ctxresult.textAlign = 'center'
+      ctxresult.save();
+      ctxresult.scale(0.2, 0.2);
+      ctxresult.translate(0, 0);
+      evalCanvas(ctxresult, instructions[idx]);
+      ctxresult.restore();
 
-    ctxresult.fillText(letters[idx] + " " + fonts[idx % fonts.length], 128, 20, 256);
-    prv++;
+      ctxresult.fillText(letters[idx] + " " + fonts[idx % fonts.length], 128, 20, 256);
+      
+  }
 }
-setInterval(preview, 100);
+// setInterval(preview, 100);
