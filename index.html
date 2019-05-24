@@ -42,25 +42,21 @@ textarea {
   margin: 0;
   font-family: monospace;
 }
+#img-gradient {
+  width:256px;
+  height:256px;
+  image-rendering: pixelated;
+  filter: contrast(1000%);
+}
+
 
 	</style>
 </head>
 <body>
 <div id="panel">
-	<button id='up' onclick='up()'>up</button>
-  <button id='down' onclick='down()'>down</button>
-  <button id='randomweights' onclick='randomweights()'>randomweights</button>
-  <button id='increase' onclick='increase()'>increase</button>
-  <button id='decrease' onclick='decrease()'>decrease</button>
-  <button id='save' onclick='save()'>save</button>
-  <button id='load' onclick='load()'>load</button>
-  <button id='blur' onclick='blurButton()'>blur</button>
-  <button id='randomize' onclick='randomize()'>randomize</button>
+  <div id="buttons"></div>
 
-  <button id='loadWeights' onclick='loadWeights()'>loadWeights</button>
-  <button id='saveDataPoint' onclick='saveDataPoint()'>saveDataPoint</button>
-  <button id='loadAndAverage' onclick='loadAndAverage()'>loadAndAverage</button>
-  
+
   <label for="u">u</label><input type="range" min=0 max=1 step="0.00391256" id='u' name='u'/>
   <label for="v">v</label><input type="range" min=0 max=1 step="0.00391256" id='v' name='v'/>
   <label for="w">w</label><input type="range" min=0 max=1 step="0.00391256" id='w' name='w'/>
@@ -76,190 +72,7 @@ textarea {
   </div>
 </div>
 <textarea name="debug" id="debug" cols="30" rows="10"></textarea>
-<script>
-  //buttons
-
-  upbutton = document.getElementById("up");
-  downbutton = document.getElementById('down');
-  var swapImage = function swapImage() {
-
-  }
-
-  function randomweights() {
-    for (let i = 0; i < weights.length; i++) {
-      weights[i] = [r(), r(), r()];
-    }
-    newweights = weights;
-  }
-
-  function saveDataPoint() {
-    let counter = localStorage.getItem('acounter');
-    if (!counter) {
-      counter = 0;
-    }
-    counter = 1 + (+counter);
-    localStorage.setItem('acounter', counter);
-    saveCtx('aavg_' + counter);
-
-  }
-
-  function loadAndAverage() {
-    let counter = localStorage.getItem('acounter');
-    let c = [];
-    let avg = [];
-
-    for (let i = 0; i < (counter); i++) {
-      c[i] = (JSON.parse(localStorage.getItem('aavg_' + (i + 1))));
-      c[i].data.length = 16 * 16 * 4;
-      c[i] = Array.from(c[i].data);
-
-      if (avg.length === 0) {
-        avg = Array.from(c[i]);
-      } else {
-        avg = avg.map((x, j) => x + c[i][j]);
-      }
-      //console.log('c[i]', i, c[i]);
-    }
-
-    avg = avg.map((x) => x / counter);
-    //console.log('avg', counter, avg);
-    //    console.log(avg);
-    let d = new ImageData(new Uint8ClampedArray(avg, 16, 16), 16, 16);
-    ctxsmall.putImageData(d, 0, 0);
-    olddata = bestdata = d;
-  }
-
-  function randomize() {
-
-
-    globalscore = 100000000;
-    olddata = bestdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
-
-    for (let i = 0; i < bestdata.data.length; i += 4) {
-      bestdata.data[i + 0] = Math.random() * 255
-      bestdata.data[i + 1] = Math.random() * 255
-      bestdata.data[i + 2] = Math.random() * 255
-
-    }
-    ctxsmall.putImageData(bestdata, 0, 0);
-  }
-  //take a function that has a vector as input
-  //and a scalar as output
-  //then find the minimum scalar for that function
-
-  function binarySearch(scoreVectorFunc, ary = 1, min = -1, max = 1) {
-    let maxvec = new Array(ary);
-    let minvec = new Array(ary);
-    //need to keep a min vec and a max vec
-    //loop through each item one at a time. 
-
-    maxvec.fill(max);
-
-    if (typeof scoreVectorFunc === "function") {
-
-
-    }
-  }
-
-  function blurButton() {
-
-
-
-    olddata = bestdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
-
-    for (let i = 0; i < bestdata.data.length; i += 4) {
-      bestdata.data[i + 0] = bestdata.data[i + 0] * 0.5 + bestdata.data[i + 4 + 0] * 0.5
-      bestdata.data[i + 1] = bestdata.data[i + 1] * 0.5 + bestdata.data[i + 4 + 1] * 0.5
-      bestdata.data[i + 2] = bestdata.data[i + 2] * 0.5 + bestdata.data[i + 4 + 2] * 0.5
-
-    }
-    ctxsmall.putImageData(bestdata, 0, 0);
-  }
-
-  function save() {
-    saveCtx();
-    saveWeights();
-
-  }
-
-  function load() {
-    loadCtx();
-    loadWeights();
-
-  }
-
-  function next() {
-    letters = letters.slice(letters.length - 1) + letters.slice(0, letters.length - 1);
-    weights = weights.slice(weights.length - 1).concat(weights.slice(0, weights.length - 1));
-    fonts = fonts.slice(fonts.length - 1).concat(fonts.slice(0, fonts.length - 1));
-    newweights = newweights.slice(newweights.length - 1).concat(newweights.slice(0, newweights.length - 1));
-
-  }
-
-  function increase() {
-    letterCounter += 1;
-  }
-
-  function decrease() {
-    letterCounter -= 1;
-  }
-
-  function up() {
-
-
-    img.onload = null;
-    img.src = '';
-
-
-    img.src = canvassmall.toDataURL('image/png');
-    canvassmall.width *= 2;
-    canvassmall.height *= 2;
-    swapImage = function() {
-      ctxsmall.drawImage(img, 0, 0, canvassmall.width, canvassmall.height);
-      globalscore = 1000000;
-      swapImage = function() {};
-
-    }
-  };
-
-  function down() {
-    img.onload = null;
-    img.src = '';
-
-    img.src = canvassmall.toDataURL('image/png');
-    canvassmall.width /= 2;
-    canvassmall.height /= 2;
-    swapImage = function() {
-      ctxsmall.drawImage(img, 0, 0, canvassmall.width, canvassmall.height);
-      globalscore = 10000;
-      swapImage = function() {};
-    }
-
-
-  };
-
-  function saveCtx(key = 'ctxsmalldata') {
-    localStorage.setItem(key, JSON.stringify(ctxsmall.getImageData(0, 0, 16, 16)));
-  }
-
-  function saveWeights() {
-    localStorage.setItem('weights', JSON.stringify(weights))
-  }
-
-  function loadCtx() {
-    let c = (JSON.parse(localStorage.getItem('ctxsmalldata')));
-    c.data.length = 16 * 16 * 4;
-    let d = new ImageData(new Uint8ClampedArray(Array.from(c.data), 16, 16), 16, 16);
-    ctxsmall.putImageData(d, 0, 0);
-    bestdata = d;
-  }
-
-  function loadWeights() {
-    weights = JSON.parse(localStorage.getItem('weights'));
-    newweights = JSON.parse(localStorage.getItem('weights'));
-  }
-
-</script>
+<script src='buttons.js'></script>
 <script src="library.js">
  
 </script>

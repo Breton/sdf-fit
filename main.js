@@ -49,7 +49,7 @@ time = 0;
 duration = 0;
 
 letters = '0123456789ABCDEFGHIJKLMNOP';
-letters = '0123456789';
+letters = '1478';
 
 letterCounter = letters.length;
 fonts = [
@@ -218,9 +218,14 @@ async function main() {
     debug('maxweightscore',indexOfMax(weightscores),weightscores);
 
     if (willAdjustWeights) {
-        // newweights = perturbWeights(weights);
-
-        newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(weightscores.length && Math.random()>0.9)?indexOfMax(weightscores):(((weightSuccess)%instructions.length)),1);
+        if(Math.random()>0.5) {
+          newweights = perturbWeights(weights,instructions.length);
+        } else if (Math.random()>0.5) {
+          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(weightscores.length && Math.random()>0.9)?indexOfMax(weightscores):(((weightSuccess)%instructions.length)),1);
+        } else {
+          newweights = perturbWeights(weights,instructions.length);
+          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, newweights, instructions,(weightscores.length && Math.random()>0.9)?indexOfMax(weightscores):(((weightSuccess)%instructions.length)),1);
+        }
     } else {
         onepixel = updatePixel(onepixel, oldscore-olderscore);
         await optimisePixelForWeights(ctx, ctxsmall, weights, instructions, onepixel);
@@ -312,7 +317,7 @@ async function main() {
     }
 
     globalscore = Math.max(newscore,globalscore);
-    
+    debug2D('gradient',gradient,16,16);
 
     //sctx.drawImage(ocanvas,0,0);
     debug('clear');
@@ -392,26 +397,27 @@ let prv = 0;
   const vel = document.getElementById('v');
   const wel = document.getElementById('w');
   const iel = document.getElementById('i');
-
+  let idx=0;
   let u=0,v=0,w=0,i=0,l=0;
 
   uel.onchange=uel.onmousemove=function () { u= +(this.value); preview(this.name, +this.value); }
   vel.onchange=vel.onmousemove=function () { v= +(this.value); preview(this.name, +this.value); }
   wel.onchange=wel.onmousemove=function () { w= +(this.value); preview(this.name, +this.value); }
-  iel.onchange=iel.onmousemove=function () { i= +(this.value); preview(this.name, +this.value); }
+  iel.onchange=iel.onmousemove=function () { idx=i= +(this.value); preview(this.name, +this.value); }
   iel.setAttribute('max', weights.length);
   iel.setAttribute('min', 0);
-
-  let idx=0;
+  setInterval(preview, 20);
+  
   async function preview (name,value) {
       let time=new Date();
       if(time-l > 10){
         l = time;
         if(name==="i"){
-          idx=value;
+          idx = value;
+          
         } 
         idx = idx % Math.min(letterCounter, weights.length);
-        console.log('preview',name,value);
+        
 
         ctxresult.globalAlpha = 1;
         ctxresult.drawImage(canvassmall, 0, 0, 256, 256);

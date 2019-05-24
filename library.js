@@ -42,6 +42,35 @@ scoreInstructionsAndWeightsScoresDebug = [];
      
 
  }
+ function debug2D(id,array,width,height) {
+    id=id.trim().replace(' ','');
+    let el = document.getElementById('img-'+id.trim());
+    if(!el) {
+        let p = document.getElementById('debugImages');
+        el = document.createElement("CANVAS");
+        el.setAttribute("id", "img-"+id.trim());
+        p.appendChild(el);
+        el.width=width;
+        el.height=height;
+    }
+    //normalise array; 
+    array = ((max,min) => (
+      array.map(x=> (x+min)/(max-min) )
+    ))(
+      (array.reduce((a, b) => Math.max(a,b) )),
+      (array.reduce((a, b) => Math.min(a,b) ))
+    );
+    
+    let ctx = el.getContext('2d');
+    let d = ctx.getImageData(0,0,width,height);
+    for(let i = 0; i<array.length;i++) {
+        d.data[i*4+0]=array[i]*255;
+        d.data[i*4+1]=array[i]*255;
+        d.data[i*4+2]=array[i]*255;
+        d.data[i*4+3]=255;
+    }
+    ctx.putImageData(d,0,0);
+ }
 
 function indexOfMax(arr) {
     if (arr.length === 0) {
