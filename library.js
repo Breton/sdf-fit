@@ -60,7 +60,7 @@ scoreInstructionsAndWeightsScoresDebug = [];
       (array.reduce((a, b) => Math.max(a,b) )),
       (array.reduce((a, b) => Math.min(a,b) ))
     );
-    
+
     let ctx = el.getContext('2d');
     let d = ctx.getImageData(0,0,width,height);
     for(let i = 0; i<array.length;i++) {
@@ -266,7 +266,7 @@ function indexOfMin(arr) {
      }
      return d;
  }
- function thresholdKernel(d, r, g, b) {
+ function thresholdKernelMin(d, r, g, b) {
 
      const pi = Math.PI;
      Number.prototype.mod = function(n) {
@@ -303,6 +303,49 @@ function indexOfMin(arr) {
             (( r + u * cos( 2*pi*1/3 ) + v * sin( 2*pi*1/3 ) )/w+0.5 ),
             (( g + u * cos( 2*pi*2/3 ) + v * sin( 2*pi*2/3 ) )/w+0.5 ),
             (( b + u * cos( 2*pi*3/3 ) + v * sin( 2*pi*3/3 ) )/w+0.5 )
+            
+         ) * 255;
+               
+    }
+    return d;
+ }
+  function thresholdKernel(d, r, g, b) {
+
+     const pi = Math.PI;
+     Number.prototype.mod = function(n) {
+      return ((this%n)+n)%n;
+     };
+     const sin = Math.sin;
+     const cos = Math.cos;
+
+     
+
+     const u = r*2-1//g*Math.cos(r*pi*2);
+     const v = g*2-1;//g*Math.sin(r*pi*2);
+     const w = (b)/3;
+     //const o = Math.sqrt(u*u+v*v);
+     //const s = Math.atan2(u,v);
+     //const t = Math.cos(Math.atan2(u,v))*(1-Math.min(1,2*o))/2;
+     //const S = (x)=>( 3*(Math.max(Math.min(x,0),1)**2) - 2*(Math.max(Math.min(x,0),1)**3) ) ;
+     const S = (x)=>( x ) ;
+     // const R = (x,z)=>S( 
+     //    ( x - t - o * Math.cos(s-(2*z*pi)/3) + w/2 - 0.5 )
+     //    /w
+     // ) ;
+     const R = (a,z)=>( ( a + u * cos( 2*pi*z/3 ) + v * sin( 2*pi*z/3 ) )/w+0.5 )
+    //console.log('threshold',u,v,w,o,s,t,[0,0.1,0.5,0.9,1].map(S));
+
+     const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
+
+     for (let i = 0; i < d.length; i += 4) {
+         let r = d[i + 0] / 255;
+         let g = d[i + 1] / 255;
+         let b = d[i + 2] / 255;
+         d[i + 0] = d[i + 1] = d[i + 2] = 
+         Math.min( 
+            (( r - Math.sqrt(u*u+v*v) * cos( Math.atan2(u,v) + 2*pi*1/3 ) - 1/3 )/w+0.5 ),
+            (( g - Math.sqrt(u*u+v*v) * cos( Math.atan2(u,v) + 2*pi*2/3 ) - 1/3 )/w+0.5 ),
+            (( b - Math.sqrt(u*u+v*v) * cos( Math.atan2(u,v) + 2*pi*3/3 ) - 1/3 )/w+0.5 )
             
          ) * 255;
                

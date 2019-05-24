@@ -49,7 +49,7 @@ time = 0;
 duration = 0;
 
 letters = '0123456789ABCDEFGHIJKLMNOP';
-letters = '1478';
+letters = '0123456789';
 
 letterCounter = letters.length;
 fonts = [
