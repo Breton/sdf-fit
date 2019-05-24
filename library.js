@@ -309,7 +309,52 @@ function indexOfMin(arr) {
     }
     return d;
  }
-  function thresholdKernel(d, r, g, b) {
+  function thresholdKernelMin2(d, r, g, b) {
+
+     const pi = Math.PI;
+     Number.prototype.mod = function(n) {
+      return ((this%n)+n)%n;
+     };
+     const sin = Math.sin;
+     const cos = Math.cos;
+
+     
+
+     const u = r*2-1//g*Math.cos(r*pi*2);
+     const v = g*2-1;//g*Math.sin(r*pi*2);
+     const w = (b)/3;
+     const a = Math.atan2( u, v );
+     const s = Math.sqrt( u*u + v*v );
+     //const o = Math.sqrt(u*u+v*v);
+     //const s = Math.atan2(u,v);
+     //const t = Math.cos(Math.atan2(u,v))*(1-Math.min(1,2*o))/2;
+     //const S = (x)=>( 3*(Math.max(Math.min(x,0),1)**2) - 2*(Math.max(Math.min(x,0),1)**3) ) ;
+     const S = (x)=>( x ) ;
+     // const R = (x,z)=>S( 
+     //    ( x - t - o * Math.cos(s-(2*z*pi)/3) + w/2 - 0.5 )
+     //    /w
+     // ) ;
+     const R = (a,z)=>( ( a + u * cos( 2*pi*z/3 ) + v * sin( 2*pi*z/3 ) )/w+0.5 )
+    //console.log('threshold',u,v,w,o,s,t,[0,0.1,0.5,0.9,1].map(S));
+
+     const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
+
+     for (let i = 0; i < d.length; i += 4) {
+         let r = d[i + 0] / 255;
+         let g = d[i + 1] / 255;
+         let b = d[i + 2] / 255;
+         d[i + 0] = d[i + 1] = d[i + 2] = 
+         Math.min( 
+            (( r - s * cos( a + ( 2*pi*1 )/3 )  )/w+0.5 ),
+            (( g - s * cos( a + ( 2*pi*2 )/3 )  )/w+0.5 ),
+            (( b - s * cos( a + ( 2*pi*3 )/3 )  )/w+0.5 )
+            
+         ) * 255;
+               
+    }
+    return d;
+ }
+function thresholdKernelCircle1(d, r, g, b) {
 
      const pi = Math.PI;
      Number.prototype.mod = function(n) {
@@ -342,17 +387,66 @@ function indexOfMin(arr) {
          let g = d[i + 1] / 255;
          let b = d[i + 2] / 255;
          d[i + 0] = d[i + 1] = d[i + 2] = 
-         Math.min( 
-            (( r - Math.sqrt(u*u+v*v) * cos( Math.atan2(u,v) + 2*pi*1/3 ) - 1/3 )/w+0.5 ),
-            (( g - Math.sqrt(u*u+v*v) * cos( Math.atan2(u,v) + 2*pi*2/3 ) - 1/3 )/w+0.5 ),
-            (( b - Math.sqrt(u*u+v*v) * cos( Math.atan2(u,v) + 2*pi*3/3 ) - 1/3 )/w+0.5 )
-            
+         (
+            1 - (
+                Math.sqrt(u*u+v*v) +
+                r * ( cos( Math.atan2(u,v) + (2 * pi)/3 ) ) +
+                g * ( cos( Math.atan2(u,v) + (4 * pi)/3 ) ) +
+                b * ( cos( Math.atan2(u,v) + (6 * pi)/3 ) ) 
+            )/w - 0.5
          ) * 255;
                
     }
     return d;
  }
 
+function thresholdKernel(d, r, g, b) {
+
+     const pi = Math.PI;
+     Number.prototype.mod = function(n) {
+      return ((this%n)+n)%n;
+     };
+     const sin = Math.sin;
+     const cos = Math.cos;
+
+     
+
+     const u = r*2-1//g*Math.cos(r*pi*2);
+     const v = g*2-1;//g*Math.sin(r*pi*2);
+     const w = (b)/3;
+     const s = Math.sqrt(u*u+v*v);
+     const a = Math.atan2(u,v);
+     //const o = Math.sqrt(u*u+v*v);
+     //const s = Math.atan2(u,v);
+     //const t = Math.cos(Math.atan2(u,v))*(1-Math.min(1,2*o))/2;
+     //const S = (x)=>( 3*(Math.max(Math.min(x,0),1)**2) - 2*(Math.max(Math.min(x,0),1)**3) ) ;
+     const S = (x)=>( x ) ;
+     // const R = (x,z)=>S( 
+     //    ( x - t - o * Math.cos(s-(2*z*pi)/3) + w/2 - 0.5 )
+     //    /w
+     // ) ;
+     const R = (a,z)=>( ( a + u * cos( 2*pi*z/3 ) + v * sin( 2*pi*z/3 ) )/w+0.5 )
+    //console.log('threshold',u,v,w,o,s,t,[0,0.1,0.5,0.9,1].map(S));
+
+     const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
+
+     for (let i = 0; i < d.length; i += 4) {
+         let r = d[i + 0] / 255;
+         let g = d[i + 1] / 255;
+         let b = d[i + 2] / 255;
+         d[i + 0] = d[i + 1] = d[i + 2] = 
+         (
+            - (
+                s -
+                ( r * 0.5 * ( cos( a + (2 * pi)/3 ) + 1) +
+                  g * 0.5 * ( cos( a + (4 * pi)/3 ) + 1) +
+                  b * 0.5 * ( cos( a + (6 * pi)/3 ) + 1) )
+            )/w + 0.5
+         ) * 255;
+               
+    }
+    return d;
+ }
  robin = 0;
  srobin = 0;
  swpool = [
@@ -1330,19 +1424,27 @@ function indexOfMin(arr) {
 
 
  setTimeout(function() {
-     div = document.createElement('div');
+     let div = document.createElement('div');
+     let container = document.createElement('div');
+
+     let imgGradient = document.getElementById('img-gradient');
+     container.style.position = ' relative';
+
      div.style.position = 'absolute'
      div.style.width = '16px'
      div.style.height = '16px'
      div.style.backgroundColor = 'red'
-     div.style.left = canvassmall.offsetLeft + "px"
-     div.style.top = canvassmall.offsetTop + "px"
+     // div.style.left = canvasvassmall.offsetLeft + "px"
+     // div.style.top = canvassmall.offsetTop + "px"
+     if(imgGradient) {
+     imgGradient.replaceWith(container);
+     container.appendChild(imgGradient);
 
-     document.body.appendChild(div);
-
+     container.appendChild(div);
+     }
      interval = setInterval(function() {
-         div.style.left = ((onepixel % 16) * 16 + canvassmall.offsetLeft) + 'px';
-         div.style.top = ((((onepixel / 16) | 0) % 16) * 16 + canvassmall.offsetTop) + 'px';
+         div.style.left = ((onepixel % 16) * 16 ) + 'px';
+         div.style.top = ((((onepixel / 16) | 0) % 16) * 16 ) + 'px';
      }, 10);
 
 

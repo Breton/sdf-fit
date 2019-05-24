@@ -116,7 +116,7 @@ for (let i = 0; i < instructions.length; i++) {
     ctx.globalCompositeOperation = "lighten";
     evalCanvas(ctx, instructions[instructions.length - i - 1]);
     ctx.globalCompositeOperation = "multiply";
-    ctx.globalAlpha = 1 / ((instructions.length + 5));
+    ctx.globalAlpha = 1 / ((instructions.length));
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, 256, 256);
     ctx.globalAlpha = 1;
@@ -152,9 +152,9 @@ function updatePixel(onepixel,diff=0) {
     let gmin = (gradient.reduce((a, b) => Math.min(a,b) ));
     let grange = gmax-gmin;
 
-    debug('gindex', gmin, gmax, grange, (gmin + grange*0.50), gindex.length);
+    debug('gindex', gmin, gmax, grange, (gmin + grange*0.90), gindex.length);
     debug('diff', diff);
-    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.50) ? i : 0))).filter(x => x);
+    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.90) ? i : 0))).filter(x => x);
     
     if (gindex.length > 0) {
         onepixel = gindex[updatecount%gindex.length];
@@ -368,7 +368,7 @@ async function main() {
 
 ${
     ((gmax,gmin) => (
-      (gradient.map((x, i) => ((x) > (gmin + (gmax-gmin)*0.5) ? i : 0))).filter(x => x)
+      (gradient.map((x, i) => ((x) > (gmin + (gmax-gmin)*0.1) ? i : 0))).filter(x => x)
     ))(
       (gradient.reduce((a, b) => Math.max(a,b) )),
       (gradient.reduce((a, b) => Math.min(a,b) ))
@@ -389,17 +389,16 @@ ${
 
 setTimeout(main, 10);
 
-let idx = 0;
-let prv = 0;
+
 
 {
-  const uel = document.getElementById('u');
-  const vel = document.getElementById('v');
-  const wel = document.getElementById('w');
-  const iel = document.getElementById('i');
-  let idx=0;
-  let u=0,v=0,w=0,i=0,l=0;
-
+  var uel = document.getElementById('u');
+  var vel = document.getElementById('v');
+  var wel = document.getElementById('w');
+  var iel = document.getElementById('i');
+  var idx=0;
+  var u=0,v=0,w=0,i=0,l=0;
+  var last = 0;
   uel.onchange=uel.onmousemove=function () { u= +(this.value); preview(this.name, +this.value); }
   vel.onchange=vel.onmousemove=function () { v= +(this.value); preview(this.name, +this.value); }
   wel.onchange=wel.onmousemove=function () { w= +(this.value); preview(this.name, +this.value); }
@@ -410,8 +409,8 @@ let prv = 0;
   
   async function preview (name,value) {
       let time=new Date();
-      if(time-l > 10){
-        l = time;
+      if(time-last > 10){
+        last = time;
         if(name==="i"){
           idx = value;
           
