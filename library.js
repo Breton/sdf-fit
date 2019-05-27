@@ -1031,6 +1031,7 @@ function thresholdKernel(d, r, g, b) {
      }
      let i = (idx % (d.length / 4)) | 0;
      let time = new Date();
+     let index = Math.floor(updatecount%instructions.length);
 
      async function sample(pixelidx, r, g, b) {
 
@@ -1039,7 +1040,7 @@ function thresholdKernel(d, r, g, b) {
          d[pixelidx * 4 + 2] = 255*(1 - Math.abs((b/255).mod(2) - 1));
 
          ctxsmall.putImageData(dataobj, 0, 0);
-         let score = await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions);
+         let score = await scoreInstructionsAndWeights(ctx, ctxsmall, [weights[index]], [instructions[index]]);
 
          return 1000 * (score.score);
      }
