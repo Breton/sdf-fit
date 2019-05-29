@@ -15,7 +15,8 @@
       newel.setAttribute('id', makeNameSafe(name));
       newel.textContent = name;
       newel.addEventListener('click', func, false);
-      console.log('name',name,'func',func);
+      newel.className="btn btn-primary";
+      
       container.appendChild(newel);
 
 
@@ -39,6 +40,7 @@
           saveCtx('aavg_' + counter);
 
       },
+
       'load and average': function loadAndAverage() {
           let counter = localStorage.getItem('acounter');
           let c = [];
@@ -77,6 +79,9 @@
 
           }
           ctxsmall.putImageData(bestdata, 0, 0);
+      },
+      'flatten': function () {
+        flatten(ctxsmall);
       },
       'blur': function blurButton() {
 

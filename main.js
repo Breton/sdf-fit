@@ -23,7 +23,7 @@ oldscore = 0;
 gindex = [];
 olderscore = 0;
 bestScore = 0;
-modebias = 0.5;
+modebias = 0;
 weightbias = 0.5;
 pixelbias = 0.5;
 twopixel = 0;
@@ -49,7 +49,9 @@ time = 0;
 duration = 0;
 
 letters = '0123456789ABCDEFGHIJKLMNOP';
+
 letters = '147';
+
 
 letterCounter = letters.length;
 fonts = [
@@ -186,18 +188,21 @@ async function main() {
     let idx = onepixel % (bestdata.data.length / 4);
 
     
-    // if (weightFail - weightSuccess > 0) {
-    //     modebias = 0.9;
-    //     weightFail = 0;
-    //     //smoothduration=500;
-    //     weightSuccess = 0;
-    // }
-    // if (pixelFail - pixelSuccess > 0) {
-    //     modebias = 0.1;
-    //     pixelFail = 0;
-    //     //smoothduration=500;
-    //     pixelSuccess = 0;
-    // }
+    if (weightFail - weightSuccess > 100) {
+        modebias = 0.99;
+        weightFail = 0;
+        //smoothduration=500;
+        weightSuccess = 0;
+    }
+    if (pixelFail - pixelSuccess > 10) {
+        modebias = 0.01;
+        pixelFail = 0;
+        if(Math.random()>0.5){
+          flatten(ctxsmall);
+        } 
+        //smoothduration=500;
+        pixelSuccess = 0;
+    }
 
     //modebias = Math.sin(time * Math.PI / 10000 ) * 0.25 + 0.75;
 
@@ -269,20 +274,20 @@ async function main() {
     if (willAdjustWeights) {
         if (newscore < oldscore) {
             weightSuccess += 1;
-            modebias *= 0.9;
+            // modebias *= 0.9;
         } else {
             weightFail += 1;
-            modebias = 1 * 0.1 + modebias * 0.9
+            // modebias = 1 * 0.1 + modebias * 0.9
             
         }
     } else {
         if (newscore < oldscore) {
             pixelSuccess += 1;
-            modebias = 1 * 0.1 + modebias * 0.9
+            // modebias = 1 * 0.1 + modebias * 0.9
             
         } else {
             pixelFail += 1;
-            modebias *= 0.9;
+            // modebias *= 0.9;
         }
     }
 
@@ -319,8 +324,10 @@ async function main() {
     globalscore = Math.max(newscore,globalscore);
     debug2D('gradient',gradient,16,16);
 
+    debugWeights(weights,letters);
     //sctx.drawImage(ocanvas,0,0);
     debug('clear');
+
     debug(`
   weightSuccess ${weightSuccess}
   weightFail ${weightFail}
