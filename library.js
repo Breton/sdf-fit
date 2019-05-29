@@ -335,7 +335,7 @@ function indexOfMin(arr) {
     }
     return d;
  }
-  function thresholdKernelMin2(d, r, g, b) {
+  function thresholdKernel(d, r, g, b) {
 
      const pi = Math.PI;
      Number.prototype.mod = function(n) {
@@ -426,7 +426,7 @@ function thresholdKernelCircle1(d, r, g, b) {
     return d;
  }
 
-function thresholdKernel(d, r, g, b) {
+function thresholdKernelCiirckle(d, r, g, b) {
 
      const pi = Math.PI;
      Number.prototype.mod = function(n) {
@@ -1034,7 +1034,7 @@ function thresholdKernel(d, r, g, b) {
 
      return newweights;
  }
- async function optimisePixelForWeights(ctx, ctxsmall, weights, instructions, idx) {
+ async function optimisePixelForWeights(ctx, ctxsmall, weights, instructions, idx, weightindex=0) {
      /* outer: lowestScorePErIndex */
      let newscore = 0;
      let mscore = 14100;
@@ -1057,7 +1057,7 @@ function thresholdKernel(d, r, g, b) {
      }
      let i = (idx % (d.length / 4)) | 0;
      let time = new Date();
-     let index = Math.floor(updatecount%instructions.length);
+     
 
      async function sample(pixelidx, r, g, b) {
 
@@ -1066,7 +1066,7 @@ function thresholdKernel(d, r, g, b) {
          d[pixelidx * 4 + 2] = 255*(1 - Math.abs((b/255).mod(2) - 1));
 
          ctxsmall.putImageData(dataobj, 0, 0);
-         let score = await scoreInstructionsAndWeights(ctx, ctxsmall, [weights[index]], [instructions[index]]);
+         let score = await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions);
 
          return 1000 * (score.score);
      }

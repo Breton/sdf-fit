@@ -36,6 +36,7 @@ starttime = new Date();
 bestdata = null;
 newdata = null;
 olddata = null;
+needsMostImprovement = 0;
 recentimprovements = [];
 
 gradient = [0, 0, 0]; // (r,g,b,r,g,b...)
@@ -50,7 +51,7 @@ duration = 0;
 
 letters = '0123456789ABCDEFGHIJKLMNOP';
 
-letters = '147';
+letters = '0123456789';
 
 
 letterCounter = letters.length;
@@ -188,14 +189,14 @@ async function main() {
     let idx = onepixel % (bestdata.data.length / 4);
 
     
-    if (weightFail - weightSuccess > 100) {
-        modebias = 0.99;
+    if (weightFail - weightSuccess > 10) {
+        modebias = 1;
         weightFail = 0;
         //smoothduration=500;
         weightSuccess = 0;
     }
     if (pixelFail - pixelSuccess > 10) {
-        modebias = 0.01;
+        modebias = 0.0;
         pixelFail = 0;
         if(Math.random()>0.5){
           flatten(ctxsmall);
@@ -219,6 +220,7 @@ async function main() {
     oldweights = weights;
     newweights = weights;
     
+    needsMostImprovement =indexOfMax(weightscores);
 
     debug('maxweightscore',indexOfMax(weightscores),weightscores);
 
@@ -233,7 +235,7 @@ async function main() {
         }
     } else {
         onepixel = updatePixel(onepixel, oldscore-olderscore);
-        await optimisePixelForWeights(ctx, ctxsmall, weights, instructions, onepixel);
+        await optimisePixelForWeights(ctx, ctxsmall, weights, instructions, onepixel,needsMostImprovement);
     }
 
 
