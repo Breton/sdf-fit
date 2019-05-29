@@ -80,7 +80,7 @@
           ctxsmall.putImageData(bestdata, 0, 0);
       },
       'flatten': function () {
-        flatten();
+        flatten(ctxsmall);
       },
       'blur': function blurButton() {
 
