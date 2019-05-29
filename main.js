@@ -49,7 +49,7 @@ time = 0;
 duration = 0;
 
 letters = '0123456789ABCDEFGHIJKLMNOP';
-letters = '0147';
+letters = '0123456789';
 
 letterCounter = letters.length;
 fonts = [
@@ -192,9 +192,12 @@ async function main() {
         //smoothduration=500;
         weightSuccess = 0;
     }
-    if (pixelFail - pixelSuccess > 100) {
+    if (pixelFail - pixelSuccess > 10) {
         modebias = 0.01;
         pixelFail = 0;
+        if(Math.random()>0.5){
+          flatten(ctxsmall);
+        } 
         //smoothduration=500;
         pixelSuccess = 0;
     }
@@ -318,9 +321,11 @@ async function main() {
 
     globalscore = Math.max(newscore,globalscore);
     debug2D('gradient',gradient,16,16);
-
+    
+    debugWeights(weights);
     //sctx.drawImage(ocanvas,0,0);
     debug('clear');
+
     debug(`
   weightSuccess ${weightSuccess}
   weightFail ${weightFail}

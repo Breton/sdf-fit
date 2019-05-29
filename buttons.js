@@ -15,7 +15,8 @@
       newel.setAttribute('id', makeNameSafe(name));
       newel.textContent = name;
       newel.addEventListener('click', func, false);
-      console.log('name',name,'func',func);
+      newel.className="btn btn-primary";
+      
       container.appendChild(newel);
 
 

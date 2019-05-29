@@ -42,6 +42,20 @@ scoreInstructionsAndWeightsScoresDebug = [];
      
 
  }
+ function debugWeights(weights) {
+    let el = document.getElementById('weights');
+    let weightels = document.querySelectorAll(".weight");
+    
+    for (let i = 0; i < weightels.length ;i++) {
+        
+        if(weights && weights[i]) {
+            weightels[i].style.left = (weights[i][0]*240) + 'px';
+            weightels[i].style.top = (weights[i][1]*240) + 'px';    
+
+        }
+        
+    }
+ }
  function debug2D(id,array,width,height) {
     id=id.trim().replace(' ','');
     let el = document.getElementById('img-'+id.trim());
@@ -555,9 +569,9 @@ function thresholdKernel(d, r, g, b) {
      let d = dataobj.data;
      let amount = 0.5;
      for (let i = 0; i < d.length / 4; i += 1) {
-         d[i * 4 + 0] = d[i * 4 + 0] / 2 + 64;
-         d[i * 4 + 1] = d[i * 4 + 1] / 2 + 64;
-         d[i * 4 + 2] = d[i * 4 + 2] / 2 + 64;
+         d[i * 4 + 0] = d[i * 4 + 0] / 2 + 64 + (Math.random()*32-16);
+         d[i * 4 + 1] = d[i * 4 + 1] / 2 + 64 + (Math.random()*32-16);
+         d[i * 4 + 2] = d[i * 4 + 2] / 2 + 64 + (Math.random()*32-16);
 
         
      }
