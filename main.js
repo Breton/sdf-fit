@@ -49,7 +49,7 @@ time = 0;
 duration = 0;
 
 letters = '0123456789ABCDEFGHIJKLMNOP';
-letters = '0123456789';
+letters = '1470';
 
 letterCounter = letters.length;
 fonts = [
@@ -321,8 +321,8 @@ async function main() {
 
     globalscore = Math.max(newscore,globalscore);
     debug2D('gradient',gradient,16,16);
-    
-    debugWeights(weights);
+
+    debugWeights(weights,letters);
     //sctx.drawImage(ocanvas,0,0);
     debug('clear');
 

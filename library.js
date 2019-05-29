@@ -42,13 +42,25 @@ scoreInstructionsAndWeightsScoresDebug = [];
      
 
  }
- function debugWeights(weights) {
+ function debugWeights(weights,letters) {
     let el = document.getElementById('weights');
     let weightels = document.querySelectorAll(".weight");
-    
+    //<span class="weight" id="n-0">0</span>
+    if(!weightels.length) {
+        for(let i = 0 ; i < weights.length; i++) {
+            let span = document.createElement('SPAN');
+            span.textContent=letters[i];
+            span.setAttribute('id', 'n-'+i);
+            span.className='weight';
+            el.appendChild(span);
+
+        }
+    }
+    weightels = document.querySelectorAll(".weight");
     for (let i = 0; i < weightels.length ;i++) {
         
         if(weights && weights[i]) {
+
             weightels[i].style.left = (weights[i][0]*240) + 'px';
             weightels[i].style.top = (weights[i][1]*240) + 'px';    
 
