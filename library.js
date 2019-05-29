@@ -1093,7 +1093,7 @@ function thresholdKernel(d, r, g, b) {
 
 
 
-     let counter = 10;
+     let counter = 100;
      let rslope = Math.round(Math.random()*3-1.5);
      let gslope = Math.round(Math.random()*3-1.5);
      let bslope = Math.round(Math.random()*3-1.5);
