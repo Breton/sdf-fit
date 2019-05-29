@@ -39,6 +39,7 @@
           saveCtx('aavg_' + counter);
 
       },
+
       'load and average': function loadAndAverage() {
           let counter = localStorage.getItem('acounter');
           let c = [];
@@ -77,6 +78,9 @@
 
           }
           ctxsmall.putImageData(bestdata, 0, 0);
+      },
+      'flatten': function () {
+        flatten();
       },
       'blur': function blurButton() {
 

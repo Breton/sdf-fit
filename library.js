@@ -549,25 +549,25 @@ function thresholdKernel(d, r, g, b) {
      return newweights;
  }
 
- function darken(ctx) {
+ function flatten(ctx) {
      let dataobj = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
      
      let d = dataobj.data;
      let amount = 0.5;
      for (let i = 0; i < d.length / 4; i += 1) {
-         d[i * 4 + 0] *= amount;
-         d[i * 4 + 1] *= amount;
-         d[i * 4 + 2] *= amount;
+         d[i * 4 + 0] = d[i * 4 + 0] / 2 + 64;
+         d[i * 4 + 1] = d[i * 4 + 1] / 2 + 64;
+         d[i * 4 + 2] = d[i * 4 + 2] / 2 + 64;
 
         
      }
-     amount = 1/amount;
-     for (let i = 0; i < weights.length; i++) {
-        weights[0][0] = (((weights[0][0]*2-1)*amount)+1)/2
-        weights[0][1] = (((weights[0][1]*2-1)*amount)+1)/2
-        weights[0][2] = (((weights[0][2]*2-1)*amount)+1)/2
+     // amount = 1/amount;
+     // for (let i = 0; i < weights.length; i++) {
+     //    weights[0][0] = (((weights[0][0]*2-1)*amount)+1)/2
+     //    weights[0][1] = (((weights[0][1]*2-1)*amount)+1)/2
+     //    weights[0][2] = (((weights[0][2]*2-1)*amount)+1)/2
         
-     }
+     // }
      olderdata=olddata=bestdata=dataobj;
      oldderweights=oldweights=bestweights=newweights=weights;
      ctx.putImageData(dataobj, 0, 0);
@@ -1092,7 +1092,7 @@ function thresholdKernel(d, r, g, b) {
 
 
 
-     let counter = 10;
+     let counter = 100;
      let rslope = Math.round(Math.random()*3-1.5);
      let gslope = Math.round(Math.random()*3-1.5);
      let bslope = Math.round(Math.random()*3-1.5);
@@ -1306,7 +1306,7 @@ function thresholdKernel(d, r, g, b) {
 
      console.log('begin optimise weight');
 
-     let counter = 20
+     let counter = 100;
      let rinc = inc,
          binc = inc,
          ginc = inc;
