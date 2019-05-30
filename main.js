@@ -51,7 +51,7 @@ duration = 0;
 
 letters = '0123456789ABCDEFGHIJKLMNOP';
 
-letters = '0123456789';
+letters = '014';
 
 
 letterCounter = letters.length;
@@ -199,7 +199,7 @@ async function main() {
         modebias = 0.0;
         pixelFail = 0;
         if(Math.random()>0.5){
-          flatten(ctxsmall);
+
         } 
         //smoothduration=500;
         pixelSuccess = 0;
