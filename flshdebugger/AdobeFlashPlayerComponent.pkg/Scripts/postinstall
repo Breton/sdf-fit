@@ -1,0 +1,47 @@
+#!/bin/sh   
+
+#-------------------------------------------------------------------------------
+# Environment variables set by installer:
+# $COMMAND_LINE_INSTALL (will be "1" if this is a command line install)
+# $2 Installation Destination (from -target parameter on command line.)
+# $3 Installation Volume (from -target parameter on command line.)
+# $4 Root Directory (should usually be "/")
+
+#-------------------------------------------------------------------------------
+# Launch SAU Daemon only if we are installing to root volume. This way we don't
+# require a system reboot.
+# If we are installing to a non-root volume, the daemon will launch when the 
+# user next boots into that system.
+if [ -f "$3/Library/LaunchDaemons/com.adobe.fpsaud.plist" ]; then
+	/usr/bin/logger "Flash Player Install: Launching SAU Daemon..."
+	/bin/launchctl load "$3/Library/LaunchDaemons/com.adobe.fpsaud.plist"
+fi 
+
+#-------------------------------------------------------------------------------
+# Run finalize utility to decompress LZMA'd .plugin
+/usr/bin/logger "Flash Player Install: Finalizing Plugin installation..."
+SCRIPT_DIR=$(dirname "$0")
+"${SCRIPT_DIR}/finalize" "$3"
+
+#-------------------------------------------------------------------------------
+# Cleanup previous version file
+if [ -f "$3/Library/Application Support/Macromedia/previous_version.txt" ]; then
+	/usr/bin/logger "Flash Player Install: Cleaning up previous version text file..."
+	rm -f "$3/Library/Application Support/Macromedia/previous_version.txt"
+fi 
+
+#-------------------------------------------------------------------------------
+# Cleanup install vector file, if we are installing to root volume
+if [ "$3" = "$4" ] && [ -f "$3/Library/Application Support/Macromedia/install_vector.txt" ]; then
+	/usr/bin/logger "Flash Player Install: Cleaning up install vector text file..."
+	rm -f "$3/Library/Application Support/Macromedia/install_vector.txt"
+fi 
+
+#-------------------------------------------------------------------------------
+# Remove FPSAUConfig.xml to reset any state information from previous install
+if [ -f "$3/Library/Application Support/Adobe/Flash Player Install Manager/FPSAUConfig.xml" ]; then
+	/usr/bin/logger "Flash Player Install: Removing existing FPSAUConfig.xml file..."
+	rm -f "$3/Library/Application Support/Adobe/Flash Player Install Manager/FPSAUConfig.xml"
+fi 
+
+exit 0

@@ -1,0 +1,17 @@
+#!/bin/sh   
+
+#-------------------------------------------------------------------------------
+# Environment variables set by installer:
+# $COMMAND_LINE_INSTALL (will be "1" if this is a command line install)
+# $2 Installation Destination (from -target parameter on command line.)
+# $3 Installation Volume (from -target parameter on command line.)
+# $4 Root Directory (should usually be "/")
+
+#-------------------------------------------------------------------------------
+# Save previous version of installed player before we overwrite with the new version
+if [ -f "$3/Library/Internet Plug-Ins/PepperFlashPlayer/PepperFlashPlayer.plugin/Contents/Info.plist" ]; then
+	/usr/bin/logger "Flash Player Install: Creating previous version text file..."
+	echo "`defaults read \"$3/Library/Internet Plug-Ins/PepperFlashPlayer/PepperFlashPlayer.plugin/Contents/Info\" CFBundleShortVersionString`" > "$3/Library/Application Support/Macromedia/previous_version.txt"
+fi 
+
+exit 0
