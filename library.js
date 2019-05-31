@@ -11,6 +11,8 @@ scoreInstructionsAndWeightsScoresDebug = [];
       return ((this%n)+n)%n;
   };
 
+
+ // median = max(min(a,b), min(max(a,b),c));
  function debug(str, ...rest) {
 
      if (str === 'clear') {
