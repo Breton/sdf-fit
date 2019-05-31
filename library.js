@@ -63,6 +63,7 @@ scoreInstructionsAndWeightsScoresDebug = [];
 
             weightels[i].style.left = (weights[i][0]*240) + 'px';
             weightels[i].style.top = (weights[i][1]*240) + 'px';    
+            weightels[i].style.width = (weights[i][2]*240) + 'px';    
 
         }
         
@@ -335,7 +336,51 @@ function indexOfMin(arr) {
     }
     return d;
  }
-  function thresholdKernel(d, r, g, b) {
+
+  function thresholdKernelMin2(d, r, g, b) {
+
+     const pi = Math.PI;
+     Number.prototype.mod = function(n) {
+      return ((this%n)+n)%n;
+     };
+     const sin = Math.sin;
+     const cos = Math.cos;
+
+     
+
+     const u = 2*(r.mod(1))-1;
+     const v = 2*(g.mod(1))-1;
+     const w = 2*(b.mod(1))-1;
+     //const o = Math.sqrt(u*u+v*v);
+     //const s = Math.atan2(u,v);
+     //const t = Math.cos(Math.atan2(u,v))*(1-Math.min(1,2*o))/2;
+     //const S = (x)=>( 3*(Math.max(Math.min(x,0),1)**2) - 2*(Math.max(Math.min(x,0),1)**3) ) ;
+     const S = (x)=>( x ) ;
+     // const R = (x,z)=>S( 
+     //    ( x - t - o * Math.cos(s-(2*z*pi)/3) + w/2 - 0.5 )
+     //    /w
+     // ) ;
+     const R = (a,z)=>( ( a + u * cos( 2*pi*z/3 ) + v * sin( 2*pi*z/3 ) )/w+0.5 )
+    //console.log('threshold',u,v,w,o,s,t,[0,0.1,0.5,0.9,1].map(S));
+
+     const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
+
+     for (let i = 0; i < d.length; i += 4) {
+         let r = d[i + 0] / 255;
+         let g = d[i + 1] / 255;
+         let b = d[i + 2] / 255;
+         d[i + 0] = d[i + 1] = d[i + 2] = 
+         Math.max(Math.min( 
+            (r + u) /0.1+0.5 ,
+            (g + v) /0.1+0.5 ),
+            (b + w) /0.1+0.5 
+            
+         ) * 255;
+               
+    }
+    return d;
+ }
+  function thresholdKernelCircle2(d, r, g, b) {
 
      const pi = Math.PI;
      Number.prototype.mod = function(n) {
@@ -376,6 +421,49 @@ function indexOfMin(arr) {
             (( b - s * cos( a + ( 2*pi*3 )/3 )  )/w+0.5 )
             
          ) * 255;
+               
+    }
+    return d;
+ }  
+ function thresholdKernelMULTIPLY(d, r, g, b) {
+
+     const pi = Math.PI;
+     Number.prototype.mod = function(n) {
+      return ((this%n)+n)%n;
+     };
+     const sin = Math.sin;
+     const cos = Math.cos;
+
+     
+
+     const u = r*2-1//g*Math.cos(r*pi*2);
+     const v = g*2-1;//g*Math.sin(r*pi*2);
+     const w = (b)/3;
+     const a = Math.atan2( u, v );
+     const s = Math.sqrt( u*u + v*v );
+     //const o = Math.sqrt(u*u+v*v);
+     //const s = Math.atan2(u,v);
+     //const t = Math.cos(Math.atan2(u,v))*(1-Math.min(1,2*o))/2;
+     //const S = (x)=>( 3*(Math.max(Math.min(x,0),1)**2) - 2*(Math.max(Math.min(x,0),1)**3) ) ;
+     const S = (x)=>( x ) ;
+     // const R = (x,z)=>S( 
+     //    ( x - t - o * Math.cos(s-(2*z*pi)/3) + w/2 - 0.5 )
+     //    /w
+     // ) ;
+     const R = (a,z)=>( ( a + u * cos( 2*pi*z/3 ) + v * sin( 2*pi*z/3 ) )/w+0.5 )
+    //console.log('threshold',u,v,w,o,s,t,[0,0.1,0.5,0.9,1].map(S));
+
+     const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
+
+     for (let i = 0; i < d.length; i += 4) {
+         let r = d[i + 0] / 255;
+         let g = d[i + 1] / 255;
+         let b = d[i + 2] / 255;
+         d[i + 0] = d[i + 1] = d[i + 2] = 
+          (((( r - s * cos( a + ( 2*pi*1 )/3 )  ) ) *
+            (( g - s * cos( a + ( 2*pi*2 )/3 )  ) ) *
+            (( b - s * cos( a + ( 2*pi*3 )/3 )  ) ) ) / w + 0.5 )
+            * 255;
                
     }
     return d;
@@ -473,6 +561,10 @@ function thresholdKernelCiirckle(d, r, g, b) {
     }
     return d;
  }
+ 
+ thresholdKernel = thresholdKernelMin2;
+
+
  robin = 0;
  srobin = 0;
  swpool = [
@@ -1294,7 +1386,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
     oscore = oscore/10;
     mscore = mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).map(x => x * x).reduce((a, b) => a + b);
     nscore = nscore = nscores.map((x, idx) => (Math.sqrt((x.score)) / lowestScorePerIndex[idx])).map(x => x * x).reduce((a, b) => a + b);
-    nscorebins = nscores.map(x=>x.bins).reduce(binsreduce).map(x=>x);
+    nscorebins = nscores.map(x=>x.bins).reduce(binsreduce).map(x=>Math.sqrt(x));
 
     
     scoreInstructionsAndWeightsScoresDebug = ['scoreweights', newscore, 'mscores', mscores.toString(), "nscores", nscores.toString(), oscore, nscore+mscore+oscore,Math.sqrt(nscore+mscore+oscore) * 1000 / count];

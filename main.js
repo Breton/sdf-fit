@@ -51,7 +51,7 @@ duration = 0;
 
 letters = '0123456789ABCDEFGHIJKLMNOP';
 
-letters = '014';
+letters = '0147';
 
 
 letterCounter = letters.length;
@@ -161,7 +161,7 @@ function updatePixel(onepixel,diff=0) {
     
     if (gindex.length > 0) {
         onepixel = gindex[updatecount%gindex.length];
-        onepixel += ([-1,1,-16,16,-16,-1,16,1,0,0,0,0,0,0,0,0])[Math.floor(Math.random()*16)];
+        onepixel += ([-1,1,-16,16,0,0,0,0,0,0,0,0,0,0,0,0])[Math.floor(Math.random()*16)];
     } else {
         onepixel += ([2,1,32,16,16,1,16,1,0,0,0,0,0,0,0,0])[Math.floor(Math.random()*16)];
     }
