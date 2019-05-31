@@ -516,6 +516,71 @@ function thresholdKernelCircle1(d, r, g, b) {
     return d;
  }
 
+function thresholdKernelMedian(d, r, g, b) {
+
+     const pi = Math.PI;
+     Number.prototype.mod = function(n) {
+      return ((this%n)+n)%n;
+     };
+     const sin = Math.sin;
+     const cos = Math.cos;
+
+     
+
+     const u = r.mod(1)*2-1;
+     const v = g.mod(1)*2-1;
+     const w = b.mod(1)*2-1;
+     const s = Math.sqrt(u*u+v*v);
+     const a = Math.atan2(u,v);
+
+     const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
+
+     for (let i = 0; i < d.length; i += 4) {
+         let r = d[i + 0] / 255;
+         let g = d[i + 1] / 255;
+         let b = d[i + 2] / 255;
+         d[i + 0] = d[i + 1] = d[i + 2] = 
+         (Math.max(Math.min(u+r,v+g), Math.min(Math.max(u+r,v+g),w+b))/0.03 + 0.5)*255;
+
+         
+               
+    }
+    return d;
+ }
+ 
+
+function thresholdKernelMinMaxBlend(d, r, g, b) {
+
+     const pi = Math.PI;
+     Number.prototype.mod = function(n) {
+      return ((this%n)+n)%n;
+     };
+     const sin = Math.sin;
+     const cos = Math.cos;
+
+     
+
+     const u = r.mod(1)*2-1;
+     const v = g.mod(1)*2-1;
+     const w = b.mod(1)*2-1;
+     const s = Math.sqrt(u*u+v*v);
+     const a = Math.atan2(u,v);
+
+     const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
+
+     for (let i = 0; i < d.length; i += 4) {
+         let r = d[i + 0] / 255;
+         let g = d[i + 1] / 255;
+         let b = d[i + 2] / 255;
+         d[i + 0] = d[i + 1] = d[i + 2] = 
+         (( (1-(b+w)) * Math.min(u+r,v+g) + (b+w) * Math.max(u+r,v+g)) /0.05 )*255;
+
+         
+               
+    }
+    return d;
+ }
+ 
 function thresholdKernelCiirckle(d, r, g, b) {
 
      const pi = Math.PI;
@@ -564,7 +629,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
     return d;
  }
  
- thresholdKernel = thresholdKernelMin2;
+ thresholdKernel = thresholdKernelMinMaxBlend;
 
 
  robin = 0;
