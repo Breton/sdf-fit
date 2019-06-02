@@ -52,7 +52,7 @@ duration = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
 
 
-letters = '0174';
+letters = '012345';
 
 
 
@@ -68,9 +68,9 @@ for (let i = 0; i < letters.length; i++) {
         ["fillRect", 0, 0, 256, 256],
         ["fillStyle", "white"],
         ["translate", 128, 128],
-        // ["rotate", i * (0.5 * Math.PI / (letters.length - 1))],
-        // ["fillRect", 0, 0, 96, 96]
-        ["fillText", letters[i], 20, 90, 256]
+        ["rotate", i * (0.5 * Math.PI / (letters.length - 1))],
+        ["fillRect", 0, 0, 96, 96]
+       // ["fillText", letters[i], 20, 90, 256]
     ];
 }
 
@@ -157,9 +157,9 @@ function updatePixel(onepixel,diff=0) {
     let gmin = (gradient.reduce((a, b) => Math.min(a,b) ));
     let grange = gmax-gmin;
 
-    debug('gindex', gmin, gmax, grange, (gmin + grange*0.90), gindex.length);
+    debug('gindex', gmin, gmax, grange, (gmin + grange*0.50), gindex.length);
     debug('diff', diff);
-    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.90) ? i : 0))).filter(x => x);
+    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.50) ? i : 0))).filter(x => x);
     
     if (gindex.length > 0) {
         onepixel = gindex[updatecount%gindex.length];

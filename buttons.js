@@ -66,6 +66,13 @@
           ctxsmall.putImageData(d, 0, 0);
           olddata = bestdata = d;
       },
+      'toggle mode': function () {
+        if(modebias > 0.5) {
+          modebias = 0;
+        } else {
+          modebias = 1;
+        }
+      },
       'random pixels': function randomize() {
 
 
