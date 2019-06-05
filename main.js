@@ -52,7 +52,7 @@ duration = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
 
 
-letters = '0123456789A';
+letters = '0123456789ABCDEF';
 
 
 
