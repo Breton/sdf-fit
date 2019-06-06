@@ -31,30 +31,48 @@
           newweights = weights;
       },
       'save data point': function saveDataPoint() {
-          let counter = localStorage.getItem('acounter');
+          let counter = +localStorage.getItem('acounter');
+          let index =  +localStorage.getItem('aindex');
+          let max = 10;
           if (!counter) {
               counter = 0;
           }
-          counter = 1 + (+counter);
+          if(typeof index === 'undefined' || index >= max) {
+            index=0;
+          }
+          index += 1;
+
+          if(counter < max) {
+            counter = 1 + (+counter);
+            
+          } 
+          console.log(index,counter);
+
           localStorage.setItem('acounter', counter);
-          saveCtx('aavg_' + counter);
+          localStorage.setItem('aindex', index);
+          saveCtx('aavg_' + (index));
 
       },
 
       'load and average': function loadAndAverage() {
-          let counter = localStorage.getItem('acounter');
+          let counter = +localStorage.getItem('acounter');
+          let index =  localStorage.getItem('aindex');
           let c = [];
           let avg = [];
 
           for (let i = 0; i < (counter); i++) {
-              c[i] = (JSON.parse(localStorage.getItem('aavg_' + (i + 1))));
-              c[i].data.length = 16 * 16 * 4;
-              c[i] = Array.from(c[i].data);
+              let item = (JSON.parse(localStorage.getItem('aavg_' + (i + 1))));
+              if(typeof item !== 'undefined') {
+                let j = c.length-1;
+                c[j] = item;
+                c[j].data.length = 16 * 16 * 4;
+                c[j] = Array.from(c[j].data);
 
-              if (avg.length === 0) {
-                  avg = Array.from(c[i]);
-              } else {
-                  avg = avg.map((x, j) => x + c[i][j]);
+                if (avg.length === 0) {
+                    avg = Array.from(c[j]);
+                } else {
+                    avg = avg.map((x, k) => x + c[j][k]);
+                }
               }
               //console.log('c[i]', i, c[i]);
           }
@@ -160,7 +178,9 @@
 
 
   function saveCtx(key = 'ctxsmalldata') {
-      localStorage.setItem(key, JSON.stringify(ctxsmall.getImageData(0, 0, 16, 16)));
+      let imgdata = ctxsmall.getImageData(0, 0, 16, 16);
+      imgdata.data = Array.from(imgdata.data);
+      localStorage.setItem(key, JSON.stringify(imgdata));
   }
 
   function saveWeights() {

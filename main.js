@@ -52,7 +52,7 @@ duration = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
 
 
-letters = '0123';
+letters = '01234';
 
 
 
@@ -76,7 +76,7 @@ for (let i = 0; i < letters.length; i++) {
 }
 
 function resetInstructions(){
-  rotation = Math.random()*2;
+  rotation += Math.random()*0.1;
   instructions = [];
   for (let i = 0; i < letters.length; i++) {
       instructions[i] = [
@@ -209,7 +209,7 @@ async function main() {
     let idx = onepixel % (bestdata.data.length / 4);
 
     
-    if (weightFail > 100) {
+    if (weightFail > 50) {
         modebias = 1;
         weightFail = 0;
         //smoothduration=500;
@@ -454,7 +454,7 @@ setTimeout(main, 10);
           
         } 
         idx = idx % Math.min(letterCounter, weights.length);
-        
+        ctxresult.globalCompositeOperation = "source-over";
 
         ctxresult.globalAlpha = 1;
         ctxresult.drawImage(canvassmall, 0, 0, 256, 256);
