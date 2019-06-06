@@ -52,7 +52,7 @@ duration = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
 
 
-letters = '01234';
+letters = '01';
 
 
 
@@ -69,14 +69,14 @@ for (let i = 0; i < letters.length; i++) {
         ["fillRect", 0, 0, 256, 256],
         ["fillStyle", "white"],
         ["translate", 128, 128],
-        ["rotate", (i+rotation) * ( (2* Math.PI )/ (letters.length ))],
+        ["rotate",  rotation + (i) * ( 2*( Math.PI )/ (letters.length ))],
         ["fillRect", 0, 0, 96, 96]
        // ["fillText", letters[i], 20, 90, 256]
     ];
 }
 
 function resetInstructions(){
-  rotation += Math.random()*0.1;
+  rotation += Math.random();
   instructions = [];
   for (let i = 0; i < letters.length; i++) {
       instructions[i] = [
@@ -84,7 +84,7 @@ function resetInstructions(){
           ["fillRect", 0, 0, 256, 256],
           ["fillStyle", "white"],
           ["translate", 128, 128],
-          ["rotate", (i+rotation) * ( (2* Math.PI )/ (letters.length ))],
+          ["rotate", rotation + (i) * ( 2*( Math.PI )/ (letters.length ))],
           ["fillRect", 0, 0, 96, 96]
          // ["fillText", letters[i], 20, 90, 256]
       ];
@@ -215,7 +215,7 @@ async function main() {
         //smoothduration=500;
         weightSuccess = 0;
     }
-    if (pixelFail > 10) {
+    if (pixelFail - pixelSuccess > 10) {
         modebias = 0.0;
         pixelFail = 0;
         
