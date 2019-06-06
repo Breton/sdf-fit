@@ -52,7 +52,7 @@ duration = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
 
 
-letters = '01';
+letters = '012';
 
 
 
@@ -209,7 +209,7 @@ async function main() {
     let idx = onepixel % (bestdata.data.length / 4);
 
     
-    if (weightFail > 50) {
+    if (weightFail - weightSuccess > 10) {
         modebias = 1;
         weightFail = 0;
         //smoothduration=500;
