@@ -38,7 +38,7 @@ newdata = null;
 olddata = null;
 needsMostImprovement = 0;
 recentimprovements = [];
-
+rotation = Math.random();
 gradient = [0, 0, 0]; // (r,g,b,r,g,b...)
 gradient.length = 256;
 gradient.fill(1);
@@ -52,7 +52,7 @@ duration = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
 
 
-letters = '0123456789ABCDEF';
+letters = '0123';
 
 
 
@@ -61,6 +61,7 @@ fonts = [
     "normal 256px serif",
     "bold 256px serif"
 ]
+
 instructions = [];
 for (let i = 0; i < letters.length; i++) {
     instructions[i] = [
@@ -68,11 +69,28 @@ for (let i = 0; i < letters.length; i++) {
         ["fillRect", 0, 0, 256, 256],
         ["fillStyle", "white"],
         ["translate", 128, 128],
-        ["rotate", i * (0.5 * Math.PI / (letters.length - 1))],
+        ["rotate", (i+rotation) * ( (2* Math.PI )/ (letters.length ))],
         ["fillRect", 0, 0, 96, 96]
        // ["fillText", letters[i], 20, 90, 256]
     ];
 }
+
+function resetInstructions(){
+  rotation = Math.random()*2;
+  instructions = [];
+  for (let i = 0; i < letters.length; i++) {
+      instructions[i] = [
+          ['fillStyle', 'black'],
+          ["fillRect", 0, 0, 256, 256],
+          ["fillStyle", "white"],
+          ["translate", 128, 128],
+          ["rotate", (i+rotation) * ( (2* Math.PI )/ (letters.length ))],
+          ["fillRect", 0, 0, 96, 96]
+         // ["fillText", letters[i], 20, 90, 256]
+      ];
+  }
+}
+
 
 iterations = 1;
 r = Math.random;
@@ -191,18 +209,27 @@ async function main() {
     let idx = onepixel % (bestdata.data.length / 4);
 
     
-    if (weightFail - weightSuccess > 10) {
+    if (weightFail > 100) {
         modebias = 1;
         weightFail = 0;
         //smoothduration=500;
         weightSuccess = 0;
     }
-    if (pixelFail - pixelSuccess > 10) {
+    if (pixelFail > 10) {
         modebias = 0.0;
         pixelFail = 0;
-        if(Math.random()>0.5){
+        
+          resetInstructions();
 
-        } 
+        
+        
+        buttons['save data point']();
+        if(Math.random()>0.5){  
+          buttons['load and average']();
+        } else {
+          buttons.blur();
+        }
+        
         //smoothduration=500;
         pixelSuccess = 0;
     }

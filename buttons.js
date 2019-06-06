@@ -98,13 +98,13 @@
 
           for (let i = 0; i < bestdata.data.length; i += 4) {
               let l = bestdata.data.length
-              bestdata.data[i + 0] = bestdata.data[(i + 0)%l] * 0.5 + bestdata.data[(i + 4 + 0)%l] * 0.25 + bestdata.data[(i - 4 + 0)%l] * 0.25
-              bestdata.data[i + 1] = bestdata.data[(i + 1)%l] * 0.5 + bestdata.data[(i + 4 + 1)%l] * 0.25 + bestdata.data[(i - 4 + 1)%l] * 0.25
-              bestdata.data[i + 2] = bestdata.data[(i + 2)%l] * 0.5 + bestdata.data[(i + 4 + 2)%l] * 0.25 + bestdata.data[(i - 4 + 2)%l] * 0.25
+              bestdata.data[i + 0] = bestdata.data[(i + 0).mod(l)] * 0.5 + bestdata.data[(i + 4 + 0).mod(l)] * 0.25 + bestdata.data[(i - 4 + 0).mod(l)] * 0.25
+              bestdata.data[i + 1] = bestdata.data[(i + 1).mod(l)] * 0.5 + bestdata.data[(i + 4 + 1).mod(l)] * 0.25 + bestdata.data[(i - 4 + 1).mod(l)] * 0.25
+              bestdata.data[i + 2] = bestdata.data[(i + 2).mod(l)] * 0.5 + bestdata.data[(i + 4 + 2).mod(l)] * 0.25 + bestdata.data[(i - 4 + 2).mod(l)] * 0.25
 
-              bestdata.data[i + 0] = bestdata.data[(i + 0)%l] * 0.5 + bestdata.data[(i + 4 * 16 + 0)%l] * 0.25 + bestdata.data[(i - 4 * 16 + 0)%l] * 0.25
-              bestdata.data[i + 1] = bestdata.data[(i + 1)%l] * 0.5 + bestdata.data[(i + 4 * 16 + 1)%l] * 0.25 + bestdata.data[(i - 4 * 16 + 1)%l] * 0.25
-              bestdata.data[i + 2] = bestdata.data[(i + 2)%l] * 0.5 + bestdata.data[(i + 4 * 16 + 2)%l] * 0.25 + bestdata.data[(i - 4 * 16 + 2)%l] * 0.25
+              bestdata.data[i + 0] = bestdata.data[(i + 0).mod(l)] * 0.5 + bestdata.data[(i + 4 * 16 + 0).mod(l)] * 0.25 + bestdata.data[(i - 4 * 16 + 0).mod(l)] * 0.25
+              bestdata.data[i + 1] = bestdata.data[(i + 1).mod(l)] * 0.5 + bestdata.data[(i + 4 * 16 + 1).mod(l)] * 0.25 + bestdata.data[(i - 4 * 16 + 1).mod(l)] * 0.25
+              bestdata.data[i + 2] = bestdata.data[(i + 2).mod(l)] * 0.5 + bestdata.data[(i + 4 * 16 + 2).mod(l)] * 0.25 + bestdata.data[(i - 4 * 16 + 2).mod(l)] * 0.25
 
           }
           ctxsmall.putImageData(bestdata, 0, 0);

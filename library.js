@@ -623,6 +623,7 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
      const sin = Math.sin;
      const cos = Math.cos;
 
+
      
 
      const u = r.mod(1)*2-1;
@@ -1327,13 +1328,13 @@ function thresholdKernelCiirckle(d, r, g, b) {
            d[(i +15) * 4 + 2],
            d[(i -15) * 4 + 2]  ];
      
-     r = r.filter(x=>(!!x));
-     g = g.filter(x=>(!!x));
-     b = b.filter(x=>(!!x));
+     r = r.filter(x=>(!isNaN(x)));
+     g = g.filter(x=>(!isNaN(x)));
+     b = b.filter(x=>(!isNaN(x)));
 
-     r = r.reduce( (a,b)=>( a+b ), 0 ) / r.length;
-     g = g.reduce( (a,b)=>( a+b ), 0 ) / g.length;
-     b = b.reduce( (a,b)=>( a+b ), 0 ) / b.length;
+     r = (r.reduce( (a,b)=>( a+b ), 0 ) / r.length)|| Math.random()*255;
+     g = (g.reduce( (a,b)=>( a+b ), 0 ) / g.length)|| Math.random()*255;
+     b = (b.reduce( (a,b)=>( a+b ), 0 ) / b.length)|| Math.random()*255;
 
 
      let or = d[i * 4 + 0],
@@ -1364,7 +1365,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
      minscore = await sample(i, r, g, b);
      diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
      
-     const phi = Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(2))));
+     const phi = Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(2)))));
      while(diff===0 && counter > 0) {
         counter--;
         rinc *= phi;
@@ -1414,9 +1415,14 @@ function thresholdKernelCiirckle(d, r, g, b) {
         newscore = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc);
           
         if(newscore-minscore < 0) {
+          let or=r,og=g,ob=b;
+
           r = r + rslope * rinc;
           g = g + gslope * ginc;
           b = b + bslope * binc;
+          if(isNaN(r)){   console.log('isnan r',or,rslope,rinc,r) }
+          if(isNaN(g)){   console.log('isnan g',og,gslope,ginc,g) }
+          if(isNaN(b)){   console.log('isnan b',ob,bslope,binc,b) }
           rinc *= phi;
           ginc *= phi;
           binc *= phi;
@@ -1698,4 +1704,4 @@ function thresholdKernelCiirckle(d, r, g, b) {
      }, 10);
 
 
- }, 1000);
+ }, 10000);
