@@ -53,7 +53,18 @@
           saveCtx('aavg_' + (index));
 
       },
+      'kill blue': function(){
 
+          olddata = bestdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
+          for (let i = 0; i < bestdata.data.length; i += 4) {
+              
+              bestdata.data[i + 2] = 0;
+
+
+          }
+          ctxsmall.putImageData(bestdata, 0, 0);
+
+      },
       'load and average': function loadAndAverage() {
           let counter = +localStorage.getItem('acounter');
           let index =  localStorage.getItem('aindex');
