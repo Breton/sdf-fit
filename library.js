@@ -684,6 +684,41 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
     }
     return d;
  }
+ function thresholdKernelMinMaxCone(d, r, g, b) {
+
+     const pi = Math.PI;
+     Number.prototype.mod = function(n) {
+      return ((this%n)+n)%n;
+     };
+     const sin = Math.sin;
+     const cos = Math.cos;
+     const min = Math.min;
+     const max = Math.max;
+     const abs = Math.abs;
+     
+
+     const u = r.mod(1);
+     const v = g.mod(1);
+     const t = b.mod(1);
+     const s = Math.sqrt(u*u+v*v);
+     const a = Math.atan2(u,v);
+
+     
+
+    for (let i = 0; i < d.length; i += 4) {
+        let r = d[i + 0] / 255;
+        let g = d[i + 1] / 255;
+        let b = d[i + 2] / 255;
+        const w = 2 - abs(b.mod(1) * 4 - 2) - 1;
+        const maxormin = b > 0.5 ? min : max;
+
+        d[i + 0] = d[i + 1] = d[i + 2] = 
+        (maxormin(  (r - u) * cos(2*pi*t - (w*pi)/4) - (g - v) * sin(2*pi*t - (w*pi)/4)  , 
+                    (r - u) * sin(2*pi*t - (w*pi)/4) + (g - v) * cos(2*pi*t - (w*pi)/4)  
+               ) / 0.02 + 0.5) * 255
+    }
+    return d;
+ }
 function thresholdKernelCiirckle(d, r, g, b) {
 
      const pi = Math.PI;
@@ -732,7 +767,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
     return d;
  }
  
- thresholdKernel = thresholdKernelMinMaxMinMaxCosBlend;
+ thresholdKernel = thresholdKernelMinMaxCone;
 
 
  robin = 0;
@@ -1471,7 +1506,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
  // ctx is used as scratch for doing the scoring.
  
  let targetDataObjects = [];
- let size = 16;
+ let size = 64;
 
  async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000, debug = false) {
     let newscore = 0;

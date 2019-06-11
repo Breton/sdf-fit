@@ -52,7 +52,7 @@ duration = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
 
 
-letters = '0123';
+letters = '01';
 
 
 
@@ -211,7 +211,7 @@ async function main() {
     let deltapixel = [0, 0, 0];
     let idx = onepixel % (bestdata.data.length / 4);
 
-    if(weightFail - weightSuccess > 1 || globalscore - minimumScore > 10 && minimumWeights.length){
+    if(weightFail - weightSuccess > 1  ){
       newweights=weights=bestweights=minimumWeights;
     }
     if (weightFail - weightSuccess > 10) {
@@ -454,7 +454,7 @@ setTimeout(main, 10);
   
   async function preview (name,value) {
       let time=new Date();
-      if(time-last > 10){
+      if(time-last > 100){
         last = time;
         if(name==="i"){
           idx = value;
