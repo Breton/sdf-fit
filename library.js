@@ -3,7 +3,7 @@ weightscores = [];
 let lowestScorePerIndex = [];
 let scorecount = 0;
 let samplecount = 0;
-
+let maxpixelcounter = 50;
  //library functions
 
  let debugbuffer = "";
@@ -696,10 +696,12 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
      const max = Math.max;
      const abs = Math.abs;
      
+     
+     
 
-     const u = r.mod(1);
-     const v = g.mod(1);
-     const t = b.mod(1);
+     const u = ((r%1)+1)%1;
+     const v = ((g%1)+1)%1;
+     const t = ((b%1)+1)%1;
      const s = Math.sqrt(u*u+v*v);
      const a = Math.atan2(u,v);
 
@@ -709,7 +711,7 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
         let r = d[i + 0] / 255;
         let g = d[i + 1] / 255;
         let b = d[i + 2] / 255;
-        const w = 2 - abs(b.mod(1) * 4 - 2) - 1;
+        const w = 2 - abs((((b%1)+1)%1) * 4 - 2) - 1;
         const maxormin = b > 0.5 ? min : max;
 
         d[i + 0] = d[i + 1] = d[i + 2] = 
@@ -828,9 +830,10 @@ function thresholdKernelCiirckle(d, r, g, b) {
 
 
      let w = ctx.canvas.width;
-     let h = ctx.canvas.height;
+     let h = ctx.canvas.height; 
+     let d = thresholdKernel(dataobj.data, r, g, b);
 
-     dataobj = new ImageData(thresholdKernel(dataobj.data, r, g, b), w, h);
+     dataobj = new ImageData(d, w, h);
 
      ctx.putImageData(dataobj, 0, 0);
      return dataobj;
@@ -1327,13 +1330,13 @@ function thresholdKernelCiirckle(d, r, g, b) {
      ctx.globalAlpha = 1;
      let dataobj = ctxsmall.getImageData(0, 0, ctxsmall.canvas.width, ctxsmall.canvas.height);
      let d = dataobj.data;
-
+     let maxmilliseconds = 200;
      if (idx === undefined) {
          idx = ((d.length * Math.random()) / 4) | 0;
      }
      let i = (idx % (d.length / 4)) | 0;
      let time = new Date();
-     
+     let getElapsed = ()=>(new Date()-time);
 
      async function sample(pixelidx, r, g, b) {
 
@@ -1428,7 +1431,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
       counter += 10;
      }
      debug("pxsamples a", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
-     while (diff > 0 && counter > 0) {
+     while (diff > 0 && getElapsed() < 200) {
          counter--;
          let samples = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc);
          if (samples - minscore > 0) {
@@ -1440,7 +1443,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          }
 
 
-         while(diff>=0 && counter > 0) {
+         while(diff>=0 && getElapsed() < 200) {
             counter--;
             //convert the counter to 3 digits of -1, 0 or 1.
             [rslope,gslope,bslope] = ('000'+(updatecount + counter).toString(5)).slice(-3).split('').map(x=>+x-2)
@@ -1457,7 +1460,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
         
      }
      debug("pxsamples b", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
-     while (diff < 0 && counter > 0) {
+     while (diff < 0 && getElapsed() < 200) {
         let newscore;
         counter--;
 

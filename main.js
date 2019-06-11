@@ -444,40 +444,56 @@ setTimeout(main, 10);
   var idx=0;
   var u=0,v=0,w=0,i=0,l=0;
   var last = 0;
-  uel.onchange=uel.onmousemove=function () { u= +(this.value); preview(this.name, +this.value); }
-  vel.onchange=vel.onmousemove=function () { v= +(this.value); preview(this.name, +this.value); }
-  wel.onchange=wel.onmousemove=function () { w= +(this.value); preview(this.name, +this.value); }
-  iel.onchange=iel.onmousemove=function () { idx=i= +(this.value); preview(this.name, +this.value); }
+  var itouched = false;
+  uel.onchange=uel.onmousemove=function () {  u= +(this.value);  }
+  vel.onchange=vel.onmousemove=function () {  v= +(this.value);  }
+  wel.onchange=wel.onmousemove=function () {  w= +(this.value);  }
+  iel.onchange=iel.onmousemove=function () { itouched = true; idx=i= +(this.value); }
   iel.setAttribute('max', weights.length);
   iel.setAttribute('min', 0);
-  setInterval(preview, 20);
+  setInterval(preview, 100);
   
-  async function preview (name,value) {
+  function preview (name,value) {
       let time=new Date();
       if(time-last > 100){
         last = time;
-        if(name==="i"){
-          idx = value;
-          
-        } 
+
         idx = idx % Math.min(letterCounter, weights.length);
         ctxresult.globalCompositeOperation = "source-over";
 
         ctxresult.globalAlpha = 1;
         ctxresult.drawImage(canvassmall, 0, 0, 256, 256);
         
+        u = weights[idx][0];
+        v = weights[idx][1];
+        w = weights[idx][2];
+
+        let dataobj;
+       dataobj = ctxresult.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+
+       let w = ctxresult.canvas.width;
+       let h = ctxresult.canvas.height; 
+       let d = thresholdKernel(dataobj.data, r, g, b);
+
+       dataobj = new ImageData(d, w, h);
+
+       ctxresult.putImageData(dataobj, 0, 0);
+       
+
+        threshold(ctxresult, u,v,w);
+
+          if(itouched){
+            uel.value=weights[idx][0]; 
+            vel.value=weights[idx][1]; 
+            wel.value=weights[idx][2]; 
+
+            
         
-        if(name==="i"){
-          threshold(ctxresult, ...weights[idx]);
-          uel.value=weights[idx][0]; u = weights[idx][0];
-          vel.value=weights[idx][1]; v = weights[idx][1];
-          wel.value=weights[idx][2]; w = weights[idx][2];
+            itouched=false;
+          } 
 
-
-        } else {
-          threshold(ctxresult, u,v,w);
-          //threshold(ctxresult, ...weights[idx]);
-        }
+        
         
         ctxresult.font = "16px sans-serif";
         ctxresult.fillStyle = 'white';
