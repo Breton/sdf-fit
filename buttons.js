@@ -91,6 +91,16 @@
           modebias = 1;
         }
       },
+      'reset instructions': function () {
+        resetInstructions();
+      },
+      'sdplaritm': function() {
+        buttons['save data point']();
+        buttons['load and average']();
+        buttons['reset instructions']();
+        buttons['toggle mode']();
+
+      },
       'random pixels': function randomize() {
 
 
@@ -124,6 +134,14 @@
               bestdata.data[i + 1] = bestdata.data[(i + 1).mod(l)] * 0.5 + bestdata.data[(i + 4 * 16 + 1).mod(l)] * 0.25 + bestdata.data[(i - 4 * 16 + 1).mod(l)] * 0.25
               bestdata.data[i + 2] = bestdata.data[(i + 2).mod(l)] * 0.5 + bestdata.data[(i + 4 * 16 + 2).mod(l)] * 0.25 + bestdata.data[(i - 4 * 16 + 2).mod(l)] * 0.25
 
+          }
+          ctxsmall.putImageData(bestdata, 0, 0);
+      },
+      'kill blue': function blurButton() {
+          olddata = bestdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
+          for (let i = 0; i < bestdata.data.length; i += 4) {
+              let l = bestdata.data.length
+              bestdata.data[i + 2] = 0.5*255;
           }
           ctxsmall.putImageData(bestdata, 0, 0);
       },
