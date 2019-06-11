@@ -69,7 +69,7 @@ for (let i = 0; i < letters.length; i++) {
         ["fillRect", 0, 0, 256, 256],
         ["fillStyle", "white"],
         ["translate", 128, 128],
-        ["rotate",  rotation + (i) * ( ( Math.PI )/ (letters.length ))],
+        ["rotate",  rotation + (i) * ( 2*( Math.PI )/ (letters.length ))],
         ["fillRect", 0, 0, 96, 96]
        // ["fillText", letters[i], 20, 90, 256]
     ];
@@ -84,7 +84,7 @@ function resetInstructions(){
           ["fillRect", 0, 0, 256, 256],
           ["fillStyle", "white"],
           ["translate", 128, 128],
-          ["rotate", rotation + (i) * ( ( Math.PI )/ (letters.length ))],
+          ["rotate", rotation + (i) * ( 2*( Math.PI )/ (letters.length ))],
           ["fillRect", 0, 0, 96, 96]
          // ["fillText", letters[i], 20, 90, 256]
       ];
@@ -211,6 +211,9 @@ async function main() {
     let deltapixel = [0, 0, 0];
     let idx = onepixel % (bestdata.data.length / 4);
 
+    if(weightFail - weightSuccess > 1 || globalscore - minimumScore > 10 && minimumWeights.length){
+      newweights=weights=bestweights=minimumWeights;
+    }
     if (weightFail - weightSuccess > 10) {
         modebias = 1;
         weightFail = 0;
@@ -314,20 +317,20 @@ async function main() {
     }
     if (willAdjustWeights) {
         if (newscore < oldscore) {
-            weightSuccess += 1;
+            weightSuccess += 1
             // modebias *= 0.9;
         } else {
-            weightFail += 1;
+            weightFail += 1
             // modebias = 1 * 0.1 + modebias * 0.9
             
         }
     } else {
         if (newscore < oldscore) {
-            pixelSuccess += 1;
+            pixelSuccess += 1
             // modebias = 1 * 0.1 + modebias * 0.9
             
         } else {
-            pixelFail += 1;
+            pixelFail += 1
             // modebias *= 0.9;
         }
     }
@@ -372,14 +375,6 @@ async function main() {
     debug(`
   weightSuccess ${weightSuccess}
   weightFail ${weightFail}
-  weightRange ${weightRange}
-  weightMin ${weightMin}
-  weightMax ${weightMax}
-  badWeightMin ${badWeightMin}
-  badWeightMax ${badWeightMax}
-  idealWeightRange ${idealWeightRange}
-  badWeightRange ${badWeightRange}
-  
   samplecount ${samplecount}
   scorecount ${scorecount}
   pixelSuccess ${pixelSuccess}

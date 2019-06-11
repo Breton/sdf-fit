@@ -84,7 +84,7 @@ let samplecount = 0;
     }
     //normalise array; 
     array = ((max,min) => (
-      array.map(x=> (x+min)/(max-min) )
+      array.map(x=> (x-min)/(max-min) )
     ))(
       (array.reduce((a, b) => Math.max(a,b) )),
       (array.reduce((a, b) => Math.min(a,b) ))
@@ -341,7 +341,7 @@ function scoreKernel(d,withbins=false) {
     return d;
  }
 
-  function thresholdKernelMin2(d, r, g, b) {
+  function thresholdKernelMinMax(d, r, g, b) {
 
      const pi = Math.PI;
      Number.prototype.mod = function(n) {
@@ -660,9 +660,9 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
 
      
 
-     const u = r.mod(1)*2-1;
-     const v = g.mod(1)*2-1;
-     const w = b.mod(1)*2-1;
+     const u = r.mod(1);
+     const v = g.mod(1);
+     const w = b.mod(1);
      const s = Math.sqrt(u*u+v*v);
      const a = Math.atan2(u,v);
 
@@ -672,9 +672,12 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
          let r = d[i + 0] / 255;
          let g = d[i + 1] / 255;
          let b = d[i + 2] / 255;
-         let bc = (-w/2)*cos(2*pi*(b+w*16))+(-w/2);
+         let bc = (-w/2)*cos(pi*(b+w*16))+(-w/2);
+         let rc = (-w/2)*cos(pi*(b+w*16))+(-w/2);
+         let gc = (-w/2)*cos(pi*(b+w*16))+(-w/2);
+
          d[i + 0] = d[i + 1] = d[i + 2] = 
-         (Math.min( (1-bc) * Math.min(u+r,v+g), bc * Math.max(u+r,v+g)) /0.02 )*255;
+         (( (1-bc) * Math.min(r+u,g+v) + bc * Math.max(r+u,g+v)) /0.02 )*255;
 
          
                
@@ -1122,7 +1125,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          let scores = await Promise.all([mscorep, nscorep]);
          mscore = (Math.abs(1 - Math.sqrt(scores[0]) / lowestScorePerIndex[idx]));
          nscore = (Math.sqrt((scores[1])) / lowestScorePerIndex[idx]);
-         let result = nscore * nscore + mscore * mscore;
+         let result = Math.sqrt(nscore * nscore + mscore * mscore);
          weightMemo.set(key, result);
          return result;
        }
@@ -1468,7 +1471,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
  // ctx is used as scratch for doing the scoring.
  
  let targetDataObjects = [];
- let size = 32;
+ let size = 16;
 
  async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000, debug = false) {
     let newscore = 0;
