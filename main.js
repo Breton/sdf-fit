@@ -52,7 +52,7 @@ duration = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
 
 
-letters = '01';
+letters = '0123';
 
 
 
@@ -175,9 +175,9 @@ function updatePixel(onepixel,diff=0) {
     let gmin = (gradient.reduce((a, b) => Math.min(a,b) ));
     let grange = gmax-gmin;
 
-    debug('gindex', gmin, gmax, grange, (gmin + grange*0.50), gindex.length);
+    debug('gindex', gmin, gmax, grange, (gmin + grange*0.90), gindex.length);
     debug('diff', diff);
-    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.50) ? i : 0))).filter(x => x);
+    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.90) ? i : 0))).filter(x => x);
     
     if (gindex.length > 0) {
         onepixel = gindex[updatecount%gindex.length];
@@ -189,12 +189,15 @@ function updatePixel(onepixel,diff=0) {
 
     return Math.abs(onepixel);
 }
+let minimumWeights=[];
+let minimumScore=10000;
+
 async function main() {
     samplecount = 0;
     scorecount = 0;
     time = new Date() - starttime;
     updatecount+=1
-
+    
 
     if (!bestdata) {
         olddata = bestdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
@@ -208,18 +211,18 @@ async function main() {
     let deltapixel = [0, 0, 0];
     let idx = onepixel % (bestdata.data.length / 4);
 
-  
     if (weightFail - weightSuccess > 10) {
         modebias = 1;
         weightFail = 0;
         //smoothduration=500;
         weightSuccess = 0;
+        newweights=weights=bestweights=minimumWeights;
     }
     if (pixelFail - pixelSuccess > 10) {
         modebias = 0.0;
         pixelFail = 0;
         
-        resetInstructions();
+          resetInstructions();
 
         
         
@@ -229,7 +232,9 @@ async function main() {
         } else {
           buttons.blur();
         }
-        
+        minimumWeights=[];
+        minimumScore=10000;
+        weightMemo = new Map();
         //smoothduration=500;
         pixelSuccess = 0;
     }
@@ -279,6 +284,11 @@ async function main() {
 
     newscore = newscore.score;
 
+    if (willAdjustWeights && newscore < minimumScore){
+      minimumScore = newscore;
+      minimumWeights = newweights;
+
+    }
     if (newscore < oldscore) {
       debug('scores', newscore,oldscore,olderscore,globalscore,'small improvement', newscore - oldscore);
     }
@@ -394,6 +404,8 @@ async function main() {
   lowestever ${lowestever}
   lastimprovoement ${lastimprovoement}
   updatecount ${updatecount}
+  minimumScore ${minimumScore}
+  minimumWeights ${minimumWeights.map((x)=>(x.map((x)=>((x*10000|0)/10000)).join(',   ')+'\n'))}
   weights.map 
   ${weights.map((x)=>(x.map((x)=>((x*10000|0)/10000)).join(',   ')+'\n'))}
   letters ${letters}

@@ -3,7 +3,7 @@ weightscores = [];
 let lowestScorePerIndex = [];
 let scorecount = 0;
 let samplecount = 0;
-scoreInstructionsAndWeightsScoresDebug = [];
+
  //library functions
 
  let debugbuffer = "";
@@ -186,37 +186,39 @@ function indexOfMin(arr) {
  tmin = 100000;
 
 
- function scoreKernel(d,withbins=false) {
-     let length = d.length / 4;
-     let score = 0;
-
-     let bins = []; //256 bins;
-     for (let i = 0; i < d.length; i += 4) {
+function scoreKernel(d,withbins=false) {
+    let length = d.length / 4;
+    let score = 0;
+    let size = Math.sqrt(length);
+     
+    let bins = []; //256 bins;
+    
+    for (let i = 0; i < d.length; i += 4) {
         if(withbins){
             let i2 = i/4;
-            let y2 = Math.floor(i2/256);
-            let x2 = i2%256;
-            let y3 = Math.floor(y2/16);
-            let x3 = Math.floor(x2/16);
+            let y2 = Math.floor(i2/size);
+            let x2 = ((i2%size)+size)%size;
+            
+            let y3 = Math.floor(y2/(size/16));
+            let x3 = Math.floor(x2/(size/16));
+
             let i3 = x3 + y3 * 16;
             bins[i3] = bins[i3] || 0;
             bins[i3] += d[i];
         }
-
-         score += d[i] * d[i];
-
-         let x = d[i] / 255;
-         let g = ((-Math.cos(x * Math.PI * 2) * 0.5 + 0.5) * 255)
-             //penalize graytones.
-         score += g * g;
-
-
-     }
-     if(withbins){
+        score += d[i] * d[i];
+        let x = d[i] / 255;
+        let g = ((-Math.cos(x * Math.PI * 2) * 0.5 + 0.5) * 255)
+        //penalize graytones.
+        score += g * g;
+    }
+    //console.log("bins",bins);
+    if(withbins){
+        
         return {score: score / length, bins:bins};
-     } else {
+    } else {
         return score / length;
-     }
+    }
  }
  function thresholdKernelOld(d, r, g, b) {
 
@@ -1067,14 +1069,8 @@ function thresholdKernelCiirckle(d, r, g, b) {
   
   let badWeightMin = 0;
   let badWeightMax = 0.1;
-  
-  weightRange =  0.8374180869593246;
-  weightMin =  0.40159586891945365;
-  weightMax =  0.9396346289882747;
-  badWeightMin =  0.28551310343576697;
-  badWeightMax =  0.6876465487998825;
-  idealWeightRange =  0.6870444967275899;
-  badWeightRange =  0.6710823695909522;
+
+ let weightMemo = new Map();
   
  async function optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions, start = 0, count = 1000) {
      /* outer: lowestScorePerIndex */
@@ -1083,9 +1079,8 @@ function thresholdKernelCiirckle(d, r, g, b) {
      let nscore = 14100;
      let r, g, b;
      let phi = Math.sqrt(2);// 
-     let range = (weightMax-weightMin);
-     weightRange = Math.random()*range + weightMin + Math.random()*(range)-(range/2);
-     let inc = (weightRange*0.5+idealWeightRange*0.5).mod(1);
+     let range = 1/256;
+     let inc = 7/13;
      let f = (x) => (Math.floor(x * 1000) / 1000);
      let minr = 1000000,
          ming = 1000000,
@@ -1110,6 +1105,10 @@ function thresholdKernelCiirckle(d, r, g, b) {
          }
      }
      async function sample(idx, r, g, b) {
+        let key = `${idx},${Math.floor(r*255)},${Math.floor(g*255)},${Math.floor(b*255)}`;
+        if(weightMemo.has(key)) {
+            return weightMemo.get(key)
+        } else {
          let mscore, nscore;
          let mscorep, nscorep;
          samplecount+=1;
@@ -1123,8 +1122,10 @@ function thresholdKernelCiirckle(d, r, g, b) {
          let scores = await Promise.all([mscorep, nscorep]);
          mscore = (Math.abs(1 - Math.sqrt(scores[0]) / lowestScorePerIndex[idx]));
          nscore = (Math.sqrt((scores[1])) / lowestScorePerIndex[idx]);
-         return nscore * nscore + mscore * mscore;
-
+         let result = nscore * nscore + mscore * mscore;
+         weightMemo.set(key, result);
+         return result;
+       }
      }
 
      for (let i = 0; i < instructions.length; i++) {
@@ -1256,32 +1257,12 @@ function thresholdKernelCiirckle(d, r, g, b) {
          debug("wsamples d", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
 
          if (counter > 0 ) {
-             weightModeSuccess += 1;
-             let iw = (1/weightModeSuccess)*(counter/50)*Math.abs(newscore-oldscore);
-             let w = 1-iw;
-             let range = weightMax-weightMin;
-    
-             //0.35909182331488354
-             //0.17960296863446265
-
-
-
-             // console.log("weightblend",inc,range/4,(inc-range/4),(inc+range/4),weightMin,weightMax,samplecount,iw,w,weightModeSuccess,Math.abs(newscore-oldscore));
-             // console.log("weightblend2",idealWeightRange,Math.min(rinc,binc,ginc),iw,w);
-             idealWeightRange = idealWeightRange*w + weightRange*iw
+     
              newweights[i][0] = r.mod(1), newweights[i][1] = g.mod(1), newweights[i][2] = b.mod(1);
-             weightMin = weightMin > (inc-range/(4)) ? weightMin*w + inc*iw : weightMin;
-             weightMax = weightMax < (inc+range/(4)) ? weightMax*w + inc*iw : weightMax;
+             
+             
 
          } else {
-            weightModeFail += 1;
-            let iw = (1/weightModeFail);
-            let w = 1-iw;
-            let range = badWeightMax-badWeightMin;
-            // console.log("badweightblend",inc,(inc-range/(2*phi)),(inc+range/(2*phi)),weightMin,weightMax,samplecount,iw,w,weightModeSuccess);
-            badWeightRange = badWeightRange*w + weightRange*iw
-            badWeightMin = badWeightMin > (inc-range/(2))? badWeightMin * w + inc * iw : badWeightMin;
-            badWeightMax = badWeightMax < (inc+range/(2))? badWeightMax * w + inc * iw : badWeightMax;
 
             
          }
@@ -1324,7 +1305,6 @@ function thresholdKernelCiirckle(d, r, g, b) {
 
          ctxsmall.putImageData(dataobj, 0, 0);
          let score = await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions);
-
          return 1000 * (score.score);
      }
 
@@ -1488,8 +1468,9 @@ function thresholdKernelCiirckle(d, r, g, b) {
  // ctx is used as scratch for doing the scoring.
  
  let targetDataObjects = [];
+ let size = 32;
 
-  async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000, debug = false) {
+ async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000, debug = false) {
     let newscore = 0;
     let mscore = 14100;
     let nscore = 14100;
@@ -1511,7 +1492,13 @@ function thresholdKernelCiirckle(d, r, g, b) {
          }
      }
     count = Math.min(weights.length, instructions.length, count);
+    ctx.canvas.width=size;
+    ctx.canvas.height=size;
+    ctx.save();
+    
 
+    ctx.scale(size/256,size/256);
+    
     for (let i = start; i < count+start; i += 1) {
       let scoreidx = i;
       let tmpdata;
@@ -1519,21 +1506,13 @@ function thresholdKernelCiirckle(d, r, g, b) {
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
       ctx.drawImage(canvassmall, 0, 0, 256, 256);  
-      //debugCanvas(ctx,'oscore-'+i);       
       if(!oscore) { oscore = score(ctx) };
       tmpdata = await thresholdAsync(ctx, weights[i][0], weights[i][1], weights[i][2]);
-      //mscore = score(tmpdata);
-      //debugCanvas(ctx,'mscore-'+i);
       mscorep = scoreAsync(tmpdata);
       mscoreps[i-start]=(mscorep);
-
-      //mscores.push(mscore);
-      //mscore = (Math.abs(1 - Math.sqrt(mscore) / lowestScorePerIndex[scoreidx]));
-
       ctx.globalCompositeOperation = 'difference';
       evalCanvas(ctx, instructions[i]);
-      //nscore = score(ctx);
-      //nscores.push(nscore)
+      
       if(debug){
         debugCanvas(ctx,'nscore-'+i);
       }
@@ -1545,6 +1524,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
       //nscore = (Math.sqrt((nscore)) / lowestScorePerIndex[scoreidx]);
       //newscore += nscore * nscore + mscore * mscore;
     }
+    ctx.restore();
     const binsreduce = (a,b)=>( 
             a.map((x,i)=>(x+b[i]))
     )
@@ -1559,7 +1539,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
     nscorebins = nscores.map(x=>x.bins).reduce(binsreduce).map(x=>Math.sqrt(x));
 
     
-    scoreInstructionsAndWeightsScoresDebug = ['scoreweights', newscore, 'mscores', mscores.toString(), "nscores", nscores.toString(), oscore, nscore+mscore+oscore,Math.sqrt(nscore+mscore+oscore) * 1000 / count];
+    
     
     return {score:(Math.sqrt(nscore+mscore+oscore)) * 1000 / count, bins:nscorebins} ;
   }
