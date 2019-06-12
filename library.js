@@ -696,7 +696,7 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
     }
     return d;
  }
- function thresholdKernelMinMaxCone(d, u, v, w) {
+ function thresholdKernelMinMaxCone(d, r, g, b) {
 
      const pi = Math.PI;
      Number.prototype.mod = function(n) {
@@ -707,33 +707,32 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
      const min = Math.min;
      const max = Math.max;
      const abs = Math.abs;
-     const swap = true;
+     
      
      
 
-     //const u = ((u%1)+1)%1;
-     //const v = ((v%1)+1)%1;
-     //const w = ((w%1)+1)%1;
+     const u = (((r%1)+1)%1)*2-1;
+     const v = (((g%1)+1)%1)*2-1;
+     const w = (((b%1)+1)%1)*2-1;
      const s = Math.sqrt(u*u+v*v);
      const a = Math.atan2(u,v);
 
      
     
     for (let i = 0; i < d.length; i += 4) {
-        const r = d[i + 0] / 255;
-        const g = d[i + 1] / 255;
-        const b = swap ? w : d[i + 2] / 255;
-        w = swap ? b : w;
-
-        const t = 2 - abs(b * 4 - 2) - 1 ;
-        const maxormin = (b > 0.5 ? min : max) ;
+        const r = (d[i + 0] / 255)*2-1;
+        const g = (d[i + 1] / 255)*2-1;
+        const b = (d[i + 2] / 255)*2-1;
         
-    
 
-        d[i + 0] = d[i + 1] = d[i + 2] = 
-        (maxormin(  (r - u) * cos(2*pi*w - (t*pi)/4) - (g - v) * sin(2*pi*w - (t*pi)/4), 
-                    (r - u) * sin(2*pi*w + (t*pi)/4) + (g - v) * cos(2*pi*w + (t*pi)/4)  
-                   ) / 0.1 + 0.5) * 255
+        const t = ((-abs(b*s*4)+1 ) * pi) / 4 ;
+        const maxormin = (b*s > 0 ? min : max) ;
+        const c = a + (3*pi/4);
+        /* available r, g, [b,t], u,v,w,a,s
+        /* used c(a(u,v)), t(b,s(u,v)), u, v, w, s(u,v), r, g  */
+        const left = (r - (u * w)/s) * cos(c - t) - (g - (v * w)/s) * sin(c - t);
+        const rite = (r - (u * w)/s) * sin(c + t) + (g - (v * w)/s) * cos(c + t);
+        d[i + 0] = d[i + 1] = d[i + 2] = (maxormin( left , rite ) / 0.1 + 0.5) * 255
     }
      
      
