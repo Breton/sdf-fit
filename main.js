@@ -211,17 +211,17 @@ async function main() {
     let deltapixel = [0, 0, 0];
     let idx = onepixel % (bestdata.data.length / 4);
 
-    if(weightFail - weightSuccess > 1  ){
+    if(weightFail > weightSuccess && minimumWeights.length > 0 ){
       newweights=weights=bestweights=minimumWeights;
     }
-    if (weightFail - weightSuccess > 10) {
+    if (weightFail > 10 && weightFail / weightSuccess > 1.1) {
         modebias = 1;
-        weightFail = 0;
+        weightFail = 1;
         //smoothduration=500;
-        weightSuccess = 0;
+        weightSuccess = 1;
         newweights=weights=bestweights=minimumWeights;
     }
-    if (pixelFail - pixelSuccess > 10) {
+    if (pixelFail > 10 && pixelFail / pixelSuccess > 1.1) {
         modebias = 0.0;
         pixelFail = 0;
         

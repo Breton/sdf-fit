@@ -713,7 +713,7 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
         const b = swap ? w : d[i + 2] / 255;
         w = swap ? b : w;
 
-        const t = 2 - abs((((b%1)+1)%1) * 4 - 2) - 1 ;
+        const t = 2 - abs(b * 4 - 2) - 1 ;
         const maxormin = (b > 0.5 ? min : max) ;
         
     
@@ -721,7 +721,7 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
         d[i + 0] = d[i + 1] = d[i + 2] = 
         (maxormin(  (r - u) * cos(2*pi*w - (t*pi)/4) - (g - v) * sin(2*pi*w - (t*pi)/4), 
                     (r - u) * sin(2*pi*w + (t*pi)/4) + (g - v) * cos(2*pi*w + (t*pi)/4)  
-                   ) / 0.02 + 0.5) * 255
+                   ) / 0.1 + 0.5) * 255
     }
      
      
