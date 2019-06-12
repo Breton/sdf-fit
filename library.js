@@ -707,7 +707,7 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
      const min = Math.min;
      const max = Math.max;
      const abs = Math.abs;
-     const swap = false;
+     const swap = true;
      
      
 
