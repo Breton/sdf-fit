@@ -100,7 +100,18 @@ let maxpixelcounter = 50;
     }
     ctx.putImageData(d,0,0);
  }
-
+function setWeights(w) {
+    if(w.length && w[0].length) {
+      weights=Array.from(w.map((x)=>Array.from(x)));
+      bestweights=Array.from(w.map((x)=>Array.from(x)));
+      newweights=Array.from(w.map((x)=>Array.from(x)));
+    }
+}
+function cloneWeights(w) {
+    if(w.length && w[0].length) {
+        return Array.from(w.map((x)=>Array.from(x)));
+    }
+}
 function indexOfMax(arr) {
     if (arr.length === 0) {
         return -1;
@@ -582,6 +593,7 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
     }
     return d;
  }
+
  function thresholdKernelMinMaxMinBlend(d, r, g, b) {
 
      const pi = Math.PI;

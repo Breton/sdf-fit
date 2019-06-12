@@ -211,17 +211,17 @@ async function main() {
     let deltapixel = [0, 0, 0];
     let idx = onepixel % (bestdata.data.length / 4);
 
-    if(weightFail > weightSuccess && minimumWeights.length > 0 ){
-      newweights=weights=bestweights=minimumWeights;
+    if(weightFail === weightSuccess && minimumWeights.length > 0 ){
+      setWeights(minimumWeights);
     }
-    if (weightFail > 10 && weightFail / weightSuccess > 1.1) {
+    if (weightFail > 100 ) {
         modebias = 1;
         weightFail = 1;
         //smoothduration=500;
         weightSuccess = 1;
-        newweights=weights=bestweights=minimumWeights;
+        setWeights(minimumWeights);
     }
-    if (pixelFail > 10 && pixelFail / pixelSuccess > 1.1) {
+    if (pixelFail > 100 ) {
         modebias = 0.0;
         pixelFail = 0;
         
@@ -235,7 +235,7 @@ async function main() {
         } else {
           buttons.blur();
         }
-        minimumWeights=[];
+        minimumWeights=null;
         minimumScore=10000;
         weightMemo = new Map();
         //smoothduration=500;
@@ -263,7 +263,14 @@ async function main() {
 
     if (willAdjustWeights) {
         if(Math.random()>0.5) {
-          newweights = perturbWeights(weights,instructions.length);
+          if(Math.random()>0.9) {
+            newweights = [];
+            for (let i = 0; i < instructions.length; i++) {
+                newweights[i] = [r(), r(), r()];
+            }
+          } else {
+            newweights = perturbWeights(weights,instructions.length);
+          }
         } else if (Math.random()>0.5) {
           newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(weightscores.length && Math.random()>0.9)?indexOfMax(weightscores):(((weightSuccess)%instructions.length)),1);
         } else {
