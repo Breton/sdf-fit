@@ -52,7 +52,7 @@ duration = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
 
 
-letters = '01';
+letters = '0123';
 
 
 
@@ -175,9 +175,9 @@ function updatePixel(onepixel,diff=0) {
     let gmin = (gradient.reduce((a, b) => Math.min(a,b) ));
     let grange = gmax-gmin;
 
-    debug('gindex', gmin, gmax, grange, (gmin + grange*0.90), gindex.length);
+    debug('gindex', gmin, gmax, grange, (gmin + grange*Math.random()), gindex.length);
     debug('diff', diff);
-    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*0.90) ? i : 0))).filter(x => x);
+    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*Math.random()) ? i : 0))).filter(x => x);
     
     if (gindex.length > 0) {
         onepixel = gindex[updatecount%gindex.length];
@@ -409,18 +409,7 @@ async function main() {
   gradient
   ${(gradient.map((x,i)=>( !!x ?(i+ ":" + x):0  ) )).filter(x=>x).join(' ')}
     
-  grdient 2
-
-${
-    ((gmax,gmin) => (
-      (gradient.map((x, i) => ((x) > (gmin + (gmax-gmin)*0.1) ? i : 0))).filter(x => x)
-    ))(
-      (gradient.reduce((a, b) => Math.max(a,b) )),
-      (gradient.reduce((a, b) => Math.min(a,b) ))
-    )
-
-    
-}
+ 
 
 
   `)

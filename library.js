@@ -684,7 +684,7 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
     }
     return d;
  }
- function thresholdKernelMinMaxCone(d, r, g, b) {
+ function thresholdKernelMinMaxCone(d, u, v, w) {
 
      const pi = Math.PI;
      Number.prototype.mod = function(n) {
@@ -695,30 +695,38 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
      const min = Math.min;
      const max = Math.max;
      const abs = Math.abs;
-     
+     const swap = false;
      
      
 
-     const u = ((r%1)+1)%1;
-     const v = ((g%1)+1)%1;
-     const t = ((b%1)+1)%1;
+     //const u = ((u%1)+1)%1;
+     //const v = ((v%1)+1)%1;
+     //const w = ((w%1)+1)%1;
      const s = Math.sqrt(u*u+v*v);
      const a = Math.atan2(u,v);
 
      
-
+    
     for (let i = 0; i < d.length; i += 4) {
-        let r = d[i + 0] / 255;
-        let g = d[i + 1] / 255;
-        let b = d[i + 2] / 255;
-        const w = 2 - abs((((b%1)+1)%1) * 4 - 2) - 1;
-        const maxormin = b > 0.5 ? min : max;
+        const r = d[i + 0] / 255;
+        const g = d[i + 1] / 255;
+        const b = swap ? w : d[i + 2] / 255;
+        w = swap ? b : w;
+
+        const t = 2 - abs((((b%1)+1)%1) * 4 - 2) - 1 ;
+        const maxormin = (b > 0.5 ? min : max) ;
+        
+    
 
         d[i + 0] = d[i + 1] = d[i + 2] = 
-        (maxormin(  (r - u) * cos(2*pi*t - (w*pi)/4) - (g - v) * sin(2*pi*t - (w*pi)/4)  , 
-                    (r - u) * sin(2*pi*t - (w*pi)/4) + (g - v) * cos(2*pi*t - (w*pi)/4)  
-               ) / 0.02 + 0.5) * 255
+        (maxormin(  (r - u) * cos(2*pi*w - (t*pi)/4) - (g - v) * sin(2*pi*w - (t*pi)/4), 
+                    (r - u) * sin(2*pi*w + (t*pi)/4) + (g - v) * cos(2*pi*w + (t*pi)/4)  
+                   ) / 0.02 + 0.5) * 255
     }
+     
+     
+
+
     return d;
  }
 function thresholdKernelCiirckle(d, r, g, b) {
@@ -1431,7 +1439,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
       counter += 10;
      }
      debug("pxsamples a", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
-     while (diff > 0 && getElapsed() < 200) {
+     while (diff > 0 && getElapsed() < 100) {
          counter--;
          let samples = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc);
          if (samples - minscore > 0) {
@@ -1443,7 +1451,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          }
 
 
-         while(diff>=0 && getElapsed() < 200) {
+         while(diff>=0 && getElapsed() < 100) {
             counter--;
             //convert the counter to 3 digits of -1, 0 or 1.
             [rslope,gslope,bslope] = ('000'+(updatecount + counter).toString(5)).slice(-3).split('').map(x=>+x-2)
@@ -1460,7 +1468,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
         
      }
      debug("pxsamples b", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
-     while (diff < 0 && getElapsed() < 200) {
+     while (diff < 0 && getElapsed() < 100) {
         let newscore;
         counter--;
 
@@ -1482,7 +1490,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
           binc *= phi;
           diff = newscore-minscore;
           minscore = newscore;
-          counter += 0.5;
+          
         } else {
           newscore = await sample(i, r , g , b);
           diff = newscore-minscore;
@@ -1607,7 +1615,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
  /* return r g b and counter. */
  async function findSmaller3Vector(idx, r, g, b, sample) {
      let rsample, gsample, bsample;
-
+     const phi = Math.sqrt(2);
      rsample = 0;
      gsample = 0;
      bsample = 0;
@@ -1622,7 +1630,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          ginc = inc;
      while (rsample === 0 && counter > 0) {
          counter--;
-         rinc *= 1.5;
+         rinc *= phi;
          const samples = await Promise.all([sample(i, r + rinc, g, b), sample(i, r - rinc, g, b)])
          rsample = samples[0] - samples[1];
 
@@ -1630,14 +1638,14 @@ function thresholdKernelCiirckle(d, r, g, b) {
      }
      while (gsample === 0 && counter > 0) {
          counter--;
-         ginc *= 1.5;
+         ginc *= phi;
          const samples = await Promise.all([sample(i, r + rinc, g + ginc, b), sample(i, r - rinc, g - ginc, b)])
          gsample = samples[0] - samples[1];
 
      }
      while (bsample === 0 && counter > 0) {
          counter--;
-         binc *= 1.5;
+         binc *= phi;
          const samples = await Promise.all([sample(i, r + rinc, g + ginc, b + binc), sample(i, r - rinc, g - ginc, b - binc)]);
 
          bsample = samples[0] - samples[1];
@@ -1697,10 +1705,10 @@ function thresholdKernelCiirckle(d, r, g, b) {
              b = b - bslope * binc;
              debug(`dscore, c ${counter} i ${i}, rgb ${[f(r),f(g),f(b)]} slope ${[f(rslope*inc), f(gslope*inc), f(bslope*inc)]} score ${f(score)}, minscore ${f(minscore)}, diff  ${f(score - minscore)}`)
              minscore = score;
-             inc *= 1.1;
-             rinc *= 1.5;
-             ginc *= 1.5;
-             binc *= 1.5;
+             inc *= phi;
+             rinc *= phi;
+             ginc *= phi;
+             binc *= phi;
              scale *= 0.5;
          }
 
@@ -1723,10 +1731,10 @@ function thresholdKernelCiirckle(d, r, g, b) {
              b = b + bslope * inc;
              debug(`iscore, c ${counter} i ${i}, rgb ${[f(r),f(g),f(b)]} slope ${[f(rslope*inc), f(gslope*inc), f(bslope*inc)]} score ${f(score)}, minscore ${f(minscore)}, diff  ${f(score - minscore)}`)
              minscore = score;
-             inc *= 0.5;
-             rinc *= 0.5;
-             ginc *= 0.5;
-             binc *= 0.5;
+             inc *= 1/phi;
+             rinc *= 1/phi;
+             ginc *= 1/phi;
+             binc *= 1/phi;
          }
 
      }
