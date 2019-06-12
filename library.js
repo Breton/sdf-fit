@@ -725,13 +725,13 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
         const b = (d[i + 2] / 255)*2-1;
         
 
-        const t = ((-abs(b*s*4)+1 ) * pi) / 4 ;
-        const maxormin = (b*s > 0 ? min : max) ;
+        const t = ((-abs(b*w*2)+1 ) * pi) / 4 ;
+        const maxormin = (b*w > 0 ? min : max) ;
         const c = a + (3*pi/4);
-        /* available r, g, [b,t], u,v,w,a,s
+        /* available r, g, [b,t], u,v,w,a(u,v),s(u,v)
         /* used c(a(u,v)), t(b,s(u,v)), u, v, w, s(u,v), r, g  */
-        const left = (r - (u * w)/s) * cos(c - t) - (g - (v * w)/s) * sin(c - t);
-        const rite = (r - (u * w)/s) * sin(c + t) + (g - (v * w)/s) * cos(c + t);
+        const left = (r - u) * cos(c - t) - (g - v) * sin(c - t);
+        const rite = (r - u) * sin(c + t) + (g - v) * cos(c + t);
         d[i + 0] = d[i + 1] = d[i + 2] = (maxormin( left , rite ) / 0.1 + 0.5) * 255
     }
      
