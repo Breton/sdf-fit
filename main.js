@@ -451,7 +451,7 @@ setTimeout(main, 10);
   iel.onchange=iel.onmousemove=function () { itouched = true; idx=i= +(this.value); }
   iel.setAttribute('max', weights.length);
   iel.setAttribute('min', 0);
-  setInterval(preview, 100);
+  setInterval(preview, 200);
   
   function preview (name,value) {
       let time=new Date();
@@ -469,19 +469,19 @@ setTimeout(main, 10);
         w = weights[idx][2];
 
         let dataobj;
-       dataobj = ctxresult.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+       dataobj = ctxresult.getImageData(0, 0, ctxresult.canvas.width, ctxresult.canvas.height);
 
 
-       let w = ctxresult.canvas.width;
-       let h = ctxresult.canvas.height; 
-       let d = thresholdKernel(dataobj.data, r, g, b);
+       let wd = ctxresult.canvas.width;
+       let hd = ctxresult.canvas.height; 
+       let dd = thresholdKernel(dataobj.data, u, v, w);
 
-       dataobj = new ImageData(d, w, h);
+
 
        ctxresult.putImageData(dataobj, 0, 0);
        
 
-        threshold(ctxresult, u,v,w);
+//        threshold(ctxresult, u,v,w);
 
           if(itouched){
             uel.value=weights[idx][0]; 
