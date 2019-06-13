@@ -48,11 +48,15 @@ maxri = 0;
 minri = 0;
 time = 0;
 duration = 0;
-
+scoreSamples = [];
+scoreWindowSize = 1000;
+scoreRate = 10;
+scoreRateRate = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
+letters = '01234';
 
 
-letters = '0123';
+
 
 
 
@@ -175,9 +179,9 @@ function updatePixel(onepixel,diff=0) {
     let gmin = (gradient.reduce((a, b) => Math.min(a,b) ));
     let grange = gmax-gmin;
 
-    debug('gindex', gmin, gmax, grange, (gmin + grange*Math.random()), gindex.length);
+    gindex = (gradient.map((x, i) => ((x) === (gmax) ? i : 0))).filter(x => x);
+    debug('gindex', gmin, gmax, grange, (gmin + grange), gindex.length);
     debug('diff', diff);
-    gindex = (gradient.map((x, i) => ((x) > (gmin + grange*Math.random()) ? i : 0))).filter(x => x);
     
     if (gindex.length > 0) {
         onepixel = gindex[updatecount%gindex.length];
@@ -211,17 +215,19 @@ async function main() {
     let deltapixel = [0, 0, 0];
     let idx = onepixel % (bestdata.data.length / 4);
 
-    if(weightFail === weightSuccess && minimumWeights.length > 0 ){
+    if(weightFail > 1  && scoreRate > -5 && minimumWeights.length > 0 ){
       setWeights(minimumWeights);
     }
-    if (weightFail > 100 ) {
+    if (weightFail > 1 && scoreRateRate > 0 ) {
+        
         modebias = 1;
         weightFail = 1;
         //smoothduration=500;
         weightSuccess = 1;
         setWeights(minimumWeights);
     }
-    if (pixelFail > 100 ) {
+    if (pixelFail > 1 && scoreRateRate > 0 ) {
+        
         modebias = 0.0;
         pixelFail = 0;
         
@@ -308,9 +314,9 @@ async function main() {
        newdata = olddata;
        weights = newweights = oldweights;
     }
-    if (newscore > olderscore) {
+    if (newscore > olderscore || scoreRateRate > 0) {
         debug('scores', newscore,oldscore,olderscore,globalscore,'big fail', newscore - olderscore);
-        weights = newweights = oldweights = olderweights = bestweights;
+        setWeights(bestweights);
         ctxsmall.putImageData(bestdata, 0, 0);
         newdata = bestdata;
     }
@@ -362,30 +368,61 @@ async function main() {
     }
 
 
-    if (newscore > globalscore) {
+    if (newscore - globalscore < 10 && newscore - globalscore > 0) {
         globalscore = globalscore * 0.99 + newscore * 0.01;
-    } else {
+    } 
+    if (newscore > globalscore && scoreRate < -10) {
+        globalscore = globalscore * 0.99 + newscore * 0.01;
+    } 
+    if(newscore < globalscore) {
         globalscore = newscore;
     }
     //globalscore = Math.max(globalscore, bestScore);
     if (lowestever > globalscore) {
         lowestever = globalscore;
     }
+    
 
-    globalscore = Math.max(newscore,globalscore);
+    {
+      let l = scoreSamples.length
+      scoreSamples.push(newscore);
+      if(l > scoreWindowSize){
+        scoreSamples.shift();
+      }
+      l=l-1;
+
+      let v = (l*l)/2;
+
+      let newScoreRate=  (scoreSamples.reduce((a,b,i)=>a+b*(i))/v - scoreSamples.reduce((a,b,i)=>a+b*(l-i))/v)/l;
+      scoreRateRate = newScoreRate  - scoreRate;
+      scoreRate=newScoreRate;
+
+     
+      //scoreRate=(scoreSamples[l-1]-scoreSamples[0])/l +  ).reduce((a,b)=>a+b)/l;
+      
+      
+
+    }
+
     debug2D('gradient',gradient,16,16);
 
     debugWeights(weights,letters);
+    debugTable(weights);
+    debugTable(minimumWeights);
+
+
     //sctx.drawImage(ocanvas,0,0);
     debug('clear');
 
     debug(`
   weightSuccess ${weightSuccess}
   weightFail ${weightFail}
-  samplecount ${samplecount}
-  scorecount ${scorecount}
   pixelSuccess ${pixelSuccess}
   pixelFail ${pixelFail}
+  scoreRate ${scoreRate}
+  scoreRateRate ${scoreRateRate}
+  samplecount ${samplecount}
+  scorecount ${scorecount}
   duration ${duration}
   smoothduration ${smoothduration}
   modebias ${modebias}
@@ -406,15 +443,11 @@ async function main() {
   lowestever ${lowestever}
   lastimprovoement ${lastimprovoement}
   updatecount ${updatecount}
-  minimumScore ${minimumScore}
-  minimumWeights ${minimumWeights.map((x)=>(x.map((x)=>((x*10000|0)/10000)).join(',   ')+'\n'))}
-  weights.map 
-  ${weights.map((x)=>(x.map((x)=>((x*10000|0)/10000)).join(',   ')+'\n'))}
+  minimumScore ${minimumScore}  
   letters ${letters}
   difference ${difference}
   gindex.length ${gindex.length}
-  gradient
-  ${(gradient.map((x,i)=>( !!x ?(i+ ":" + x):0  ) )).filter(x=>x).join(' ')}
+  
     
  
 

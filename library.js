@@ -29,7 +29,9 @@ let maxpixelcounter = 50;
      }
 
  }
+ function debugTable (table,columns) {
 
+ }
  function debugCanvas(ctx,id){
     id=id.trim().replace(' ','');
     let el = document.getElementById('img-'+id.trim());
@@ -105,6 +107,10 @@ function setWeights(w) {
       weights=Array.from(w.map((x)=>Array.from(x)));
       bestweights=Array.from(w.map((x)=>Array.from(x)));
       newweights=Array.from(w.map((x)=>Array.from(x)));
+      oldweights=Array.from(w.map((x)=>Array.from(x)));
+      olderweights=Array.from(w.map((x)=>Array.from(x)));
+
+       
     }
 }
 function cloneWeights(w) {

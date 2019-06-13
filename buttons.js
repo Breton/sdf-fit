@@ -25,10 +25,12 @@
   buttons = {
       'clear memory': () => Object.keys(localStorage).forEach(x => delete localStorage[x]),
       'random weights': function randomweights() {
+        let w = [];
           for (let i = 0; i < weights.length; i++) {
-              weights[i] = [r(), r(), r()];
+              w[i] = [r(), r(), r()];
           }
-          newweights = weights;
+          setWeights(w);
+          
       },
       'save data point': function saveDataPoint() {
           let counter = +localStorage.getItem('acounter');
