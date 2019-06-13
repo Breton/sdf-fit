@@ -225,15 +225,15 @@ async function main() {
         modebias = 0.0;
         pixelFail = 0;
         
-          resetInstructions();
+        //  resetInstructions();
 
         
         
-        buttons['save data point']();
+        //buttons['save data point']();
         if(Math.random()>0.5){  
-          buttons['load and average']();
+         // buttons['load and average']();
         } else {
-          buttons.blur();
+         // buttons.blur();
         }
         minimumWeights=null;
         minimumScore=10000;

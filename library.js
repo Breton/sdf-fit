@@ -715,7 +715,7 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
      const v = (((g%1)+1)%1)*2-1;
      const w = (((b%1)+1)%1)*2-1;
      const s = Math.sqrt(u*u+v*v);
-     const a = Math.atan2(u,v);
+     
 
      
     
@@ -725,13 +725,17 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
         const b = (d[i + 2] / 255)*2-1;
         
 
-        const t = ((-abs(b*w*2)+1 ) * pi) / 4 ;
-        const maxormin = (b*w > 0 ? min : max) ;
-        const c = a + (3*pi/4);
-        /* available r, g, [b,t], u,v,w,a(u,v),s(u,v)
-        /* used c(a(u,v)), t(b,s(u,v)), u, v, w, s(u,v), r, g  */
-        const left = (r - u) * cos(c - t) - (g - v) * sin(c - t);
-        const rite = (r - u) * sin(c + t) + (g - v) * cos(c + t);
+
+        const s = w;//Math.sqrt((u-b)*(u-b)+(v-w)*(v-w))-1;
+        const t = ((-abs(s*2)+1 ) * pi) / 4 ;
+        const maxormin = (s > 0 ? min : max) ;
+        const a = b*pi;//Math.atan2(u-b,v-w);
+
+        /* r,g,b,u,v,w -> a,t,s*/
+        
+        
+        const left = (r - u) * cos(a - t) - (g - v) * sin(a - t);
+        const rite = (r - u) * sin(a + t) + (g - v) * cos(a + t);
         d[i + 0] = d[i + 1] = d[i + 2] = (maxormin( left , rite ) / 0.1 + 0.5) * 255
     }
      
