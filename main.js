@@ -218,7 +218,7 @@ async function main() {
     if(weightFail > 1  && scoreRate > -5 && minimumWeights.length > 0 ){
       setWeights(minimumWeights);
     }
-    if (weightFail > 1 && scoreRateRate > 0 ) {
+    if (weightFail > 1000 && scoreRateRate > 0 ) {
         
         modebias = 1;
         weightFail = 1;
@@ -226,7 +226,7 @@ async function main() {
         weightSuccess = 1;
         setWeights(minimumWeights);
     }
-    if (pixelFail > 1 && scoreRateRate > 0 ) {
+    if (pixelFail > 10 && scoreRateRate > 0 ) {
         
         modebias = 0.0;
         pixelFail = 0;
@@ -302,7 +302,7 @@ async function main() {
 
     if (willAdjustWeights && newscore < minimumScore){
       minimumScore = newscore;
-      minimumWeights = newweights;
+      minimumWeights = cloneWeights(newweights);
 
     }
     if (newscore < oldscore) {
@@ -312,7 +312,7 @@ async function main() {
        debug('scores', newscore,oldscore,olderscore,globalscore,'small fail', newscore - oldscore);
        ctxsmall.putImageData(olddata, 0, 0);
        newdata = olddata;
-       weights = newweights = oldweights;
+       setWeights(oldweights);
     }
     if (newscore > olderscore || scoreRateRate > 0) {
         debug('scores', newscore,oldscore,olderscore,globalscore,'big fail', newscore - olderscore);
@@ -322,8 +322,9 @@ async function main() {
     }
     if (newscore < globalscore) {
        debug('scores', newscore,oldscore,olderscore,globalscore,'big improvement', newscore - globalscore);
-       bestweights = newweights;
+       bestweights = cloneWeights(newweights);
        bestdata = newdata;
+       
     }
     if (newscore === oldscore) {
        debug('scores', newscore,oldscore,olderscore,globalscore,'no change', newscore - globalscore);
