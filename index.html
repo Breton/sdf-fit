@@ -251,10 +251,19 @@ textarea {
 </div>
 <div id="debugtables"></div>
 <textarea name="debug" id="debug" cols="30" rows="10"></textarea>
-<script src='buttons.js'></script>
-<script src="library.js">
- 
+
+<script> let pollution = {window:new Set(Object.getOwnPropertyNames(window)) }
+
+//{let names = Object.getOwnPropertyNames(window), descriptors = Object.getOwnPropertyDescriptors(window);  names.filter( (x)=>descriptors[x].enumerable && typeof window[x] === "number" ); }
 </script>
+<script src='buttons.js'></script>
+<script> pollution.buttons = Object.getOwnPropertyNames(window).filter((x)=>(!pollution.window.has(x)));</script>
+<script> pollution.window = new Set(Object.getOwnPropertyNames(window)) </script>
+<script src="library.js"></script>
+<script> pollution.library = Object.getOwnPropertyNames(window).filter((x)=>(!pollution.window.has(x)));</script>
+<script> pollution.window= new Set(Object.getOwnPropertyNames(window)) </script>
 <script src="main.js"></script>
+<script> pollution.main = Object.getOwnPropertyNames(window).filter((x)=>(!pollution.window.has(x)));</script>
+<script> pollution.window = new Set(Object.getOwnPropertyNames(window))</script>
 </body>
 </html>

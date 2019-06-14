@@ -115,10 +115,13 @@ function setWeights(w) {
 }
 function cloneWeights(w) {
     if(w.length && w[0].length) {
-        return Array.from(w.map((x)=>Array.from(x)));
+        let c = Array.from(w.map((x)=>Array.from(x)));
+        console.log("cloneweihgts", w, c)
+        return c;
     }
 }
 function indexOfMax(arr) {
+
     if (arr.length === 0) {
         return -1;
     }
@@ -224,10 +227,10 @@ function scoreKernel(d,withbins=false) {
             bins[i3] += d[i];
         }
         score += d[i] * d[i];
-        let x = d[i] / 255;
-        let g = ((-Math.cos(x * Math.PI * 2) * 0.5 + 0.5) * 255)
+        //let x = d[i] / 255;
+        //let g = ((-Math.cos(x * Math.PI * 2) * 0.5 + 0.5) * 255)
         //penalize graytones.
-        score += g * g;
+        //score += g * g;
     }
     //console.log("bins",bins);
     if(withbins){
@@ -732,10 +735,10 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
         
 
 
-        const s = w;//Math.sqrt((u-b)*(u-b)+(v-w)*(v-w))-1;
+        const s = b;//Math.sqrt((u-b)*(u-b)+(v-w)*(v-w))-1;
         const t = ((-abs(s*2)+1 ) * pi) / 4 ;
         const maxormin = (s > 0 ? min : max) ;
-        const a = b*pi;//Math.atan2(u-b,v-w);
+        const a = w*pi;//Math.atan2(u-b,v-w);
 
         /* r,g,b,u,v,w -> a,t,s*/
         
@@ -1106,10 +1109,10 @@ function thresholdKernelCiirckle(d, r, g, b) {
      let score = 0;
      for (let d = dataobj.data, i = 0; i < d.length; i += 4) {
          score += d[i] * d[i];
-         let x = d[i] / 255;
-         let g = ((-Math.cos(x * Math.PI * 2) * 0.5 + 0.5) * 255)
-             //penalize graytones.
-         score += g * g;
+         //let x = d[i] / 255;
+         //let g = ((-Math.cos(x * Math.PI * 2) * 0.5 + 0.5) * 255)
+         //penalize graytones.
+         //score += g * g;
      }
      return score / (width * height);
  }
@@ -1170,6 +1173,8 @@ function thresholdKernelCiirckle(d, r, g, b) {
      ctx.globalCompositeOperation = 'source-over';
      for (let i = 0; i < instructions.length; i++){
         if (!lowestScorePerIndex[i]) {
+             ctx.fillStyle="black";
+             ctx.fillRect(0,0,256,256);
              evalCanvas(ctx, instructions[i]);
              lowestScorePerIndex[i] = Math.sqrt(score(ctx));
          }
@@ -1182,18 +1187,24 @@ function thresholdKernelCiirckle(d, r, g, b) {
          let mscore, nscore;
          let mscorep, nscorep;
          samplecount+=1;
-         ctx.globalCompositeOperation = 'source-over';
-         ctx.drawImage(canvassmall, 0, 0, 256, 256);
-         let tmpdata =  threshold(ctx, r, g, b);
-         mscorep = scoreAsync(tmpdata);
-         ctx.globalCompositeOperation = 'difference';
-         evalCanvas(ctx, instructions[idx]);
-         nscorep = scoreAsync(ctx);
-         let scores = await Promise.all([mscorep, nscorep]);
-         mscore = (Math.abs(1 - Math.sqrt(scores[0]) / lowestScorePerIndex[idx]));
-         nscore = (Math.sqrt((scores[1])) / lowestScorePerIndex[idx]);
-         let result = Math.sqrt(nscore * nscore + mscore * mscore);
-         weightMemo.set(key, result);
+
+         
+         
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.drawImage(canvassmall, 0, 0, 256, 256);
+          let tmpdata =  threshold(ctx, r, g, b);
+          mscorep = scoreAsync(tmpdata);
+          ctx.globalCompositeOperation = 'difference';
+          evalCanvas(ctx, instructions[idx]);
+
+          nscorep = scoreAsync(ctx);
+          let scores = await Promise.all([mscorep, nscorep]);
+
+          mscore = (Math.abs(1 - Math.sqrt(scores[0]) / lowestScorePerIndex[idx]));
+          nscore = (   Math.sqrt(scores[1]) -  Math.sqrt(scores[0]) ) / lowestScorePerIndex[idx];
+          let result = Math.sqrt(nscore*nscore + mscore*mscore);
+          weightMemo.set(key, result);
+         
          return result;
        }
      }
@@ -1374,6 +1385,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          d[pixelidx * 4 + 2] = 255*(1 - Math.abs((b/255).mod(2) - 1));
 
          ctxsmall.putImageData(dataobj, 0, 0);
+         console.log('weightssc',weights);
          let score = await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions);
          return 1000 * (score.score);
      }
@@ -1538,7 +1550,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
  // ctx is used as scratch for doing the scoring.
  
  let targetDataObjects = [];
- let size = 64;
+ 
 
  async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000, debug = false) {
     let newscore = 0;
@@ -1550,11 +1562,12 @@ function thresholdKernelCiirckle(d, r, g, b) {
     let oscores = [];
     let mscoreps = [];
     let nscoreps = [];
-    
+    let size=evalSize;
     //outer functions:
     // threshold
     // score
     // evalCanvas
+    console.log("ww",weights);
      for (let i = 0; i < instructions.length; i++){
         if (!lowestScorePerIndex[i]) {
              evalCanvas(ctx, instructions[i]);
@@ -1565,32 +1578,35 @@ function thresholdKernelCiirckle(d, r, g, b) {
     ctx.canvas.width=size;
     ctx.canvas.height=size;
     ctx.save();
-    
-
     ctx.scale(size/256,size/256);
-    
+    console.log(weights,start,count);
     for (let i = start; i < count+start; i += 1) {
       let scoreidx = i;
       let tmpdata;
       samplecount +=1;
       ctx.globalAlpha = 1;
+
       ctx.globalCompositeOperation = 'source-over';
       ctx.drawImage(canvassmall, 0, 0, 256, 256);  
-      if(!oscore) { oscore = score(ctx) };
+      
       tmpdata = await thresholdAsync(ctx, weights[i][0], weights[i][1], weights[i][2]);
       mscorep = scoreAsync(tmpdata);
       mscoreps[i-start]=(mscorep);
       ctx.globalCompositeOperation = 'difference';
       evalCanvas(ctx, instructions[i]);
       
-      if(debug){
-        debugCanvas(ctx,'nscore-'+i);
-      }
+
+
+
+
       nscorep = scoreAsync(ctx,true);
 
       nscoreps[i-start]=(nscorep);
       
 
+      if(debug){
+        debugCanvas(ctx,'nscore-'+i);
+      }
       //nscore = (Math.sqrt((nscore)) / lowestScorePerIndex[scoreidx]);
       //newscore += nscore * nscore + mscore * mscore;
     }
@@ -1602,16 +1618,16 @@ function thresholdKernelCiirckle(d, r, g, b) {
  
     mscores = await Promise.all(mscoreps);
     nscores = await Promise.all(nscoreps);
-    oscore = lowestScorePerIndex.map(x=>Math.sqrt(oscore)/x).map(x=>x*x).reduce((a, b) => a + b);
-    oscore = oscore/10;
-    mscore = mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).map(x => x * x).reduce((a, b) => a + b);
-    nscore = nscore = nscores.map((x, idx) => (Math.sqrt((x.score)) / lowestScorePerIndex[idx])).map(x => x * x).reduce((a, b) => a + b);
+    
+    
+    mscore = mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).map(x => x).reduce((a, b) => a + b);
+    nscore = nscore = nscores.map( (x, idx) => (( Math.sqrt(x.score) - Math.sqrt(mscores[idx]) ) / lowestScorePerIndex[idx]) ).map(x => x).reduce((a, b) => a + b);
     nscorebins = nscores.map(x=>x.bins).reduce(binsreduce).map(x=>Math.sqrt(x));
 
     
     
     
-    return {score:(Math.sqrt(nscore+mscore+oscore)) * 1000 / count, bins:nscorebins} ;
+    return {score:(Math.sqrt(nscore*nscore+mscore*mscore)) * 1000 / count, bins:nscorebins} ;
   }
 
  function evalCanvas(ctx, instructions, variables) {

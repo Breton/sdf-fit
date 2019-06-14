@@ -53,10 +53,10 @@ scoreWindowSize = 1000;
 scoreRate = 10;
 scoreRateRate = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
-letters = '01234';
+letters = '0123456789';
+evalSize = 64;
 
-
-
+minimumScoreDiff = 0;
 
 
 
@@ -215,9 +215,6 @@ async function main() {
     let deltapixel = [0, 0, 0];
     let idx = onepixel % (bestdata.data.length / 4);
 
-    if(weightFail > 1  && scoreRate > -5 && minimumWeights.length > 0 ){
-      setWeights(minimumWeights);
-    }
     if (weightFail > 10 && scoreRateRate > 0 && scoreRate > 0 ) {
         
         modebias = 1;
@@ -259,16 +256,16 @@ async function main() {
     olderdata = olddata;
     olddata = (newdata||olddata);
 
-    olderweights = oldweights;
-    oldweights = weights;
-    newweights = weights;
+    olderweights = cloneWeights(oldweights);
+    oldweights = cloneWeights(weights);
+    newweights = cloneWeights(weights);
     
     needsMostImprovement =indexOfMax(weightscores);
 
     debug('maxweightscore',indexOfMax(weightscores),weightscores);
-
+    console.log('weights',weights);
     if (willAdjustWeights) {
-        if(Math.random()>0.5) {
+        if(Math.random()>0.9) {
           if(Math.random()>0.9) {
             newweights = [];
             for (let i = 0; i < instructions.length; i++) {
@@ -278,10 +275,11 @@ async function main() {
             newweights = perturbWeights(weights,instructions.length);
           }
         } else if (Math.random()>0.5) {
+          console.log('weights1',weights);
           newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(weightscores.length && Math.random()>0.9)?indexOfMax(weightscores):(((weightSuccess)%instructions.length)),1);
         } else {
-          newweights = perturbWeights(weights,instructions.length);
-          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, newweights, instructions,(weightscores.length && Math.random()>0.9)?indexOfMax(weightscores):(((weightSuccess)%instructions.length)),1);
+          console.log('weights2',weights);
+          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(weightscores.length && Math.random()>0.9)?indexOfMax(weightscores):(((weightSuccess)%instructions.length)),1);
         }
     } else {
         onepixel = updatePixel(onepixel, oldscore-olderscore);
@@ -291,10 +289,14 @@ async function main() {
 
     
     newdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
-//    ctxsmall.putImageData(bestdata, 0, 0);
-  //  bestScore = await scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
-    // bestScore = bestScore - await scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
-    ctxsmall.putImageData(newdata, 0, 0);
+    
+    //ctxsmall.putImageData(bestdata, 0, 0);
+    //bestScore = await scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
+    
+    minimumScoreDiff = minimumScore - await scoreLoopAsync(ctx, ctxsmall, minimumWeights, instructions, 0, letterCounter);
+
+    //ctxsmall.putImageData(newdata, 0, 0);
+
     newscore = await scoreLoopAsync(ctx, ctxsmall, newweights, instructions, 0, letterCounter);
     gradient = newscore.bins.map((x,i)=> Math.floor(x*0.5+gradient[i]*0.5) );
 
@@ -314,15 +316,16 @@ async function main() {
        newdata = olddata;
        setWeights(oldweights);
     }
-    if (newscore > olderscore || scoreRateRate > 0) {
+    if (newscore > olderscore ) {
         debug('scores', newscore,oldscore,olderscore,globalscore,'big fail', newscore - olderscore);
-        setWeights(bestweights);
+        setWeights(minimumWeights);
         ctxsmall.putImageData(bestdata, 0, 0);
         newdata = bestdata;
     }
     if (newscore < globalscore) {
        debug('scores', newscore,oldscore,olderscore,globalscore,'big improvement', newscore - globalscore);
        bestweights = cloneWeights(newweights);
+       
        bestdata = newdata;
        
        
@@ -447,6 +450,7 @@ async function main() {
   lastimprovement ${lastimprovement}
   updatecount ${updatecount}
   minimumScore ${minimumScore}  
+  minimumScoreDiff ${minimumScoreDiff}  
   letters ${letters}
   difference ${difference}
   gindex.length ${gindex.length}

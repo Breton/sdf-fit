@@ -100,12 +100,12 @@
       'toggle mode': function () {
         if(modebias > 0.5) {
           modebias = 0;
-          minimumWeights=[];
+          minimumWeights=cloneWeights(weights);
           minimumScore=10000;
           weightMemo = new Map();
         } else {
           modebias = 1;
-          newweights=weights=bestweights=minimumWeights;
+          setWeights(minimumWeights);
         }
       },
       'reset instructions': function () {
