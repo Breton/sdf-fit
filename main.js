@@ -28,7 +28,7 @@ weightbias = 0.5;
 pixelbias = 0.5;
 twopixel = 0;
 willAdjustWeights = true;
-lastimprovoement = 0;
+lastimprovement = 0;
 globalscore = 1000000;
 updatecount = 0;
 difference = 0;
@@ -207,7 +207,7 @@ async function main() {
         olddata = bestdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
     }
     if (!bestweights) {
-      bestweights = weights;
+      bestweights = cloneWeights(weights);
     }
 
 
@@ -218,7 +218,7 @@ async function main() {
     if(weightFail > 1  && scoreRate > -5 && minimumWeights.length > 0 ){
       setWeights(minimumWeights);
     }
-    if (weightFail > 1000 && scoreRateRate > 0 ) {
+    if (weightFail > 10 && scoreRateRate > 0 && scoreRate > 0 ) {
         
         modebias = 1;
         weightFail = 1;
@@ -226,7 +226,7 @@ async function main() {
         weightSuccess = 1;
         setWeights(minimumWeights);
     }
-    if (pixelFail > 10 && scoreRateRate > 0 ) {
+    if (pixelFail > 10 && scoreRateRate > 0 && scoreRate > 0 ) {
         
         modebias = 0.0;
         pixelFail = 0;
@@ -325,6 +325,7 @@ async function main() {
        bestweights = cloneWeights(newweights);
        bestdata = newdata;
        
+       
     }
     if (newscore === oldscore) {
        debug('scores', newscore,oldscore,olderscore,globalscore,'no change', newscore - globalscore);
@@ -369,14 +370,19 @@ async function main() {
     }
 
 
-    if (newscore - globalscore < 10 && newscore - globalscore > 0) {
-        globalscore = globalscore * 0.99 + newscore * 0.01;
-    } 
-    if (newscore > globalscore && scoreRate < -10) {
-        globalscore = globalscore * 0.99 + newscore * 0.01;
+    
+    if (newscore >= globalscore) {
+        let m = 0.0273015
+        let k = 0.260159
+        let o = 1.00663
+        let b = -m*Math.pow(lastimprovement,k)+o;
+        lastimprovement++;
+
+        globalscore = globalscore * b + newscore * (1-b);
     } 
     if(newscore < globalscore) {
         globalscore = newscore;
+        lastimprovement = 1;
     }
     //globalscore = Math.max(globalscore, bestScore);
     if (lowestever > globalscore) {
@@ -427,11 +433,7 @@ async function main() {
   duration ${duration}
   smoothduration ${smoothduration}
   modebias ${modebias}
-  weightbias ${weightbias}
-  pixelbias ${pixelbias}
   willAdjustWeights ${willAdjustWeights}
-  letterCounter ${letterCounter}
-  anneal ${anneal}
   iterations ${iterations}
   onepixel ${onepixel}
   bestScore ${bestScore}
@@ -442,7 +444,7 @@ async function main() {
   diff ${newscore - oldscore }
   differ ${newscore - olderscore}
   lowestever ${lowestever}
-  lastimprovoement ${lastimprovoement}
+  lastimprovement ${lastimprovement}
   updatecount ${updatecount}
   minimumScore ${minimumScore}  
   letters ${letters}
@@ -481,11 +483,12 @@ setTimeout(main, 10);
   iel.onchange=iel.onmousemove=function () { itouched = true; idx=i= +(this.value); }
   iel.setAttribute('max', weights.length);
   iel.setAttribute('min', 0);
-  setInterval(preview, 200);
+  setTimeout(preview, 200);
   
   function preview (name,value) {
+      setTimeout(preview, 100);
       let time=new Date();
-      if(time-last > 100){
+      if(time-last > 200){
         last = time;
 
         idx = idx % Math.min(letterCounter, weights.length);
@@ -533,8 +536,9 @@ setTimeout(main, 10);
         ctxresult.translate(0, 0);
         evalCanvas(ctxresult, instructions[idx]);
         ctxresult.restore();
-
         ctxresult.fillText(letters[idx] + " " + fonts[idx % fonts.length], 128, 20, 256);
+        
+
       } 
   }
 }
