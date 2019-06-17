@@ -23,7 +23,7 @@
 
   }
   buttons = {
-      'clear memory': () => Object.keys(localStorage).forEach(x => delete localStorage[x]),
+      'clear memory': () => Object.keys(localStorage).forEach(x => { if( x[0]==='a' ) { delete localStorage[x]; }} ),
       'random weights': function randomweights() {
         let w = [];
           for (let i = 0; i < weights.length; i++) {
@@ -31,6 +31,13 @@
           }
           setWeights(w);
           
+      },
+      'tween weights': function () {
+        setWeights(distributeWeights(tweenWeights(weights,0.005),0.1,0.5));
+      },
+      'mode lock': function () {
+        modelock = !modelock;
+        this.style.backgroundColor= modelock ? 'red' : 'blue';
       },
       'save data point': function saveDataPoint() {
           let counter = +localStorage.getItem('acounter');
@@ -231,6 +238,6 @@
   }
 
   function loadWeights() {
-      weights = JSON.parse(localStorage.getItem('weights'));
-      newweights = JSON.parse(localStorage.getItem('weights'));
+      setWeights(JSON.parse(localStorage.getItem('weights')));
+      
   }

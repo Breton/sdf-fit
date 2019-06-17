@@ -46,31 +46,51 @@ let maxpixelcounter = 50;
      
 
  }
- function debugWeights(weights,letters) {
+ function debugWeights(weights,letters,color='blue') {
     let el = document.getElementById('weights');
-    let weightels = document.querySelectorAll(".weight");
-    //<span class="weight" id="n-0">0</span>
-    if(!weightels.length) {
+    let elmap = {}
+    if(typeof letters === "string") {
+        letters=letters.split('');
+
+    }
+    if(typeof letters === "undefined") {
+        letters = new Array(weights.length);
+        letters.fill('0');
+        letters = letters.map((x,i)=>'d'+i);
+
+    }
+    let elselector = letters.map(x=>'#n-'+x).join(',')
+    let weightels = document.querySelectorAll(elselector);
+
+    
+    //create elements that don't exist yet.
+    if(weightels.length<letters.length) {
         for(let i = 0 ; i < weights.length; i++) {
-            let span = document.createElement('SPAN');
-            span.textContent=letters[i];
-            span.setAttribute('id', 'n-'+i);
-            span.className='weight';
-            el.appendChild(span);
+            let wel = document.getElementById('n-'+letters[i]);
+            
+            if(!wel){
+
+                let span = document.createElement('SPAN');
+                span.textContent=letters[i];
+                span.setAttribute('id', 'n-'+letters[i]);
+                span.className='weight';
+                span.style.backgroundColor=color;
+                el.appendChild(span);
+            }
 
         }
     }
-    weightels = document.querySelectorAll(".weight");
-    for (let i = 0; i < weightels.length ;i++) {
-        
-        if(weights && weights[i]) {
 
-            weightels[i].style.left = (weights[i][0]*240) + 'px';
-            weightels[i].style.top = (weights[i][1]*240) + 'px';    
-            weightels[i].style.width = (weights[i][2]*240) + 'px';    
 
+
+    for (let i = 0; i < letters.length ;i++) {
+        let wel = document.getElementById('n-'+letters[i]);
+        //console.log('weightsdebug',weights);
+        if(wel  && weights.length  ) {
+            wel.style.left = (weights[i][0]*256) + 'px';
+            wel.style.top = (weights[i][1]*256) + 'px';
+            wel.style.width = (weights[i][2]*240+10) + 'px';
         }
-        
     }
  }
  function debug2D(id,array,width,height) {
@@ -103,6 +123,16 @@ let maxpixelcounter = 50;
     ctx.putImageData(d,0,0);
  }
 function setWeights(w) {
+    if(w.length < letters.length) {
+        let a = [];
+        for(let i = 0; i < letters.length; i++) {
+            a[i] = w[i%w.length];
+        }
+        w = a;
+    }
+    if(w.length > letters.length) {
+        w.length = letters.length;
+    }
     if(w.length && w[0].length) {
       weights=Array.from(w.map((x)=>Array.from(x)));
       bestweights=Array.from(w.map((x)=>Array.from(x)));
@@ -114,10 +144,12 @@ function setWeights(w) {
     }
 }
 function cloneWeights(w) {
-    if(w.length && w[0].length) {
+    if(w.length > 0 && w[0] && w[0].length) {
         let c = Array.from(w.map((x)=>Array.from(x)));
-        console.log("cloneweihgts", w, c)
+        
         return c;
+    } else {
+        return w
     }
 }
 function indexOfMax(arr) {
@@ -177,7 +209,7 @@ function indexOfMin(arr) {
          if (typeof event.data.jobid === 'number') {
              if (typeof callbacks[event.data.jobid] === 'function') {
                  callbacks[event.data.jobid](event.data.returnValue);
-                 //console.log("returned ",jobid, typeof event.data.returnValue, typeof callbacks[event.data.jobid]);
+                 
                  delete callbacks[event.data.jobid];
 
              } else {
@@ -430,7 +462,7 @@ function scoreKernel(d,withbins=false) {
      //    /w
      // ) ;
      const R = (a,z)=>( ( a + u * cos( 2*pi*z/3 ) + v * sin( 2*pi*z/3 ) )/w+0.5 )
-    //console.log('threshold',u,v,w,o,s,t,[0,0.1,0.5,0.9,1].map(S));
+    
 
      const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
 
@@ -475,7 +507,7 @@ function scoreKernel(d,withbins=false) {
      //    /w
      // ) ;
      const R = (a,z)=>( ( a + u * cos( 2*pi*z/3 ) + v * sin( 2*pi*z/3 ) )/w+0.5 )
-    //console.log('threshold',u,v,w,o,s,t,[0,0.1,0.5,0.9,1].map(S));
+    
 
      const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
 
@@ -516,7 +548,7 @@ function thresholdKernelCircle1(d, r, g, b) {
      //    /w
      // ) ;
      const R = (a,z)=>( ( a + u * cos( 2*pi*z/3 ) + v * sin( 2*pi*z/3 ) )/w+0.5 )
-    //console.log('threshold',u,v,w,o,s,t,[0,0.1,0.5,0.9,1].map(S));
+    
 
      const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
 
@@ -745,7 +777,7 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
         
         const left = (r - u) * cos(a - t) - (g - v) * sin(a - t);
         const rite = (r - u) * sin(a + t) + (g - v) * cos(a + t);
-        d[i + 0] = d[i + 1] = d[i + 2] = (maxormin( left , rite ) / 0.1 + 0.5) * 255
+        d[i + 0] = d[i + 1] = d[i + 2] = (maxormin( left , rite ) / 0.01 + 0.5) * 255
     }
      
      
@@ -779,7 +811,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
      //    /w
      // ) ;
      const R = (a,z)=>( ( a + u * cos( 2*pi*z/3 ) + v * sin( 2*pi*z/3 ) )/w+0.5 )
-    //console.log('threshold',u,v,w,o,s,t,[0,0.1,0.5,0.9,1].map(S));
+    
 
      const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
 
@@ -870,38 +902,58 @@ function thresholdKernelCiirckle(d, r, g, b) {
      ctx.putImageData(dataobj, 0, 0);
      return dataobj;
  }
+ function distributeWeights(weights,amount=0.01,distance=0.1){
+    let newweights = cloneWeights(weights);
+    let l = weights.length;
+    for (var i = weights.length - 1; i >= 0; i--) {
+        for (var j = weights.length - 1; j >= 0; j--) {
+            let rd=newweights[i][0]-newweights[j][0];
+            let gd=newweights[i][1]-newweights[j][1];
+            let bd=newweights[i][2]-newweights[j][2];
+            if(Math.sqrt(rd*rd+gd*gd+bd*bd)<distance) {
+                newweights[i][0] = Math.max(0,Math.min(1,newweights[i][0]+rd*amount));
+                newweights[i][1] = Math.max(0,Math.min(1,newweights[i][1]+gd*amount));
+                newweights[i][2] = Math.max(0,Math.min(1,newweights[i][2]+bd*amount));
+              
+                newweights[j][0] = Math.max(0,Math.min(1,newweights[j][0]-rd*amount));
+                newweights[j][1] = Math.max(0,Math.min(1,newweights[j][1]-gd*amount));
+                newweights[j][2] = Math.max(0,Math.min(1,newweights[j][2]-bd*amount));
+            }
 
- function tweenWeights(weights) {
+        }
+    }
+    return newweights;
+ }
+ function tweenWeights(weights,amount=0.5) {
      let newweights = [];
      for (let i = 0; i < weights.length; i++) {
-         let lidx = (i + weights.length - 1) % weights.length;
-         let ridx = (i + weights.length + 1) % weights.length;
+         let lidx = (i + weights.length - 1).mod( weights.length );
+         let ridx = (i + weights.length + 1).mod( weights.length );
+
          newweights[i] = [];
-         if (i !== 0 && i !== (weights.length - 1)) {
-             const s = Math.sin
-             const c = Math.cos
-             const t = Math.PI * 2
+         
+         const s = Math.sin
+         const c = Math.cos
+         const t = Math.PI * 2
+
+         const r = (weights[i][0]); 
+         const g = (weights[i][1]);
+         const b = (weights[i][2]);
+         const rl = (weights[lidx][0]);
+         const gl = (weights[lidx][1]);
+         const bl = (weights[lidx][2]);
+         const rr = (weights[ridx][0]);
+         const gr = (weights[ridx][1]);
+         const br = (weights[ridx][2]);
+
+         let ia = (1-amount);
+         let da = amount/2;
+
+         newweights[i][0] = (r * ia + (rl) * da + (rr) * da);
+         newweights[i][1] = (g * ia + (gl) * da + (gr) * da);
+         newweights[i][2] = (b * ia + (bl) * da + (br) * da);
 
 
-             const r = (weights[i][0]) * t;
-             const g = (weights[i][1]) * t;
-             const b = (weights[i][2]) * t;
-             const rl = (weights[lidx][0]) * t;
-             const gl = (weights[lidx][1]) * t;
-             const bl = (weights[lidx][2]) * t;
-             const rr = (weights[ridx][0]) * t;
-             const gr = (weights[ridx][1]) * t;
-             const br = (weights[ridx][2]) * t;
-
-             newweights[i][0] = Math.atan2((s(r) * 0.98 + s(rl) * 0.01 + s(rr)) * 0.01, (c(r) * 0.98 + c(rl) * 0.01 + c(rr)) * 0.01) / t;
-             newweights[i][1] = Math.atan2((s(g) * 0.98 + s(gl) * 0.01 + s(gr)) * 0.01, (c(g) * 0.98 + c(gl) * 0.01 + c(gr)) * 0.01) / t;
-             newweights[i][2] = Math.atan2((s(b) * 0.98 + s(bl) * 0.01 + s(br)) * 0.01, (c(b) * 0.98 + c(bl) * 0.01 + c(br)) * 0.01) / t;
-
-         } else {
-             newweights[i][0] = ((weights[i][0] + 1e6) % 1);
-             newweights[i][1] = ((weights[i][1] + 1e6) % 1);
-             newweights[i][2] = ((weights[i][2] + 1e6) % 1);
-         }
      }
      console.log("tweened");
      return newweights;
@@ -927,7 +979,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
         
      // }
      olderdata=olddata=bestdata=dataobj;
-     oldderweights=oldweights=bestweights=newweights=weights;
+     setWeights(weights);
      ctx.putImageData(dataobj, 0, 0);
  }
 
@@ -1184,7 +1236,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
         if(weightMemo.has(key)) {
             return weightMemo.get(key)
         } else {
-         let mscore, nscore;
+         let mscore, nscore, cscore;
          let mscorep, nscorep;
          samplecount+=1;
 
@@ -1201,8 +1253,9 @@ function thresholdKernelCiirckle(d, r, g, b) {
           let scores = await Promise.all([mscorep, nscorep]);
 
           mscore = (Math.abs(1 - Math.sqrt(scores[0]) / lowestScorePerIndex[idx]));
-          nscore = (   Math.sqrt(scores[1]) -  Math.sqrt(scores[0]) ) / lowestScorePerIndex[idx];
-          let result = Math.sqrt(nscore*nscore + mscore*mscore);
+          nscore = (   Math.sqrt(scores[1]) ) / lowestScorePerIndex[idx];
+          cscore = (   Math.sqrt(scores[1]) - Math.sqrt(scores[0]) ) / lowestScorePerIndex[idx];
+          let result = Math.sqrt(nscore*nscore + mscore*mscore + cscore*cscore);
           weightMemo.set(key, result);
          
          return result;
@@ -1385,7 +1438,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          d[pixelidx * 4 + 2] = 255*(1 - Math.abs((b/255).mod(2) - 1));
 
          ctxsmall.putImageData(dataobj, 0, 0);
-         console.log('weightssc',weights);
+        // console.log('weightssc',weights);
          let score = await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions);
          return 1000 * (score.score);
      }
@@ -1556,10 +1609,10 @@ function thresholdKernelCiirckle(d, r, g, b) {
     let newscore = 0;
     let mscore = 14100;
     let nscore = 14100;
-    let oscore = 0;
+    let cscore = 0;
     let mscores = [];
     let nscores = [];
-    let oscores = [];
+    let cscores = [];
     let mscoreps = [];
     let nscoreps = [];
     let size=evalSize;
@@ -1567,7 +1620,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
     // threshold
     // score
     // evalCanvas
-    console.log("ww",weights);
+    
      for (let i = 0; i < instructions.length; i++){
         if (!lowestScorePerIndex[i]) {
              evalCanvas(ctx, instructions[i]);
@@ -1579,7 +1632,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
     ctx.canvas.height=size;
     ctx.save();
     ctx.scale(size/256,size/256);
-    console.log(weights,start,count);
+    
     for (let i = start; i < count+start; i += 1) {
       let scoreidx = i;
       let tmpdata;
@@ -1620,14 +1673,15 @@ function thresholdKernelCiirckle(d, r, g, b) {
     nscores = await Promise.all(nscoreps);
     
     
-    mscore = mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).map(x => x).reduce((a, b) => a + b);
-    nscore = nscore = nscores.map( (x, idx) => (( Math.sqrt(x.score) - Math.sqrt(mscores[idx]) ) / lowestScorePerIndex[idx]) ).map(x => x).reduce((a, b) => a + b);
+    mscore = mscores.map((x, idx) => (Math.abs(1 - Math.sqrt(x) / lowestScorePerIndex[idx]))).map(x => x).reduce((a, b) => a + b);
+    nscore = nscores.map( (x, idx) => (( Math.sqrt(x.score)  ) / lowestScorePerIndex[idx]) ).map(x => x).reduce((a, b) => a + b);
+    cscore = nscores.map( (x, idx) => (( Math.sqrt(x.score) - Math.sqrt(mscores[idx])  ) / lowestScorePerIndex[idx]) ).map(x => x).reduce((a, b) => a + b);
     nscorebins = nscores.map(x=>x.bins).reduce(binsreduce).map(x=>Math.sqrt(x));
 
     
     
     
-    return {score:(Math.sqrt(nscore*nscore+mscore*mscore)) * 1000 / count, bins:nscorebins} ;
+    return {score:(Math.sqrt(nscore*nscore+mscore*mscore+cscore*cscore)) * 1000 / count, bins:nscorebins} ;
   }
 
  function evalCanvas(ctx, instructions, variables) {
@@ -1635,11 +1689,11 @@ function thresholdKernelCiirckle(d, r, g, b) {
      instructions.forEach(function(o, i) {
          switch (typeof ctx[o[0]]) {
              case 'function':
-                 //console.log('function', o[0], ctx[o[0]],o.slice(1));
+                 
                  ctx[o[0]](...o.slice(1));
                  break;
              default:
-                 //console.log('default',o[0],ctx[o[0]])
+                 
                  ctx[o[0]] = o[1];
                  break;
          }
@@ -1659,7 +1713,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
 
 
 
-     console.log('begin optimise weight');
+
 
      let counter = 100;
      let rinc = inc,
