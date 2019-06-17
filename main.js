@@ -53,10 +53,10 @@ scoreWindowSize = 100;
 scoreRate = 10;
 scoreRateRate = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
-letters = '01';
+letters = '0147';
 evalSize = 64;
 modelock = false;
-
+scoreDebug = {};
 weightBenchmarks = [];
 weightBenchmarkCount = 100;
 
@@ -184,11 +184,11 @@ function updatePixel(onepixel,diff=0) {
     let gmin = (gradient.reduce((a, b) => Math.min(a,b) ));
     let grange = gmax-gmin;
 
-    if(Math.random()>0.1){
-      gindex = (gradient.map((x, i) => ( x !== gmin && ((x-gmin)/grange < 0.1) ? i : 0) )).filter(x => x);
+    if(Math.random()>0.5){
+      gindex = (gradient.map((x, i) => ( x !== gmin && ((x-gmin)/grange < 0.1) ? i : 0) )).filter(x => !!x);
       //gindex = (gradient.map((x, i) => (Math.abs(x-(grange/2)-gmin) < (0.1) ? i : 0))).filter(x => x);
     } else {
-      gindex = (gradient.map((x, i) => (((x-gmin)/grange > Math.random()) ? i : 0))).filter(x => x);
+      gindex = (gradient.map((x, i) => (((x-gmin)/grange > Math.random()) ? i : 0))).filter(x => !!x);
     }
     debug('gindex', gmin, gmax, grange, (gmin + grange), gindex.length);
     debug('diff', diff);
@@ -225,15 +225,22 @@ async function main() {
     let deltapixel = [0, 0, 0];
     let idx = onepixel % (bestdata.data.length / 4);
     if(!modelock) {
-      if (weightFail > 1 && scoreRateRate > 0 && scoreRate > 0 ) {
+      if (weightFail > 1 && scoreRateRate >= 0 && scoreRate >= 0 ) {
           
           modebias = 1;
           weightFail = 1;
           //smoothduration=500;
           weightSuccess = 1;
-          setWeights(minimumWeights);
+          
+          if(flipCoin()){
+            console.log('set bestweights because score rate');
+            //setWeights(bestweights);
+          } else if(flipCoin()){
+            console.log('set minimal weights because score rate');
+            //setWeights(minimumWeights);
+          }
       }
-      if (pixelFail > 1 && scoreRateRate > 0 && scoreRate > 0 ) {
+      if (pixelFail > 1 && scoreRateRate >= 0 && scoreRate >= 0 ) {
           
           modebias = 0.0;
           pixelFail = 0;
@@ -277,7 +284,7 @@ async function main() {
     debug('maxweightscore',indexOfMax(weightscores),weightscores);
     //console.log('weights',weights);
     if (willAdjustWeights) {
-        if (flipCoin()) {
+        if(scoreRateRate > 0) {
           if(weightBenchmarks.length > 0 ) {
             weights = cloneWeights(weightBenchmarks[Math.floor(weightBenchmarks.length*Math.random())].weights);
             
@@ -285,23 +292,22 @@ async function main() {
         } 
         if(letters.length>2) {
           if (flipCoin()) {
-            weights = tweenWeights(weights);
+            weights = tweenWeights(weights,0.01);
+            //distributeWeights(weights,-0.01,0.5);
           }
           if (flipCoin()) {
-            weights = distributeWeights(weights);
+            weights = distributeWeights(weights,0.01,0.5);
           }
-        }
 
-        if(Math.random()>0.5) {
-          if(Math.random()>0.5) {
-            newweights = [];
-            for (let i = 0; i < instructions.length; i++) {
-                newweights[i] = [r(), r(), r()];
-            }
-          } else {
-            newweights = perturbWeights(weights,instructions.length);
-          }
-        } else if (Math.random()>0.5) {
+        }
+        if (flipCoin()) {
+          //weights = randomWeights(weights);
+        }
+        if(flipCoin()) {
+
+          newweights = perturbWeights(weights,instructions.length);
+          
+        } else if (flipCoin()) {
           //console.log('weights1',weights);
           newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(weightscores.length && Math.random()>0.9)?indexOfMax(weightscores):(((weightSuccess)%instructions.length)),1);
         } else {
@@ -327,19 +333,24 @@ async function main() {
     newscore = await scoreLoopAsync(ctx, ctxsmall, newweights, instructions, 0, letterCounter);
     gradient = newscore.bins.map((x,i)=> Math.floor(x*0.5+gradient[i]*0.5) );
 
+    scoreDebug = newscore;
     newscore = newscore.score;
       
     debugWeights(newweights,letters.split('').map(x=>'n'+x ),'gray' );
 
-    if (willAdjustWeights && newscore < minimumScore){
+    if (willAdjustWeights && newscore < minimumScore || (weightBenchmarks.length && newscore < weightBenchmarks[weightBenchmarks.length-1].score)){
       minimumScore = newscore;
       minimumWeights = cloneWeights(newweights);
-      weightBenchmarks.push({score:newscore,weights:minimumWeights});
+      weightBenchmarks.push({score:newscore,weights:minimumWeights,sum:sumWeights(minimumWeights) });
       weightBenchmarks.sort((a,b)=>a.score-b.score);
       weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
       if(weightBenchmarks.length > weightBenchmarkCount) {
         weightBenchmarks.length = weightBenchmarkCount;
       }
+      weightBenchmarks.sort((a,b)=>a.sum-b.sum);
+      weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
+
+
     }
     if (newscore < oldscore) {
       debug('scores', newscore,oldscore,olderscore,globalscore,'small improvement', newscore - oldscore);
@@ -348,11 +359,11 @@ async function main() {
        debug('scores', newscore,oldscore,olderscore,globalscore,'small fail', newscore - oldscore);
        ctxsmall.putImageData(olddata, 0, 0);
        newdata = olddata;
-       setWeights(oldweights);
+       //setWeights(oldweights);
     }
     if (newscore > olderscore ) {
         debug('scores', newscore,oldscore,olderscore,globalscore,'big fail', newscore - olderscore);
-        setWeights(olderweights);
+
         ctxsmall.putImageData(bestdata, 0, 0);
         newdata = bestdata;
     }
@@ -361,12 +372,15 @@ async function main() {
        bestweights = cloneWeights(newweights);
        bestdata = newdata;
        if(weightBenchmarks[0].score !== newscore ){
-         weightBenchmarks.push({score:newscore,weights:minimumWeights});
+         
+         weightBenchmarks.push({score:newscore,weights:bestweights,sum:sumWeights(bestweights)});
          weightBenchmarks.sort((a,b)=>a.score-b.score);
          weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
          if(weightBenchmarks.length > weightBenchmarkCount) {
             weightBenchmarks.length = weightBenchmarkCount;
          }
+         weightBenchmarks.sort((a,b)=>a.sum-b.sum);
+         weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
        }
 
     }
@@ -471,6 +485,11 @@ async function main() {
   weightFail ${weightFail}
   pixelSuccess ${pixelSuccess}
   pixelFail ${pixelFail}
+  mscore ${scoreDebug.mscore} nscore ${scoreDebug.nscore} cscore ${scoreDebug.cscore}
+  mscores ${scoreDebug.mscores} 
+  nscores ${scoreDebug.nscores} 
+  cscores ${scoreDebug.cscores}
+  lscores ${lowestScorePerIndex}
   scoreRate ${scoreRate}
   scoreRateRate ${scoreRateRate}
   samplecount ${samplecount}
