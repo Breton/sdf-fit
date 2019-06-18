@@ -54,7 +54,7 @@ scoreRate = 10;
 scoreRateRate = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
 letters = '0147';
-evalSize = 16;
+evalSize = 64;
 modelock = false;
 scoreDebug = {};
 weightBenchmarks = [];
@@ -384,7 +384,7 @@ async function main() {
        debug('scores', newscore,oldscore,olderscore,globalscore,'big improvement', newscore - globalscore);
        bestweights = cloneWeights(newweights);
        bestdata = newdata;
-       if(weightBenchmarks[0].score !== newscore ){
+       if(weightBenchmarks && (weightBenchmarks[0]||{}).score !== newscore ){
          
          weightBenchmarks.push({score:Math.round(newscore),weights:bestweights,sum:sumWeights(bestweights)});
          weightBenchmarks.sort((a,b)=>a.score-b.score);
