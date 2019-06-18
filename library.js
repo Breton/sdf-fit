@@ -133,7 +133,7 @@ let maxpixelcounter = 50;
     ctx.putImageData(d,0,0);
  }
 function setWeights(w) {
-    console.log("setWEights",minimumScore)
+    
     if(w.length < letters.length) {
         let a = [];
         for(let i = 0; i < letters.length; i++) {
@@ -279,9 +279,9 @@ function scoreKernel(d,withbins=false) {
     //console.log("bins",bins);
     if(withbins){
         
-        return {score: Math.sqrt(score) , bins:bins};
+        return {score: Math.sqrt(score)/Math.sqrt(length) , bins:bins};
     } else {
-        return  Math.sqrt(score);
+        return  Math.sqrt(score)/Math.sqrt(length);
     }
  }
  function thresholdKernelOld(d, r, g, b) {
@@ -1094,7 +1094,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
      return [(n1 - o1) || 0, (n2 - o2) || 0, (n3 - o3) || 0];
  }
 
- function perturbWeights(weights, count = 1, amount = 0.1) {
+ function perturbWeights(weights, count = 1, amount = 0.5) {
      let a = [];
      let idx = Math.min(count - 1, Math.random() * weights.length | 0);
      for (let i = 0; i < weights.length; i++) {
@@ -1136,7 +1136,9 @@ function thresholdKernelCiirckle(d, r, g, b) {
      return a.map((a, i) => ([a[0] - b[i][0], a[1] - b[i][1], a[2] - b[i][2]]))
  }
  function sumWeights(a) {
-    return Math.sqrt(a.reduce((a,b)=>( a[0]*a[9] + a[1]*a[1] + a[2]*a[2] + b[0]*b[9] + b[1]*b[1] + b[2]*b[2] )) )
+    return ( a.reduce((a,b)=> a.concat(b)).map((x,i)=>Math.floor(((i+1 )*x*255))).map((x)=>x*x).reduce((a,b)=>a+b));
+
+    //return Math.sqrt(a.reduce((a,b)=>( a[0]*a[9] + a[1]*a[1] + a[2]*a[2] + b[0]*b[9] + b[1]*b[1] + b[2]*b[2] )) )
  }
 
  function addWeights(a, b, factor) {
@@ -1265,10 +1267,10 @@ function thresholdKernelCiirckle(d, r, g, b) {
           // nscore = (   Math.sqrt(scores[1]) ) / lowestScorePerIndex[idx];
           // cscore = (   Math.sqrt(scores[1]) - Math.sqrt(scores[0]) ) / lowestScorePerIndex[idx];
           // let result = Math.sqrt(nscore*nscore + mscore*mscore + cscore*cscore);
-
-          weightMemo.set(key, result);
+          
+          weightMemo.set(key, result.score);
          
-         return result;
+         return result.score/1000;
        }
      }
 
@@ -1396,6 +1398,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
 
          }
          weightscores[i]=await sample(i, r, g, b);
+         
          //console.log("weight score",i, weightSuccess,weightFail,  weightscores[i],oldscore, weightscores[i]-oldscore,lowestScorePerIndex[i],counter);
          
          debug("wsamples d", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
@@ -1677,21 +1680,24 @@ function thresholdKernelCiirckle(d, r, g, b) {
     }
     ctx.restore();
     const binsreduce = (a,b)=>( 
-            a.map((x,i)=>(x+b[i]))
+        a.map((x,i)=>(x+b[i]))
     )
 
- 
+    const shapeMscore = (x,l)=>(
+        Math.max(1-x/l,(x-l)/(1-l))
+    )
     mscores = await Promise.all(mscoreps);
     nscores = await Promise.all(nscoreps);
     
     
-    mscore =Math.sqrt(mscores.map( (x, idx) => (Math.abs(1 - (x) / lowestScorePerIndex[idx])) ).map(x => x*x).reduce((a, b) => a + b));
-    nscore = Math.sqrt(nscores.map(x=>x.score).map( (x, idx) => (( (x)  ) / lowestScorePerIndex[idx]) ).map(x => x*x).reduce((a, b) => a + b));
+    mscore =Math.sqrt(mscores.map( (x, idx) =>  shapeMscore(x,lowestScorePerIndex[idx])  ).map(x => x*x).reduce((a, b) => a + b));
+    nscore = Math.sqrt(nscores.map(x=>x.score).map( (x, idx) => ( (x)   / ((mscores[idx])||0.00001)) ).map(x => x*x).reduce((a, b) => a + b));
     cscores = nscores.map(x=>x.score).map( (x, idx) => (( Math.max(0, (x) - (mscores[idx]))  ) / lowestScorePerIndex[idx]) );
     cscore = Math.sqrt(cscores.map(x => x*x).reduce((a, b) => a + b));
 
     nscorebins = nscores.map(x=>x.bins).reduce(binsreduce).map(x=>Math.sqrt(x));
-    return {score:(Math.sqrt(mscore*mscores+cscore*cscore)) * 1000, bins:nscorebins, mscore, nscore, cscore, mscores:mscores.map((x, idx) => (Math.abs(1 - (x) / lowestScorePerIndex[idx]))), nscores:nscores.map((x,i)=>x.score/lowestScorePerIndex[i]), cscores} ;
+    
+    return {score:(Math.sqrt(mscore*mscore+cscore*cscore)) * 1000 / Math.sqrt(count), bins:nscorebins, mscore, nscore, cscore, mscores:mscores.map( (x, idx) =>  shapeMscore(x,lowestScorePerIndex[idx])  ), nscores: nscores.map(x=>x.score).map( (x, idx) => ( (x)   / (mscores[idx])) ) , cscores} ;
   }
 
  function evalCanvas(ctx, instructions, variables) {

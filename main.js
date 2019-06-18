@@ -54,7 +54,7 @@ scoreRate = 10;
 scoreRateRate = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
 letters = '0147';
-evalSize = 64;
+evalSize = 16;
 modelock = false;
 scoreDebug = {};
 weightBenchmarks = [];
@@ -108,11 +108,12 @@ r = Math.random;
 weights = [];
 oldweights = [];
 olderweights = [];
-bestweights = null;
+bestweights = [];
 for (let i = 0; i < letters.length; i++) {
     weights[i] = [r(), r(), r()];
     oldweights[i] = [r(), r(), r()];
     olderweights[i] = [r(), r(), r()];
+    bestweights[i] = [r(), r(), r()];
 }
 weights.length = letters.length
 weightsDiff = [];
@@ -231,30 +232,15 @@ async function main() {
           weightFail = 1;
           //smoothduration=500;
           weightSuccess = 1;
-          
-          if(flipCoin()){
-            console.log('set bestweights because score rate');
-            //setWeights(bestweights);
-          } else if(flipCoin()){
-            console.log('set minimal weights because score rate');
-            //setWeights(minimumWeights);
-          }
+          weights=cloneWeights(minimumWeights);
+          oldweights=cloneWeights(minimumWeights)
+          olderweights=cloneWeights(minimumWeights)
       }
       if (pixelFail > 1 && scoreRateRate >= 0 && scoreRate >= 0 ) {
           
           modebias = 0.0;
           pixelFail = 0;
-          
-          //  resetInstructions();
 
-          
-          
-          //buttons['save data point']();
-          if(Math.random()>0.5){  
-           // buttons['load and average']();
-          } else {
-           // buttons.blur();
-          }
           
           minimumScore=10000;
           weightMemo = new Map();
@@ -284,30 +270,54 @@ async function main() {
     debug('maxweightscore',indexOfMax(weightscores),weightscores);
     //console.log('weights',weights);
     if (willAdjustWeights) {
-        if(scoreRateRate > 0) {
-          if(weightBenchmarks.length > 0 ) {
-            weights = cloneWeights(weightBenchmarks[Math.floor(weightBenchmarks.length*Math.random())].weights);
-            
+        if(scoreRate >= 0) {
+          let whichweights = 'none';
+          switch (Math.floor(Math.random()*10)){
+            case 0: 
+              if(weightBenchmarks && weightBenchmarks.length)
+              weights = cloneWeights(weightBenchmarks[Math.floor(weightBenchmarks.length*Math.random())].weights);
+              whichweights= 'random benchmark'
+              break;
+            case 1: 
+              weights = cloneWeights(bestweights);
+              whichweights= 'best'
+              break;
+            case 2: 
+              weights = cloneWeights(weightBenchmarks[0].weights);
+              whichweights= 'lowest bench'
+              break;
+            case 3: 
+              weights = cloneWeights(minimumWeights);
+              whichweights= 'minimal'
+              break;
+            case 4: 
+              weights = randomWeights(weights);
+              whichweights= 'random'
+              break;
+            default:
+              whichweights = 'no, none';
+              break;
           }
+
+           console.log('loaded',whichweights,updatecount);
         } 
         if(letters.length>2) {
           if (flipCoin()) {
             weights = tweenWeights(weights,0.01);
-            //distributeWeights(weights,-0.01,0.5);
+            
           }
           if (flipCoin()) {
             weights = distributeWeights(weights,0.01,0.5);
           }
 
         }
-        if (flipCoin()) {
-          //weights = randomWeights(weights);
-        }
+
         if(flipCoin()) {
 
-          newweights = perturbWeights(weights,instructions.length);
+          weights = perturbWeights(weights);
           
-        } else if (flipCoin()) {
+        } 
+        if (flipCoin()) {
           //console.log('weights1',weights);
           newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(weightscores.length && Math.random()>0.9)?indexOfMax(weightscores):(((weightSuccess)%instructions.length)),1);
         } else {
@@ -341,7 +351,7 @@ async function main() {
     if (willAdjustWeights && newscore < minimumScore || (weightBenchmarks.length && newscore < weightBenchmarks[weightBenchmarks.length-1].score)){
       minimumScore = newscore;
       minimumWeights = cloneWeights(newweights);
-      weightBenchmarks.push({score:newscore,weights:minimumWeights,sum:sumWeights(minimumWeights) });
+      weightBenchmarks.push({score:Math.round(newscore),weights:minimumWeights,sum:sumWeights(minimumWeights) });
       weightBenchmarks.sort((a,b)=>a.score-b.score);
       weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
       if(weightBenchmarks.length > weightBenchmarkCount) {
@@ -373,7 +383,7 @@ async function main() {
        bestdata = newdata;
        if(weightBenchmarks[0].score !== newscore ){
          
-         weightBenchmarks.push({score:newscore,weights:bestweights,sum:sumWeights(bestweights)});
+         weightBenchmarks.push({score:Math.round(newscore),weights:bestweights,sum:sumWeights(bestweights)});
          weightBenchmarks.sort((a,b)=>a.score-b.score);
          weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
          if(weightBenchmarks.length > weightBenchmarkCount) {

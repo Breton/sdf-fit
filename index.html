@@ -37,7 +37,7 @@ img {
   top:0;
   left:0px;
   right:0px;
-  margin: 0;
+  margin: 5em 0 0;
   padding: 1em;
   overflow: scroll;
   
@@ -196,6 +196,11 @@ input[type=range].slider:focus::-ms-fill-upper {
   left:0;
   width:100vw;
   z-index: 1;
+   white-space: nowrap;
+   overflow: auto;
+   padding-bottom:10px;
+   background: #ccc;
+   box-shadow: 0px -10px 30px
 }
 
 
@@ -222,8 +227,8 @@ textarea {
 	</style>
 </head>
 <body>
-<div id="panel">
   <div id="buttons"></div>
+<div id="panel">
 
 
   <label for="u">u</label><input type="range" class="slider" min=0 max=1 step="0.00391256" id='u' name='u'/>

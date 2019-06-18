@@ -9,18 +9,40 @@
       });
   }
 
-  function makeButton(name, func) {
-      let container = document.getElementById("buttons");
+  function makeButton(name, func,containerId='buttons') {
+      let container = document.getElementById(containerId);
       let newel = document.createElement('button');
+      //track button presses
+      let key = 'btn-count-'+makeNameSafe(name);
+      let count = +localStorage.getItem(key);
+      makeButton.counts=makeButton.counts||{};
+      makeButton.counts[makeNameSafe(name)]=count||0;
+
       newel.setAttribute('id', makeNameSafe(name));
       newel.textContent = name;
+
+
       newel.addEventListener('click', func, false);
-      newel.className="btn btn-primary";
-      
+      newel.addEventListener('click', function () {
+        let count = +localStorage.getItem(key);
+        localStorage.setItem(key, count+1);
+        makeButton.counts[makeNameSafe(name)]=count+1;
+        
+      }, false);
+      newel.className="btn btn-primary";   
       container.appendChild(newel);
 
 
 
+  }
+  function sortButtons(counts,containerId) {
+    let container = document.getElementById(containerId)
+    let buttonorder = Object.keys(counts).sort((a,b)=> counts[b]-counts[a] );
+    buttonorder.forEach(function (key){
+      let id = '#'+key;
+      let el = container.querySelector(id);
+      container.appendChild(el);
+    });
   }
   buttons = {
       'clear memory': () => Object.keys(localStorage).forEach(x => { if( x[0]==='a' ) { delete localStorage[x]; }} ),
@@ -186,10 +208,7 @@
   };
 
   Object.keys(buttons).forEach(name => makeButton(name, buttons[name]));
-
-
-
-
+  sortButtons(makeButton.counts,'buttons');
 
 
 
@@ -235,6 +254,8 @@
       let d = new ImageData(new Uint8ClampedArray(Array.from(c.data), 16, 16), 16, 16);
       ctxsmall.putImageData(d, 0, 0);
       bestdata = d;
+      olddata = d;
+      olderdata = d;
   }
 
   function loadWeights() {
