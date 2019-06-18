@@ -129,8 +129,8 @@
       'toggle mode': function () {
         if(modebias > 0.5) {
           modebias = 0;
-          minimumWeights=cloneWeights(bestweights);
-          minimumScore=10000;
+          minimumWeights=cloneWeights(weights);
+          minimumScore=globalscore;
           weightMemo = new Map();
         } else {
           modebias = 1;

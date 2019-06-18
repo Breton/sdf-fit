@@ -226,7 +226,7 @@ async function main() {
     let deltapixel = [0, 0, 0];
     let idx = onepixel % (bestdata.data.length / 4);
     if(!modelock) {
-      if (weightFail > 1 && scoreRateRate >= 0 && scoreRate >= 0 ) {
+      if (weightFail > 1 && scoreRateRate >= 0 && scoreRate >= 0 || lastimprovement ===0 ) {
           
           modebias = 1;
           weightFail = 1;
@@ -236,7 +236,7 @@ async function main() {
           oldweights=cloneWeights(minimumWeights)
           olderweights=cloneWeights(minimumWeights)
       }
-      if (pixelFail > 1 && scoreRateRate >= 0 && scoreRate >= 0 ) {
+      if (pixelFail > 1 && scoreRateRate >= 0 && scoreRate >= 0  || lastimprovement ===0) {
           
           modebias = 0.0;
           pixelFail = 0;
@@ -272,7 +272,7 @@ async function main() {
     if (willAdjustWeights) {
         if(scoreRate >= 0) {
           let whichweights = 'none';
-          switch (Math.floor(Math.random()*10)){
+          switch (updatecount % 10){
             case 0: 
               if(weightBenchmarks && weightBenchmarks.length)
               weights = cloneWeights(weightBenchmarks[Math.floor(weightBenchmarks.length*Math.random())].weights);
@@ -303,26 +303,28 @@ async function main() {
         } 
         if(letters.length>2) {
           if (flipCoin()) {
-            weights = tweenWeights(weights,0.01);
+           // weights = tweenWeights(weights,0.001);
             
           }
           if (flipCoin()) {
-            weights = distributeWeights(weights,0.01,0.5);
+            //weights = distributeWeights(weights,0.001,0.5);
+          } else {
+             //weights = distributeWeights(weights,-0.001,0.5);
           }
 
         }
 
         if(flipCoin()) {
 
-          weights = perturbWeights(weights);
+           weights = perturbWeights(weights,weights.length,0.001);
           
         } 
-        if (flipCoin()) {
+        if (flipCoin() && weightscores && weightscores.length) {
           //console.log('weights1',weights);
-          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(weightscores.length && Math.random()>0.9)?indexOfMax(weightscores):(((weightSuccess)%instructions.length)),1);
+          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,indexOfMax(weightscores),1);
         } else {
           //console.log('weights2',weights);
-          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(weightscores.length && Math.random()>0.9)?indexOfMax(weightscores):(((weightSuccess)%instructions.length)),1);
+          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(weightSuccess%instructions.length),1);
         }
     } else {
         onepixel = updatePixel(onepixel, oldscore-olderscore);
@@ -556,10 +558,10 @@ setTimeout(main, 10);
   var u=0,v=0,w=0,i=0,l=0;
   var last = 0;
   var itouched = false;
-  uel.onchange=uel.onmousemove=function () {  u= +(this.value);  }
-  vel.onchange=vel.onmousemove=function () {  v= +(this.value);  }
-  wel.onchange=wel.onmousemove=function () {  w= +(this.value);  }
-  iel.onchange=iel.onmousemove=function () { itouched = true; idx=i= Math.floor(+(this.value)); blend=+(this.value)-i; }
+  uel.onchange=uel.oninput=function () {  u= +(this.value);  }
+  vel.onchange=vel.oninput=function () {  v= +(this.value);  }
+  wel.onchange=wel.oninput=function () {  w= +(this.value);  }
+  iel.onchange=iel.oninput=function () { itouched = true; idx=i= Math.floor(+(this.value)); blend=+(this.value)-i; }
   iel.setAttribute('max', weights.length);
   iel.setAttribute('min', 0);
   setTimeout(preview, 200);
