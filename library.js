@@ -34,16 +34,22 @@ let maxpixelcounter = 50;
  }
  function debugCanvas(ctx,id){
     id=id.trim().replace(' ','');
+    let cc = null;
+    
+
+    
     let el = document.getElementById('img-'+id.trim());
     if(!el) {
         let p = document.getElementById('debugImages');
 
-        el = document.createElement("IMG");
+        el = document.createElement("CANVAS");
+        el.setAttribute('width', ctx.canvas.width);
+        el.setAttribute('height', ctx.canvas.height);
         el.setAttribute("id", "img-"+id.trim());
         p.appendChild(el);
     }
-    ctx.canvas.toBlob((x)=>(el.setAttribute('src', URL.createObjectURL(x) )));
-     
+    let tctx = el.getContext('2d');
+    tctx.drawImage(ctx.canvas, 0,0,ctx.canvas.width,ctx.canvas.height);
 
  }
  function debugWeights(weights,letters,color='blue') {
