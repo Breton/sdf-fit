@@ -494,6 +494,8 @@ async function main() {
     debug('clear');
 
     debug(`
+  globalscore ${globalscore}
+  minimumScore ${minimumScore}  
   weightSuccess ${weightSuccess}
   weightFail ${weightFail}
   pixelSuccess ${pixelSuccess}
@@ -514,7 +516,6 @@ async function main() {
   iterations ${iterations}
   onepixel ${onepixel}
   bestScore ${bestScore}
-  globalscore ${globalscore}
   olderscore ${olderscore}
   oldscore ${oldscore}
   newscore ${newscore}
@@ -523,7 +524,6 @@ async function main() {
   lowestever ${lowestever}
   lastimprovement ${lastimprovement}
   updatecount ${updatecount}
-  minimumScore ${minimumScore}  
   minimumScoreDiff ${minimumScoreDiff}  
   letters ${letters}
   difference ${difference}
