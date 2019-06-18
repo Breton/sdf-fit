@@ -11,7 +11,10 @@ let maxpixelcounter = 50;
       return ((this%n)+n)%n;
   };
 
-
+ function round(n,digits=4){
+    let f = Math.pow(10,digits);
+    return (n*f|0)/f;
+ } 
  // median = max(min(a,b), min(max(a,b),c));
  function debug(str, ...rest) {
 
@@ -23,7 +26,8 @@ let maxpixelcounter = 50;
      } else {
          debugbuffer += str + "\n";
          if (rest && rest.length) {
-             debugbuffer += '\t:' + rest.join(",") + "\n";
+
+             debugbuffer += '\t:' + rest.map((x)=>({ number:((x*1000)|0)/1000 })[typeof x]||x).join(",") + "\n";
          }
 
      }
@@ -123,6 +127,7 @@ let maxpixelcounter = 50;
     ctx.putImageData(d,0,0);
  }
 function setWeights(w) {
+    console.log("setWEights",minimumScore)
     if(w.length < letters.length) {
         let a = [];
         for(let i = 0; i < letters.length; i++) {
@@ -1083,7 +1088,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
      return [(n1 - o1) || 0, (n2 - o2) || 0, (n3 - o3) || 0];
  }
 
- function perturbWeights(weights, count = 1, amount = 0.01) {
+ function perturbWeights(weights, count = 1, amount = 0.1) {
      let a = [];
      let idx = Math.min(count - 1, Math.random() * weights.length | 0);
      for (let i = 0; i < weights.length; i++) {
@@ -1619,21 +1624,23 @@ function thresholdKernelCiirckle(d, r, g, b) {
     // threshold
     // score
     // evalCanvas
-    
+    count = Math.min(weights.length-start, instructions.length-start, count);
+    ctx.canvas.width=size;
+    ctx.canvas.height=size;
+    ctx.save();
+    ctx.scale(size/256,size/256);
+
      for (let i = 0; i < instructions.length; i++){
         if (!lowestScorePerIndex[i]) {
              ctx.globalCompositeOperation='source-over';
              ctx.fillStyle="black";
              ctx.fillRect(0,0,256,256);
              evalCanvas(ctx, instructions[i]);
-             lowestScorePerIndex[i] = (score(ctx));
+             lowestScorePerIndex[i] = await scoreAsync(ctx);
+             console.log(ctx.canvas.width, "lowest score per index", lowestScorePerIndex[i]);
          }
      }
-    count = Math.min(weights.length-start, instructions.length-start, count);
-    ctx.canvas.width=size;
-    ctx.canvas.height=size;
-    ctx.save();
-    ctx.scale(size/256,size/256);
+
     
     for (let i = start; i < count+start; i += 1) {
       let scoreidx = i;
@@ -1672,17 +1679,13 @@ function thresholdKernelCiirckle(d, r, g, b) {
     nscores = await Promise.all(nscoreps);
     
     
-    mscore = Math.sqrt(mscores.map((x, idx) => (Math.abs(1 - (x) / lowestScorePerIndex[idx]))).map(x => x*x).reduce((a, b) => a + b));
+    mscore =Math.sqrt(mscores.map( (x, idx) => (Math.abs(1 - (x) / lowestScorePerIndex[idx])) ).map(x => x*x).reduce((a, b) => a + b));
     nscore = Math.sqrt(nscores.map(x=>x.score).map( (x, idx) => (( (x)  ) / lowestScorePerIndex[idx]) ).map(x => x*x).reduce((a, b) => a + b));
     cscores = nscores.map(x=>x.score).map( (x, idx) => (( Math.max(0, (x) - (mscores[idx]))  ) / lowestScorePerIndex[idx]) );
     cscore = Math.sqrt(cscores.map(x => x*x).reduce((a, b) => a + b));
-    
-    nscorebins = nscores.map(x=>x.bins).reduce(binsreduce).map(x=>Math.sqrt(x));
 
-    
-    
-    
-    return {score:(Math.sqrt(mscore*mscore+nscore*nscore+cscore*cscore)) * 1000, bins:nscorebins, mscore, nscore, cscore, mscores:mscores.map((x, idx) => (Math.abs(1 - (x) / lowestScorePerIndex[idx]))), nscores:nscores.map(x=>x.score), cscores} ;
+    nscorebins = nscores.map(x=>x.bins).reduce(binsreduce).map(x=>Math.sqrt(x));
+    return {score:(Math.sqrt(mscore*mscores+cscore*cscore)) * 1000, bins:nscorebins, mscore, nscore, cscore, mscores:mscores.map((x, idx) => (Math.abs(1 - (x) / lowestScorePerIndex[idx]))), nscores:nscores.map((x,i)=>x.score/lowestScorePerIndex[i]), cscores} ;
   }
 
  function evalCanvas(ctx, instructions, variables) {
@@ -1720,6 +1723,8 @@ function thresholdKernelCiirckle(d, r, g, b) {
      let rinc = inc,
          binc = inc,
          ginc = inc;
+
+
      while (rsample === 0 && counter > 0) {
          counter--;
          rinc *= phi;
