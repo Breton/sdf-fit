@@ -348,9 +348,12 @@ async function main() {
       
     debugWeights(newweights,letters.split('').map(x=>'n'+x ),'gray' );
 
-    if (willAdjustWeights && newscore < minimumScore || (weightBenchmarks.length && newscore < weightBenchmarks[weightBenchmarks.length-1].score)){
+    if (willAdjustWeights && newscore < minimumScore) {
       minimumScore = newscore;
       minimumWeights = cloneWeights(newweights);
+    }
+    if (willAdjustWeights && newscore < minimumScore || (weightBenchmarks.length && newscore < weightBenchmarks[weightBenchmarks.length-1].score)){
+
       weightBenchmarks.push({score:Math.round(newscore),weights:minimumWeights,sum:sumWeights(minimumWeights) });
       weightBenchmarks.sort((a,b)=>a.score-b.score);
       weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
