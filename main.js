@@ -53,7 +53,7 @@ scoreWindowSize = 100;
 scoreRate = 10;
 scoreRateRate = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
-letters = '0147';
+letters = '25';
 evalSize = 64;
 modelock = false;
 scoreDebug = {};
@@ -164,39 +164,20 @@ newscore = 0;
 newweights = weights;
 lowestever = letterCounter * 100000;
 
-ctx.fillStyle = "black"
-ctx.fillRect(0, 0, 256, 256);
 
+
+console.log("priming canvas");
 for (let i = 0; i < instructions.length; i++) {
-
-    ctx.globalCompositeOperation = "lighten";
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = "white"
     evalCanvas(ctx, instructions[i]);
-    ctx.globalCompositeOperation = "multiply";
-    ctx.globalAlpha = 1 / (instructions.length + 5);
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, 256, 256);
-    ctx.globalAlpha = 1;
-}
-ctx.globalCompositeOperation = "multiply";
-ctx.fillStyle = "red";
-ctx.fillRect(0, 0, 256, 256);
-ctxsmall.globalCompositeOperation = "screen";
-ctxsmall.drawImage(canvas, 0, 0, canvassmall.width, canvassmall.height);
+    ctx.globalCompositeOperation="screen";
+     
 
-for (let i = 0; i < instructions.length; i++) {
-
-    ctx.globalCompositeOperation = "lighten";
-    evalCanvas(ctx, instructions[instructions.length - i - 1]);
-    ctx.globalCompositeOperation = "multiply";
-    ctx.globalAlpha = 1 / ((instructions.length));
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, 256, 256);
-    ctx.globalAlpha = 1;
 }
-ctx.globalCompositeOperation = "multiply";
-ctx.fillStyle = "green";
-ctx.fillRect(0, 0, 256, 256);
-ctxsmall.globalCompositeOperation = "screen";
+
 ctxsmall.drawImage(canvas, 0, 0, canvassmall.width, canvassmall.height);
 
 
@@ -615,7 +596,7 @@ setTimeout(main, 10);
 
         ctxresult.globalAlpha = 1;
         ctxresult.drawImage(canvassmall, 0, 0, 256, 256);
-        
+        console.log('weights', (idx+1)%weights.length, idx, blend );
         if(idx < weights.length-1) {
           u = weights[idx][0]*(1-blend) + weights[(idx+1)%weights.length][0]*blend;
           v = weights[idx][1]*(1-blend) + weights[(idx+1)%weights.length][1]*blend;
