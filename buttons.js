@@ -252,10 +252,10 @@
       let c = (JSON.parse(localStorage.getItem('ctxsmalldata')));
       c.data.length = 16 * 16 * 4;
       let d = new ImageData(new Uint8ClampedArray(Array.from(c.data), 16, 16), 16, 16);
-      ctxsmall.putImageData(d, 0, 0);
       bestdata = d;
       olddata = d;
       olderdata = d;
+      ctxsmall.putImageData(d, 0, 0);
   }
 
   function loadWeights() {

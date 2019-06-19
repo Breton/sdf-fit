@@ -1,9 +1,10 @@
 weightscores = [];
 // Library local variables
-let lowestScorePerIndex = [];
+
 let scorecount = 0;
 let samplecount = 0;
 let maxpixelcounter = 50;
+
  //library functions
 
  let debugbuffer = "";
@@ -36,6 +37,7 @@ let maxpixelcounter = 50;
  function debugTable (table,columns) {
 
  }
+ 
  function debugCanvas(ctx,id){
     id=id.trim().replace(' ','');
     let cc = null;
@@ -103,6 +105,7 @@ let maxpixelcounter = 50;
         }
     }
  }
+
  function debug2D(id,array,width,height) {
     id=id.trim().replace(' ','');
     let el = document.getElementById('img-'+id.trim());
@@ -110,6 +113,7 @@ let maxpixelcounter = 50;
         let p = document.getElementById('debugImages');
         el = document.createElement("CANVAS");
         el.setAttribute("id", "img-"+id.trim());
+        el.setAttribute("class", "debug2d");
         p.appendChild(el);
         el.width=width;
         el.height=height;
@@ -131,6 +135,7 @@ let maxpixelcounter = 50;
         d.data[i*4+3]=255;
     }
     ctx.putImageData(d,0,0);
+    return el;
  }
 function setWeights(w) {
     
@@ -878,6 +883,22 @@ function thresholdKernelCiirckle(d, r, g, b) {
      ctx.putImageData(dataobj, 0, 0);
      return dataobj;
  }
+ function score(ctx,withbins=false) {
+     let dataobj, width, height;
+     scorecount+=1;
+     if (ctx.data !== undefined) {
+         dataobj = ctx;
+         width = ctx.width;
+         height = ctx.height;
+     } else {
+         dataobj = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+         width = ctx.canvas.width;
+         height = ctx.canvas.height;
+     }
+     
+     
+     return scoreKernel(dataobj.data,withbins);
+ }
 
  function scoreAsync(ctx,withbins=false) {
      let dataobj, w, h;
@@ -1163,29 +1184,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
      return a.map((a, i) => ([a[0] * afac + b[i][0] * factor, a[1] * afac + b[i][1] * factor, a[2] * afac + b[i][2] * factor]))
  }
 
- function score(ctx) {
-     let dataobj, width, height;
-     scorecount+=1;
-     if (ctx.data !== undefined) {
-         dataobj = ctx;
-         width = ctx.width;
-         height = ctx.height;
-     } else {
-         dataobj = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-         width = ctx.canvas.width;
-         height = ctx.canvas.height;
-     }
-     let score = 0;
-     for (let d = dataobj.data, i = 0; i < d.length; i += 4) {
-         score += (d[i]/255)*(d[i]/255);
 
-         //let x = d[i] / 255;
-         //let g = ((-Math.cos(x * Math.PI * 2) * 0.5 + 0.5) * 255)
-         //penalize graytones.
-         //score += g * g;
-     }
-     return Math.sqrt(score);
- }
 
  function chunk(array, size) {
      const chunked_arr = [];
@@ -1214,21 +1213,93 @@ function thresholdKernelCiirckle(d, r, g, b) {
   let badWeightMax = 0.1;
 
  let weightMemo = new Map();
-  
+ let weightMemoCtx = document.getElementById('weightsPlotter').getContext('2d');
+ let weightmemocount = 0;
+
+    function R(r,g,b,a) {
+      if(r < 1) { r=r*255 }
+      if(g < 1) { g=g*255 }
+      if(b < 1) { b=b*255 }
+      a = a === undefined ? 1 : a;
+      return "rgba("+(r|0)+","+(g|0)+","+(b|0)+","+a+")";
+    };
+
+ weightMemoCtx.fillRect(0,0,256,256);
+
+ function plotWeight (idx,x,y,intensity){
+
+
+    weightMemoCtx.globalAlpha=1;
+
+    weightMemoCtx.fillStyle=["red","green","blue","purple","yellow","orange","cyan"][idx];
+    weightMemoCtx.fillStyle=R(intensity,intensity,intensity);
+    weightMemoCtx.fillRect(x,y,1,1);
+
+
+
+ }
+
+
+
+ async function plotWeightForInstructions(weights, instructions, start = 0, b=0.5) {
+    let score=0;
+     async function sample(idx, r, g, b) {
+        let key = `${idx},${Math.floor(r*255)},${Math.floor(g*255)},${Math.floor(b*255)}`;
+        if(weightMemo.has(key)) {
+            return weightMemo.get(key)
+        } else {
+         let mscore, nscore, cscore;
+         let mscorep, nscorep;
+         samplecount+=1;
+
+         
+         let result = await scoreInstructionsAndWeights(ctx, ctxsmall, [[r,g,b]], [instructions[idx]], 0, 1)
+
+          weightMemo.set(key, result.score/1000);
+          
+         return result.score/1000;
+       }
+     }
+     let w=64,h=65,c=weights.length;
+     let min = 5000;
+     let max = 0;
+     for(let i=0;i<w;i++) {
+        for(let j=0;j<h;j++) {
+
+            score = await sample(start, i/w, j/h, b);
+            if(score > max){max=score};
+            if(score < min){min=score};
+        }
+     }
+
+     for(let i=0;i<w;i++) {
+        for(let j=0;j<h;j++) {
+            score = await sample(start, i/w, j/h, b);
+            console.log("plot",max,min,score,(score-min)/(max-min),i,j);
+            plotWeight(start,i+start*64,j,(score-min)/(max-min));
+        }
+     }
+ 
+ }
  async function optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions, start = 0, count = 1000) {
      /* outer: lowestScorePerIndex */
      let newscore = 0;
      let mscore = 14100;
      let nscore = 14100;
      let r, g, b;
-     let phi = Math.sqrt(2);// 
-     let range = 1/256;
-     let inc = Math.random();
+     let phi = Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(2))))));// 
+     
+     let inc = 1/4096;
+     if(Math.random()>0.5) {
+        inc = Math.random();
+     }
      let f = (x) => (Math.floor(x * 1000) / 1000);
      let minr = 1000000,
          ming = 1000000,
          minb = 1000000;
      let minscore = 1000000;
+     let startscore = 1000000;
+
      let newweights = [];
      let oldscore = 0;
      ctx.globalAlpha = 1;
@@ -1243,7 +1314,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
      ctx.globalCompositeOperation = 'source-over';
 
      async function sample(idx, r, g, b) {
-        let key = `${idx},${Math.floor(r*255)},${Math.floor(g*255)},${Math.floor(b*255)}`;
+        let key = `${idx},${Math.floor(r*2048)},${Math.floor(g*2048)},${Math.floor(b*2048)}`;
         if(weightMemo.has(key)) {
             return weightMemo.get(key)
         } else {
@@ -1253,23 +1324,9 @@ function thresholdKernelCiirckle(d, r, g, b) {
 
          
          let result = await scoreInstructionsAndWeights(ctx, ctxsmall, [[r,g,b]], [instructions[idx]], 0, 1)
-          // ctx.globalCompositeOperation = 'source-over';
-          // ctx.drawImage(canvassmall, 0, 0, 256, 256);
-          // let tmpdata =  threshold(ctx, r, g, b);
-          // mscorep = scoreAsync(tmpdata);
-          // ctx.globalCompositeOperation = 'difference';
-          // evalCanvas(ctx, instructions[idx]);
 
-          // nscorep = scoreAsync(ctx);
-          // let scores = await Promise.all([mscorep, nscorep]);
-
-          // mscore = (Math.abs(1 - Math.sqrt(scores[0]) / lowestScorePerIndex[idx]));
-          // nscore = (   Math.sqrt(scores[1]) ) / lowestScorePerIndex[idx];
-          // cscore = (   Math.sqrt(scores[1]) - Math.sqrt(scores[0]) ) / lowestScorePerIndex[idx];
-          // let result = Math.sqrt(nscore*nscore + mscore*mscore + cscore*cscore);
+          weightMemo.set(key, result.score/1000);
           
-          weightMemo.set(key, result.score);
-         
          return result.score/1000;
        }
      }
@@ -1280,7 +1337,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          newweights[i][0] = r, newweights[i][1] = g, newweights[i][2] = b;
      }
 
-     //start = Math.floor(Math.random()*(count-1));
+     
      for (let i = start; i < count+start; i += 1) {
 
          let tmpdata;
@@ -1298,7 +1355,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          bsample = 0;
 
 
-         let counter = 40;
+         let counter = 100;
          let rslope = Math.sign(Math.random()-0.5);
          let gslope = Math.sign(Math.random()-0.5);
          let bslope = Math.sign(Math.random()-0.5);
@@ -1317,9 +1374,12 @@ function thresholdKernelCiirckle(d, r, g, b) {
          // we want to use m to adjust x to minimize y.
          let scale = 1;
 
-         oldscore = minscore = await sample(i, r, g, b);
+         startscore = oldscore = minscore = await sample(i, r, g, b);
          diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
 
+         debug("wsample a 1", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
+
+         //scale inc until you see a change in diff.
          
          while (diff === 0 && counter > 0) {
              counter--;
@@ -1338,38 +1398,57 @@ function thresholdKernelCiirckle(d, r, g, b) {
 
 
              diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
+             debug("wsamples a 2", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
+
          }
-      
-         debug("wsamples a", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
-         
-
-         while (diff > 0 && counter > 0) {
-             counter--;
-             let samples = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc);
-             if (samples - minscore > 0) {
-                 rslope = -rslope;
-                 gslope = -gslope;
-                 bslope = -gslope;
-                 diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
-                 debug("wswapslope", counter, diff);
-             }
-       
+         if(diff < 0) {
+            r = r + rslope * rinc;
+            g = g + gslope * ginc;
+            b = b + bslope * binc;
+         }
+        
+         debug("wsamples b", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
+         //enumerate directions.
 
 
-             while (diff >= -0.0001 && counter > 0) {
+
+         while (counter > 0) {
+             while (diff >= 0 && counter > 0) {
                  counter--;
                  //convert the counter to 3 digits of -1, 0 or 1.
-                [rslope,gslope,bslope] = ('000'+(counter+updatecount).toString(3)).slice(-3).split('').map(x=>+x-1)
+                [rslope,gslope,bslope] = ('000'+(counter+updatecount).toString(5)).slice(-3).split('').map(x=>+x-2)
 
 
 
-                 diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
-                 debug("wenumerate slope", rinc,ginc,binc, rslope, gslope, bslope, counter, diff);
+                 newscore = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) 
+                 diff = newscore - minscore;
+                 debug("wenumerate slope 1", rinc,ginc,binc, rslope, gslope, bslope, counter, diff);
              }
-    
+             minscore = newscore;
+             while (diff < 0 && counter > 0) {
+                 counter--;
+                 r = r + rslope * rinc;
+                 g = g + gslope * ginc;
+                 b = b + bslope * binc;
+                 //convert the counter to 3 digits of -1, 0 or 1.
+                [rslope,gslope,bslope] = ('000'+(counter+updatecount).toString(5)).slice(-3).split('').map(x=>+x-2)
 
+
+
+                 newscore = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc)
+                 diff = newscore - minscore;
+                 if(diff < 0) {
+                    minscore = newscore;
+                 }
+                 debug("wenumerate slope 2", rinc,ginc,binc, rslope, gslope, bslope, counter, diff);
+             }
          }
 
+        
+
+
+
+         /*
          debug("wsamples b", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
          while (diff < 0 && counter > 0) {
              
@@ -1397,13 +1476,15 @@ function thresholdKernelCiirckle(d, r, g, b) {
              debug("wsamples c", i, counter, r, g, b, rinc, ginc, binc, rslope, gslope, bslope, newscore, minscore, diff);
 
          }
+
+        */
          weightscores[i]=await sample(i, r, g, b);
          
-         //console.log("weight score",i, weightSuccess,weightFail,  weightscores[i],oldscore, weightscores[i]-oldscore,lowestScorePerIndex[i],counter);
+         
          
          debug("wsamples d", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
 
-         if (counter > 0 ) {
+         if ( weightscores[i] <  startscore ) {
      
              newweights[i][0] = r.mod(1), newweights[i][1] = g.mod(1), newweights[i][2] = b.mod(1);
              
@@ -1619,6 +1700,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
  
 
  async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000, debug = false) {
+    /* outer lowestScorePerIndex */
     let newscore = 0;
     let mscore = 14100;
     let nscore = 14100;
@@ -1638,17 +1720,8 @@ function thresholdKernelCiirckle(d, r, g, b) {
     ctx.canvas.height=size;
     ctx.save();
     ctx.scale(size/256,size/256);
+    
 
-     for (let i = 0; i < instructions.length; i++){
-        if (!lowestScorePerIndex[i]) {
-             ctx.globalCompositeOperation='source-over';
-             ctx.fillStyle="black";
-             ctx.fillRect(0,0,256,256);
-             evalCanvas(ctx, instructions[i]);
-             lowestScorePerIndex[i] = await scoreAsync(ctx);
-             console.log(ctx.canvas.width, "lowest score per index", lowestScorePerIndex[i]);
-         }
-     }
 
     
     for (let i = start; i < count+start; i += 1) {
@@ -1849,30 +1922,3 @@ function thresholdKernelCiirckle(d, r, g, b) {
      }
  }
 
-
- setTimeout(function() {
-     let div = document.createElement('div');
-     let container = document.createElement('div');
-
-     let imgGradient = document.getElementById('img-gradient');
-     container.style.position = ' relative';
-
-     div.style.position = 'absolute'
-     div.style.width = '16px'
-     div.style.height = '16px'
-     div.style.backgroundColor = 'red'
-     // div.style.left = canvasvassmall.offsetLeft + "px"
-     // div.style.top = canvassmall.offsetTop + "px"
-     if(imgGradient) {
-     imgGradient.replaceWith(container);
-     container.appendChild(imgGradient);
-
-     container.appendChild(div);
-     }
-     interval = setInterval(function() {
-         div.style.left = ((onepixel % 16) * 16 ) + 'px';
-         div.style.top = ((((onepixel / 16) | 0) % 16) * 16 ) + 'px';
-     }, 10);
-
-
- }, 10000);

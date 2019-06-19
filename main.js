@@ -59,6 +59,41 @@ modelock = false;
 scoreDebug = {};
 weightBenchmarks = [];
 weightBenchmarkCount = 100;
+lowestScorePerIndex = [];
+
+gradientPromise = new Promise (function (res,err){
+  
+});
+
+
+debug2D('gradient',gradient,16,16);
+(function() {
+     let div = document.createElement('div');
+     let container = document.createElement('div');
+
+     let imgGradient = document.getElementById('img-gradient');
+     container.style.position = 'relative';
+     container.style.display = 'inline-block';
+
+     div.style.position = 'absolute'
+     div.style.width = '16px'
+     div.style.height = '16px'
+     div.style.backgroundColor = 'red'
+     // div.style.left = canvasvassmall.offsetLeft + "px"
+     // div.style.top = canvassmall.offsetTop + "px"
+     if(imgGradient) {
+     imgGradient.replaceWith(container);
+     container.appendChild(imgGradient);
+
+     container.appendChild(div);
+     }
+     setInterval(function() {
+         div.style.left = ((onepixel % 16) * 16 ) + 'px';
+         div.style.top = ((((onepixel / 16) | 0) % 16) * 16 ) + 'px';
+     }, 10);
+
+
+ }());
 
 
 minimumScoreDiff = 0;
@@ -72,7 +107,9 @@ fonts = [
 ]
 
 instructions = [];
+
 for (let i = 0; i < letters.length; i++) {
+
     instructions[i] = [
         ['fillStyle', 'black'],
         ["fillRect", 0, 0, 256, 256],
@@ -85,7 +122,7 @@ for (let i = 0; i < letters.length; i++) {
         ["fillText", letters[i], 20, 90, 256]
     ];
 }
-
+console.log("instructions populated",instructions.length, instructions[0][6][1]);
 function resetInstructions(){
   rotation += Math.PI/32;
   instructions = [];
@@ -168,9 +205,21 @@ ctxsmall.globalCompositeOperation = "source-over";
 
 
 
-//loadCtx();
-//loadWeights();
+/* init lowest scores for scoreInstructionsAndWeights */
 
+ for (let i = 0; i < instructions.length; i++){
+    if (lowestScorePerIndex[i]===undefined) {
+         ctx.globalCompositeOperation='source-over';
+         ctx.fillStyle="black";
+         ctx.fillRect(0,0,256,256);
+         
+         evalCanvas(ctx, instructions[i]);
+         lowestScorePerIndex[i] = score(ctx);
+           //debugCanvas(ctx,'lowestscore-'+i);
+          //console.log(ctx.canvas.width, "lowest score per index", lowestScorePerIndex[i]);
+         
+     }
+ }
 
 function scoreLoopAsync(ctx, ctxsmall, weights, instructions, start, letterCounter) {
     ctx.clearRect(0,0,256,256);
@@ -270,7 +319,7 @@ async function main() {
     debug('maxweightscore',indexOfMax(weightscores),weightscores);
     //console.log('weights',weights);
     if (willAdjustWeights) {
-        if(scoreRate >= 0) {
+        if(false) {
           let whichweights = 'none';
           switch (updatecount % 10){
             case 0: 
@@ -299,32 +348,20 @@ async function main() {
               break;
           }
 
-           console.log('loaded',whichweights,updatecount);
+           
         } 
-        if(letters.length>2) {
-          if (flipCoin()) {
-           // weights = tweenWeights(weights,0.001);
-            
-          }
-          if (flipCoin()) {
-            //weights = distributeWeights(weights,0.001,0.5);
-          } else {
-             //weights = distributeWeights(weights,-0.001,0.5);
-          }
+  
 
-        }
-
-        if(flipCoin()) {
-
-           weights = perturbWeights(weights,weights.length,0.001);
-          
-        } 
         if (flipCoin() && weightscores && weightscores.length) {
           //console.log('weights1',weights);
           newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,indexOfMax(weightscores),1);
+          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, newweights, instructions,indexOfMax(weightscores),1);
+          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, newweights, instructions,indexOfMax(weightscores),1);
         } else {
           //console.log('weights2',weights);
-          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(weightSuccess%instructions.length),1);
+          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(updatecount%instructions.length),1);
+          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, newweights, instructions,(updatecount%instructions.length),1);
+          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, newweights, instructions,(updatecount%instructions.length),1);
         }
     } else {
         onepixel = updatePixel(onepixel, oldscore-olderscore);
@@ -347,7 +384,7 @@ async function main() {
 
     scoreDebug = newscore;
     newscore = newscore.score;
-      
+    
     debugWeights(newweights,letters.split('').map(x=>'n'+x ),'gray' );
 
     if (willAdjustWeights && newscore < minimumScore) {
@@ -484,6 +521,7 @@ async function main() {
     }
 
     debug2D('gradient',gradient,16,16);
+
 
     debugWeights(bestweights,letters.split('').map(x=>'b'+x ),'green' );
     debugWeights(minimumWeights,letters.split('').map(x=>'m'+x ),'red' );

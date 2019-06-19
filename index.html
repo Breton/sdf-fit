@@ -37,8 +37,8 @@ img {
   top:0;
   left:0px;
   right:0px;
-  margin: 5em 0 8em;
-  padding: 1em;
+  margin: 5em 0 12em;
+  padding: 1em 0 12em;
   overflow: scroll;
   
 }
@@ -46,7 +46,14 @@ img {
   position:relative;
   width:256px;
   height:256px;
+  display: inline-block;
   border: 1px solid black;
+}
+.debug2d {
+  display:inline-block;
+}
+.debugImages {
+  display:inline-block;
 }
 body {
   font-family: sans-serif;
@@ -248,10 +255,12 @@ textarea {
  
   </div>
   <div id="debugImages">
-    
+    <canvas id="weightsPlotter" width="256" height="256"></canvas>
+
   </div>
+  <div id="debugtables"></div>
 </div>
-<div id="debugtables"></div>
+
 <textarea name="debug" id="debug" cols="30" rows="10"></textarea>
 
 <script> let pollution = {window:new Set(Object.getOwnPropertyNames(window)) }
