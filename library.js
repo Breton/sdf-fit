@@ -58,6 +58,39 @@ let maxpixelcounter = 50;
     tctx.drawImage(ctx.canvas, 0,0,ctx.canvas.width,ctx.canvas.height);
 
  }
+ function setDataImg(imgOrCanvasOrDataobj,label='none') {
+    console.log('set data label',label);
+
+    if(!setDataImg.userAction){
+
+        if(imgOrCanvasOrDataobj.data){
+            
+            bestdata=imgOrCanvasOrDataobj;
+            olddata=imgOrCanvasOrDataobj;
+            
+            ctxsmall.putImageData(imgOrCanvasOrDataobj, 0, 0);
+        } else {
+
+            ctxsmall.drawImage(imgOrCanvasOrDataobj, 0, 0, canvassmall.width, canvassmall.height);
+            let data = ctxsmall.getImageData(0,0,16,16);
+            bestdata=data;
+            olddata=data;
+            
+        }
+        if(label==="userAction"){
+            pixelBenchmarks.length=0;
+            addPixelBenchmark(data,10000);
+        }
+    }
+    if(label==="userAction"){
+
+        setDataImg.userAction=true;
+        
+        setTimeout(function(){
+            setDataImg.userAction=false;
+        },1000)
+    }
+ }
  function debugWeights(weights,letters,color='blue') {
     let el = document.getElementById('weights');
     let elmap = {}

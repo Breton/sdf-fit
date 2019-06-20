@@ -390,7 +390,6 @@ async function main() {
     }
     if (newscore > oldscore) {
        debug('scores', newscore,oldscore,olderscore,globalscore,'small fail', newscore - oldscore);
-       ctxsmall.putImageData(olddata, 0, 0);
        newdata = olddata;
        //setWeights(oldweights);
     }
