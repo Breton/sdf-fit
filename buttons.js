@@ -93,7 +93,8 @@
 
 
           }
-          ctxsmall.putImageData(bestdata, 0, 0);
+          
+          setDataImg(bestdata,'userAction');
 
       },
       'load and average': function loadAndAverage() {
@@ -123,8 +124,9 @@
           //console.log('avg', counter, avg);
           //    console.log(avg);
           let d = new ImageData(new Uint8ClampedArray(avg, 16, 16), 16, 16);
-          ctxsmall.putImageData(d, 0, 0);
-          olddata = bestdata = d;
+          setDataImg(d,'userAction');
+          
+          
       },
       'toggle mode': function () {
         if(modebias > 0.5) {
@@ -159,7 +161,8 @@
               bestdata.data[i + 2] = Math.random() * 255
 
           }
-          ctxsmall.putImageData(bestdata, 0, 0);
+          setDataImg(bestdata,'userAction');
+          
       },
       'flatten': function () {
         flatten(ctxsmall);
@@ -252,10 +255,9 @@
       let c = (JSON.parse(localStorage.getItem('ctxsmalldata')));
       c.data.length = 16 * 16 * 4;
       let d = new ImageData(new Uint8ClampedArray(Array.from(c.data), 16, 16), 16, 16);
-      bestdata = d;
-      olddata = d;
-      olderdata = d;
-      ctxsmall.putImageData(d, 0, 0);
+
+      setDataImg(d,'userAction');
+      //ctxsmall.putImageData(d, 0, 0);
   }
 
   function loadWeights() {

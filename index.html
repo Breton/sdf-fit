@@ -208,6 +208,8 @@ input[type=range].slider:focus::-ms-fill-upper {
    padding-bottom:10px;
    background: #ccc;
    box-shadow: 0px -10px 30px
+     -webkit-overflow-scrolling: touch;
+
 }
 
 
@@ -239,7 +241,7 @@ textarea {
   <div id="buttons"></div>
 <div id="panel">
 
-
+<div id='imagestoload'></div>
   <label for="u">u</label><input type="range" class="slider" min=0 max=1 step="0.00391256" id='u' name='u'/>
   <label for="v">v</label><input type="range" class="slider" min=0 max=1 step="0.00391256" id='v' name='v'/>
   <label for="w">w</label><input type="range" class="slider" min=0 max=1 step="0.00391256" id='w' name='w'/>
@@ -258,11 +260,38 @@ textarea {
     <canvas id="weightsPlotter" width="256" height="256"></canvas>
 
   </div>
+
   <div id="debugtables"></div>
+
 </div>
 
 <textarea name="debug" id="debug" cols="30" rows="10"></textarea>
 
+<script>
+  {
+    let imagecontainer = document.getElementById('imagestoload');
+    console.log(imagecontainer)
+    let list = fetch('list.txt').then(function(res){
+      
+      res.text().then(function(text){
+
+        list = text.split('\n').map((x)=>`<img width=32 height=32 src="${x.trim()}" >`).join('');
+        console.log(list);
+        imagecontainer.innerHTML=list;
+        function loadImg() {
+          //ctxsmall.drawImage(this,0,0,16,16);
+          setDataImg(this,"userAction");
+          userSetImage=true;
+        }
+        imagecontainer.querySelectorAll('img').forEach(function(x){
+          x.addEventListener('click', loadImg , false);
+        })
+      })
+      
+
+    })
+  }
+</script>
 <script> let pollution = {window:new Set(Object.getOwnPropertyNames(window)) }
 
 //{let names = Object.getOwnPropertyNames(window), descriptors = Object.getOwnPropertyDescriptors(window);  names.filter( (x)=>descriptors[x].enumerable && typeof window[x] === "number" ); }

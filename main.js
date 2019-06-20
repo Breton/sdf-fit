@@ -59,12 +59,58 @@ modelock = false;
 scoreDebug = {};
 weightBenchmarks = [];
 weightBenchmarkCount = 100;
+pixelBenchmarks = [];
+pixelBenchmarkCount = 100;
 lowestScorePerIndex = [];
 
 gradientPromise = new Promise (function (res,err){
   
 });
 
+function addPixelBenchmark(data,newscore) {
+    //console.log("adding pixel benchmrark, newscore",!!pixelBenchmarks, pixelBenchmarks.length,(pixelBenchmarks[0]||{}).score,  newscore )
+  if(pixelBenchmarks && typeof pixelBenchmarks.push === 'function' ){
+     
+       pixelBenchmarks.push({score:Math.round(newscore),data:data,sum:Math.round(score(data)*100000000000)});
+       console.log('adding pixel benchmark', newscore, Math.round(score(data)*1000));
+       pixelBenchmarks.sort((a,b)=>a.score-b.score);
+       pixelBenchmarks = pixelBenchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
+       if(pixelBenchmarks.length > pixelBenchmarkCount) {
+          pixelBenchmarks.length = pixelBenchmarkCount;
+       }
+       pixelBenchmarks.sort((a,b)=>a.sum-b.sum);
+       pixelBenchmarks = pixelBenchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
+  }
+}
+function randomPixelBenchmark() {
+  if(pixelBenchmarks && pixelBenchmarks.length) {
+    return (pixelBenchmarks[Math.floor(pixelBenchmarks.length*Math.random())].data);
+  } else {
+    return bestdata || ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
+  }
+
+}
+function lowestPixelBenchmark() {
+  if(pixelBenchmarks && pixelBenchmarks.length) {
+    return (pixelBenchmarks[0].data);
+  } else {
+    return bestdata || ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
+  }
+
+}
+function addWeightBenchmark(weights,newscore) {
+    if(weightBenchmarks && (weightBenchmarks[0]||{}).score !== newscore ){
+         
+         weightBenchmarks.push({score:Math.round(newscore),weights:bestweights,sum:sumWeights(weights)});
+         weightBenchmarks.sort((a,b)=>a.score-b.score);
+         weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
+         if(weightBenchmarks.length > weightBenchmarkCount) {
+            weightBenchmarks.length = weightBenchmarkCount;
+         }
+         weightBenchmarks.sort((a,b)=>a.sum-b.sum);
+         weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
+    }
+}
 
 debug2D('gradient',gradient,16,16);
 (function() {
@@ -177,8 +223,8 @@ for (let i = 0; i < instructions.length; i++) {
      
 
 }
+setDataImg(canvas);
 
-ctxsmall.drawImage(canvas, 0, 0, canvassmall.width, canvassmall.height);
 
 
 ctx.globalCompositeOperation = "source-over";
@@ -246,6 +292,8 @@ async function main() {
 
     if (!bestdata) {
         olddata = bestdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
+    } else {
+      bestdata = lowestPixelBenchmark();
     }
     if (!bestweights) {
       bestweights = cloneWeights(weights);
@@ -300,7 +348,7 @@ async function main() {
     debug('maxweightscore',indexOfMax(weightscores),weightscores);
     //console.log('weights',weights);
     if (willAdjustWeights) {
-        if(false) {
+        if(flipCoin()) {
           let whichweights = 'none';
           switch (updatecount % 10){
             case 0: 
@@ -372,49 +420,39 @@ async function main() {
       minimumScore = newscore;
       minimumWeights = cloneWeights(newweights);
     }
-    if (willAdjustWeights && newscore < minimumScore || (weightBenchmarks.length && newscore < weightBenchmarks[weightBenchmarks.length-1].score)){
 
-      weightBenchmarks.push({score:Math.round(newscore),weights:minimumWeights,sum:sumWeights(minimumWeights) });
-      weightBenchmarks.sort((a,b)=>a.score-b.score);
-      weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
-      if(weightBenchmarks.length > weightBenchmarkCount) {
-        weightBenchmarks.length = weightBenchmarkCount;
-      }
-      weightBenchmarks.sort((a,b)=>a.sum-b.sum);
-      weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
-
-
+    if (willAdjustWeights && newscore < minimumScore ){
+      addWeightBenchmark(minimumWeights,newscore);
+   
     }
     if (newscore < oldscore) {
+      addPixelBenchmark(newdata,newscore);
+      addWeightBenchmark(newweights,newscore);
       debug('scores', newscore,oldscore,olderscore,globalscore,'small improvement', newscore - oldscore);
+
     }
     if (newscore > oldscore) {
        debug('scores', newscore,oldscore,olderscore,globalscore,'small fail', newscore - oldscore);
-       newdata = olddata;
+       addPixelBenchmark(newdata,newscore);
+       setDataImg(randomPixelBenchmark(),'newscore > oldscore: randomPixelBenchmark');
+       
        //setWeights(oldweights);
     }
     if (newscore > olderscore ) {
         debug('scores', newscore,oldscore,olderscore,globalscore,'big fail', newscore - olderscore);
 
-        ctxsmall.putImageData(bestdata, 0, 0);
-        newdata = bestdata;
+        
+        setDataImg(randomPixelBenchmark(),'newscore > olderscore: randomPixelBenchmark');
+        //newdata = bestdata;
     }
     if (newscore < globalscore) {
        debug('scores', newscore,oldscore,olderscore,globalscore,'big improvement', newscore - globalscore);
        bestweights = cloneWeights(newweights);
        bestdata = newdata;
-       if(weightBenchmarks && (weightBenchmarks[0]||{}).score !== newscore ){
-         
-         weightBenchmarks.push({score:Math.round(newscore),weights:bestweights,sum:sumWeights(bestweights)});
-         weightBenchmarks.sort((a,b)=>a.score-b.score);
-         weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
-         if(weightBenchmarks.length > weightBenchmarkCount) {
-            weightBenchmarks.length = weightBenchmarkCount;
-         }
-         weightBenchmarks.sort((a,b)=>a.sum-b.sum);
-         weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
-       }
+       addWeightBenchmark(bestweights,newscore);
+       addPixelBenchmark(newdata,newscore);
 
+   
     }
     if (newscore === oldscore) {
        debug('scores', newscore,oldscore,olderscore,globalscore,'no change', newscore - globalscore);
