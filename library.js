@@ -59,37 +59,32 @@ let maxpixelcounter = 50;
 
  }
  function setDataImg(imgOrCanvasOrDataobj,label='none') {
+    let data = {};
     console.log('set data label',label);
 
-    if(!setDataImg.userAction){
+    
 
         if(imgOrCanvasOrDataobj.data){
             
             bestdata=imgOrCanvasOrDataobj;
             olddata=imgOrCanvasOrDataobj;
-            
+            data = imgOrCanvasOrDataobj;
             ctxsmall.putImageData(imgOrCanvasOrDataobj, 0, 0);
         } else {
 
             ctxsmall.drawImage(imgOrCanvasOrDataobj, 0, 0, canvassmall.width, canvassmall.height);
-            let data = ctxsmall.getImageData(0,0,16,16);
+            data = ctxsmall.getImageData(0,0,16,16);
             bestdata=data;
             olddata=data;
             
         }
         if(label==="userAction"){
+            console.log('truncate pixel benchmarks')
             pixelBenchmarks.length=0;
             addPixelBenchmark(data,10000);
         }
-    }
-    if(label==="userAction"){
-
-        setDataImg.userAction=true;
-        
-        setTimeout(function(){
-            setDataImg.userAction=false;
-        },1000)
-    }
+    
+    
  }
  function debugWeights(weights,letters,color='blue') {
     let el = document.getElementById('weights');
@@ -1044,9 +1039,10 @@ function thresholdKernelCiirckle(d, r, g, b) {
      //    weights[0][2] = (((weights[0][2]*2-1)*amount)+1)/2
         
      // }
-     olderdata=olddata=bestdata=dataobj;
-     setWeights(weights);
-     ctx.putImageData(dataobj, 0, 0);
+     
+     
+     setDataImg(dataobj,'userAction');
+     
  }
 
  function enhancePerturb(ctx, recentimprovements, maxri, minri, gradient) {

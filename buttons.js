@@ -89,11 +89,11 @@
           olddata = bestdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
           for (let i = 0; i < bestdata.data.length; i += 4) {
               
-              bestdata.data[i + 2] = 0;
+              bestdata.data[i + 2] = 127;
 
 
           }
-          
+
           setDataImg(bestdata,'userAction');
 
       },
@@ -186,14 +186,7 @@
           }
           ctxsmall.putImageData(bestdata, 0, 0);
       },
-      'kill blue': function blurButton() {
-          olddata = bestdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
-          for (let i = 0; i < bestdata.data.length; i += 4) {
-              let l = bestdata.data.length
-              bestdata.data[i + 2] = 0.5*255;
-          }
-          ctxsmall.putImageData(bestdata, 0, 0);
-      },
+   
 
 
       save: function save() {

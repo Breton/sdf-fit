@@ -60,19 +60,20 @@ scoreDebug = {};
 weightBenchmarks = [];
 weightBenchmarkCount = 100;
 pixelBenchmarks = [];
-pixelBenchmarkCount = 100;
+pixelBenchmarkCount = 5;
 lowestScorePerIndex = [];
 
 gradientPromise = new Promise (function (res,err){
   
 });
 
-function addPixelBenchmark(data,newscore) {
+async function addPixelBenchmark(data,newscore) {
     //console.log("adding pixel benchmrark, newscore",!!pixelBenchmarks, pixelBenchmarks.length,(pixelBenchmarks[0]||{}).score,  newscore )
-  if(pixelBenchmarks && typeof pixelBenchmarks.push === 'function' ){
-     
-       pixelBenchmarks.push({score:Math.round(newscore),data:data,sum:Math.round(score(data)*100000000000)});
-       console.log('adding pixel benchmark', newscore, Math.round(score(data)*1000));
+  if(pixelBenchmarks && typeof pixelBenchmarks.push === 'function' && !willAdjustWeights ){
+       let sum =  score(data);
+
+       pixelBenchmarks.push({score:Math.round(newscore),data:data,sum:Math.round(sum*100000000000)});
+       console.log('adding pixel benchmark', newscore, Math.round(sum*1000));
        pixelBenchmarks.sort((a,b)=>a.score-b.score);
        pixelBenchmarks = pixelBenchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
        if(pixelBenchmarks.length > pixelBenchmarkCount) {
