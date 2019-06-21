@@ -1384,7 +1384,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          bsample = 0;
 
 
-         let counter = 100;
+         let counter = 30;
          let rslope = Math.sign(Math.random()-0.5);
          let gslope = Math.sign(Math.random()-0.5);
          let bslope = Math.sign(Math.random()-0.5);
