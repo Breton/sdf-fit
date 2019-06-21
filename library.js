@@ -1720,6 +1720,300 @@ function thresholdKernelCiirckle(d, r, g, b) {
      debug("new", minscore);
      return minscore;
  }
+async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, weightindex=0) {
+     /* outer: lowestScorePErIndex */
+     let newscore = 0;
+     let mscore = 14100;
+     let nscore = 14100;
+     let r, g, b;
+     let diff;
+     let inc = 1;
+     let minr = 1000000,
+         ming = 1000000,
+         minb = 1000000;
+     let f = (x) => (Math.floor(x * 1000) / 1000);
+     let minscore = 1000000;
+     let newweights = [];
+     ctx.globalAlpha = 1;
+     let dataobj = ctxsmall.getImageData(0, 0, ctxsmall.canvas.width, ctxsmall.canvas.height);
+     let d = dataobj.data;
+     let maxmilliseconds = 200;
+     if (idx === undefined) {
+         idx = ((d.length * Math.random()) / 4) | 0;
+     }
+     let i = (idx % (d.length / 4)) | 0;
+     let time = new Date();
+     let getElapsed = ()=>(new Date()-time);
+
+     async function sample(pixelidx, r, g, b) {
+
+         d[pixelidx * 4 + 0] = 255*r
+         d[pixelidx * 4 + 1] = 255*g
+         d[pixelidx * 4 + 2] = 255*b
+
+         ctxsmall.putImageData(dataobj, 0, 0);
+        // console.log('weightssc',weights);
+         let score = await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions);
+         return 1000 * (score.score);
+     }
+
+
+     r = 0;
+     g = 0;
+     b = 0;
+
+
+     let or = d[i * 4 + 0],
+         og = d[i * 4 + 1],
+         ob = d[i * 4 + 2];
+
+
+
+
+
+     let samples = [
+         sample(i, 0, 0, 0),
+         sample(i, 0, 0, 1),
+         sample(i, 0, 1, 0),
+         sample(i, 0, 1, 1),
+         sample(i, 1, 0, 0),
+         sample(i, 1, 0, 1),
+         sample(i, 1, 1, 0),
+         sample(i, 1, 1, 1)
+     ]
+
+     
+     
+     let scores = await Promise.all(samples);
+     let lowest = scores.reduce((a,b)=>Math.min(a,b));
+     let indexoflowest = scores.indexOf(lowest);
+     minscore = await sample(i,...(('000'+indexoflowest.toString(2)).slice(-3).split('').map(x=>+x) ));
+
+
+     debug('8colorscores',minscore,i,...(('000'+indexoflowest.toString(2)).slice(-3).split('').map(x=>+x) ));
+     return minscore;
+ }
+
+
+ async function optimise9PixelsForWeights(ctx, ctxsmall, weights, instructions, idx, weightindex=0) {
+     /* outer: lowestScorePErIndex */
+     let newscore = 0;
+     let mscore = 14100;
+     let nscore = 14100;
+     let r, g, b;
+     let diff;
+     let inc = 1;
+     let minr = 1000000,
+         ming = 1000000,
+         minb = 1000000;
+     let f = (x) => (Math.floor(x * 1000) / 1000);
+     let minscore = 1000000;
+     let newweights = [];
+     ctx.globalAlpha = 1;
+     let dataobj = ctxsmall.getImageData(0, 0, ctxsmall.canvas.width, ctxsmall.canvas.height);
+     let d = dataobj.data;
+     let maxmilliseconds = 200;
+     if (idx === undefined) {
+         idx = ((d.length * Math.random()) / 4) | 0;
+     }
+     let i = (idx % (d.length / 4)) | 0;
+     let time = new Date();
+     let getElapsed = ()=>(new Date()-time);
+
+     async function sample(pixelidx, r, g, b) {
+
+         d[ (pixelidx +  0) * 4 + 0 ] = 255*(1 - Math.abs((r/255).mod(2) - 1))*0.50 + d[ (pixelidx%256 +  0) * 4 + 0 ]*0.50 ;
+         d[ (pixelidx +  0) * 4 + 1 ] = 255*(1 - Math.abs((g/255).mod(2) - 1))*0.50 + d[ (pixelidx%256 +  0) * 4 + 1 ]*0.50 ;
+         d[ (pixelidx +  0) * 4 + 2 ] = 255*(1 - Math.abs((b/255).mod(2) - 1))*0.50 + d[ (pixelidx%256 +  0) * 4 + 2 ]*0.50 ;
+         d[ (pixelidx +  1) * 4 + 0 ] = 255*(1 - Math.abs((r/255).mod(2) - 1))*0.30 + d[ (pixelidx%256 +  1) * 4 + 0 ]*0.70 ;
+         d[ (pixelidx +  1) * 4 + 1 ] = 255*(1 - Math.abs((g/255).mod(2) - 1))*0.30 + d[ (pixelidx%256 +  1) * 4 + 1 ]*0.70 ;
+         d[ (pixelidx +  1) * 4 + 2 ] = 255*(1 - Math.abs((b/255).mod(2) - 1))*0.30 + d[ (pixelidx%256 +  1) * 4 + 2 ]*0.70 ;
+         d[ (pixelidx -  1) * 4 + 0 ] = 255*(1 - Math.abs((r/255).mod(2) - 1))*0.30 + d[ (pixelidx%256 -  1) * 4 + 0 ]*0.70 ;
+         d[ (pixelidx -  1) * 4 + 1 ] = 255*(1 - Math.abs((g/255).mod(2) - 1))*0.30 + d[ (pixelidx%256 -  1) * 4 + 1 ]*0.70 ;
+         d[ (pixelidx -  1) * 4 + 2 ] = 255*(1 - Math.abs((b/255).mod(2) - 1))*0.30 + d[ (pixelidx%256 -  1) * 4 + 2 ]*0.70 ;
+         d[ (pixelidx + 16) * 4 + 0 ] = 255*(1 - Math.abs((r/255).mod(2) - 1))*0.30 + d[ (pixelidx%256 + 16) * 4 + 0 ]*0.70 ;
+         d[ (pixelidx + 16) * 4 + 1 ] = 255*(1 - Math.abs((g/255).mod(2) - 1))*0.30 + d[ (pixelidx%256 + 16) * 4 + 1 ]*0.70 ;
+         d[ (pixelidx + 16) * 4 + 2 ] = 255*(1 - Math.abs((b/255).mod(2) - 1))*0.30 + d[ (pixelidx%256 + 16) * 4 + 2 ]*0.70 ;
+         d[ (pixelidx - 16) * 4 + 0 ] = 255*(1 - Math.abs((r/255).mod(2) - 1))*0.30 + d[ (pixelidx%256 - 16) * 4 + 0 ]*0.70 ;
+         d[ (pixelidx - 16) * 4 + 1 ] = 255*(1 - Math.abs((g/255).mod(2) - 1))*0.30 + d[ (pixelidx%256 - 16) * 4 + 1 ]*0.70 ;
+         d[ (pixelidx - 16) * 4 + 2 ] = 255*(1 - Math.abs((b/255).mod(2) - 1))*0.30 + d[ (pixelidx%256 - 16) * 4 + 2 ]*0.70 ;
+         d[ (pixelidx + 15) * 4 + 0 ] = 255*(1 - Math.abs((r/255).mod(2) - 1))*0.10 + d[ (pixelidx%256 + 15) * 4 + 0 ]*0.90 ;
+         d[ (pixelidx + 15) * 4 + 1 ] = 255*(1 - Math.abs((g/255).mod(2) - 1))*0.10 + d[ (pixelidx%256 + 15) * 4 + 1 ]*0.90 ;
+         d[ (pixelidx + 15) * 4 + 2 ] = 255*(1 - Math.abs((b/255).mod(2) - 1))*0.10 + d[ (pixelidx%256 + 15) * 4 + 2 ]*0.90 ;
+         d[ (pixelidx - 15) * 4 + 0 ] = 255*(1 - Math.abs((r/255).mod(2) - 1))*0.10 + d[ (pixelidx%256 - 15) * 4 + 0 ]*0.90 ;
+         d[ (pixelidx - 15) * 4 + 1 ] = 255*(1 - Math.abs((g/255).mod(2) - 1))*0.10 + d[ (pixelidx%256 - 15) * 4 + 1 ]*0.90 ;
+         d[ (pixelidx - 15) * 4 + 2 ] = 255*(1 - Math.abs((b/255).mod(2) - 1))*0.10 + d[ (pixelidx%256 - 15) * 4 + 2 ]*0.90 ;
+         d[ (pixelidx + 17) * 4 + 0 ] = 255*(1 - Math.abs((r/255).mod(2) - 1))*0.10 + d[ (pixelidx%256 + 17) * 4 + 0 ]*0.90 ;
+         d[ (pixelidx + 17) * 4 + 1 ] = 255*(1 - Math.abs((g/255).mod(2) - 1))*0.10 + d[ (pixelidx%256 + 17) * 4 + 1 ]*0.90 ;
+         d[ (pixelidx + 17) * 4 + 2 ] = 255*(1 - Math.abs((b/255).mod(2) - 1))*0.10 + d[ (pixelidx%256 + 17) * 4 + 2 ]*0.90 ;
+         d[ (pixelidx - 17) * 4 + 0 ] = 255*(1 - Math.abs((r/255).mod(2) - 1))*0.10 + d[ (pixelidx%256 - 17) * 4 + 0 ]*0.90 ;
+         d[ (pixelidx - 17) * 4 + 1 ] = 255*(1 - Math.abs((g/255).mod(2) - 1))*0.10 + d[ (pixelidx%256 - 17) * 4 + 1 ]*0.90 ;
+         d[ (pixelidx - 17) * 4 + 2 ] = 255*(1 - Math.abs((b/255).mod(2) - 1))*0.10 + d[ (pixelidx%256 - 17) * 4 + 2 ]*0.90 ;
+
+
+
+
+
+         ctxsmall.putImageData(dataobj, 0, 0);
+        // console.log('weightssc',weights);
+         let score = await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions);
+         return 1000 * (score.score);
+     }
+
+
+     r = [], g = [], b = [];
+
+     r = [ d[(i + 0) * 4 + 0],
+           d[(i + 1) * 4 + 0],
+           d[(i - 1) * 4 + 0],
+           d[(i +16) * 4 + 0],
+           d[(i -16) * 4 + 0],
+           d[(i +17) * 4 + 0],
+           d[(i -17) * 4 + 0],
+           d[(i +15) * 4 + 0],
+           d[(i -15) * 4 + 0]  ];
+     
+     g = [ d[(i + 0) * 4 + 1],
+           d[(i + 1) * 4 + 1],
+           d[(i - 1) * 4 + 1],
+           d[(i +16) * 4 + 1],
+           d[(i -16) * 4 + 1],
+           d[(i +17) * 4 + 1],
+           d[(i -17) * 4 + 1],
+           d[(i +15) * 4 + 1],
+           d[(i -15) * 4 + 1]  ];
+
+     b = [ d[(i + 0) * 4 + 2],
+           d[(i + 1) * 4 + 2],
+           d[(i - 1) * 4 + 2],
+           d[(i +16) * 4 + 2],
+           d[(i -16) * 4 + 2],
+           d[(i +17) * 4 + 2],
+           d[(i -17) * 4 + 2],
+           d[(i +15) * 4 + 2],
+           d[(i -15) * 4 + 2]  ];
+     
+     r = r.filter(x=>(!isNaN(x)));
+     g = g.filter(x=>(!isNaN(x)));
+     b = b.filter(x=>(!isNaN(x)));
+
+     r = (r.reduce( (a,b)=>( a+b ), 0 ) / r.length)|| Math.random()*255;
+     g = (g.reduce( (a,b)=>( a+b ), 0 ) / g.length)|| Math.random()*255;
+     b = (b.reduce( (a,b)=>( a+b ), 0 ) / b.length)|| Math.random()*255;
+
+
+     let or = d[i * 4 + 0],
+         og = d[i * 4 + 1],
+         ob = d[i * 4 + 2];
+
+
+
+     let counter = 100;
+     let rslope = Math.round(Math.random()*3-1.5);
+     let gslope = Math.round(Math.random()*3-1.5);
+     let bslope = Math.round(Math.random()*3-1.5);
+
+     let rinc = inc,
+         binc = inc,
+         ginc = inc;
+
+
+
+
+
+     // slope is rise over run (y/x)
+     // the line equation is 
+     // y = xm + c
+     // we want to use m to adjust x to minimize y.
+     let scale = 1;
+
+     minscore = await sample(i, r, g, b);
+     diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
+     
+     const phi = Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(2)))));
+     while(diff===0 && counter > 0) {
+        counter--;
+        rinc *= phi;
+        ginc *= phi;
+        binc *= phi;
+        diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
+     }
+     if(diff !== 0) {
+      counter += 10;
+     }
+     debug("pxsamples a", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
+     while (diff > 0 && getElapsed() < 100) {
+         counter--;
+         let samples = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc);
+         if (samples - minscore > 0) {
+             rslope = -rslope;
+             gslope = -gslope;
+             bslope = -gslope;
+             diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
+             debug("swapslope", counter, diff);
+         }
+
+
+         while(diff>=0 && getElapsed() < 100) {
+            counter--;
+            //convert the counter to 3 digits of -1, 0 or 1.
+            [rslope,gslope,bslope] = ('000'+(updatecount + counter).toString(5)).slice(-3).split('').map(x=>+x-2)
+            rinc *= phi;
+            ginc *= phi;
+            binc *= phi;
+
+
+
+            diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
+            debug("enumerate slope", rslope, gslope, bslope, counter, diff);
+         }
+
+        
+     }
+     debug("pxsamples b", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
+     while (diff < 0 && getElapsed() < 100) {
+        let newscore;
+        counter--;
+
+
+
+        newscore = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc);
+          
+        if(newscore-minscore < 0) {
+          let or=r,og=g,ob=b;
+
+          r = r + rslope * rinc;
+          g = g + gslope * ginc;
+          b = b + bslope * binc;
+          if(isNaN(r)){   console.log('isnan r',or,rslope,rinc,r) }
+          if(isNaN(g)){   console.log('isnan g',og,gslope,ginc,g) }
+          if(isNaN(b)){   console.log('isnan b',ob,bslope,binc,b) }
+          rinc *= phi;
+          ginc *= phi;
+          binc *= phi;
+          diff = newscore-minscore;
+          minscore = newscore;
+          
+        } else {
+          newscore = await sample(i, r , g , b);
+          diff = newscore-minscore;
+        }
+
+        debug("pxsamples c", i, counter, r,g,b,rinc, ginc, binc, rslope, gslope, bslope, newscore, minscore, diff);
+
+     }
+     debug("pxsamples d", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
+
+     if (counter > 0) {
+         minscore = await sample(i, r , g, b);
+     } else {
+         minscore = await sample(i, or, og, ob);
+     }
+
+
+     debug("new", minscore);
+     return minscore;
+ }
  //weights correspond to instructions.
  //we are evaluating the fitness of ctxsmall combined with threshold and weights
  //for matching the shapes in instructions.
