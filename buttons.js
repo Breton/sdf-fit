@@ -184,7 +184,8 @@
               bestdata.data[i + 2] = bestdata.data[(i + 2).mod(l)] * 0.5 + bestdata.data[(i + 4 * 16 + 2).mod(l)] * 0.25 + bestdata.data[(i - 4 * 16 + 2).mod(l)] * 0.25
 
           }
-          ctxsmall.putImageData(bestdata, 0, 0);
+          setDataImg(bestdata,'userAction');
+          //ctxsmall.putImageData(bestdata, 0, 0);
       },
    
 

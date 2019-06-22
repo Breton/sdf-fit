@@ -53,19 +53,16 @@ scoreWindowSize = 100;
 scoreRate = 10;
 scoreRateRate = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
-letters = '03689';
+letters = '0123456789';
 evalSize = 64;
 modelock = false;
 scoreDebug = {};
 weightBenchmarks = [];
 weightBenchmarkCount = 100;
 pixelBenchmarks = [];
-pixelBenchmarkCount = 10;
+pixelBenchmarkCount = 20;
 lowestScorePerIndex = [];
 
-gradientPromise = new Promise (function (res,err){
-  
-});
 
 async function addPixelBenchmark(data,newscore) {
     //console.log("adding pixel benchmrark, newscore",!!pixelBenchmarks, pixelBenchmarks.length,(pixelBenchmarks[0]||{}).score,  newscore )
