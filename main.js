@@ -266,21 +266,22 @@ newweights = weights;
 lowestever = letterCounter * 100000;
 
 
+function primeCanvas() {
+  console.log("priming canvas");
+  for (let i = 0; i < instructions.length; i++) {
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.fillStyle = "white"
+      evalCanvas(ctx, instructions[i]);
+      ctx.globalCompositeOperation="screen";
+       
 
-console.log("priming canvas");
-for (let i = 0; i < instructions.length; i++) {
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, 256, 256);
-    ctx.fillStyle = "white"
-    evalCanvas(ctx, instructions[i]);
-    ctx.globalCompositeOperation="screen";
-     
-
+  }
+  setDataImg(canvas,'userAction');
 }
-setDataImg(canvas);
 
-
+primeCanvas();
 
 ctx.globalCompositeOperation = "source-over";
 ctxsmall.globalCompositeOperation = "source-over";

@@ -93,9 +93,12 @@
 
 
           }
-
+          
           setDataImg(bestdata,'userAction');
 
+      },
+      'prime canvas': function () {
+        setDataImg(primeCanvas(),'userAction');
       },
       'load and average': function loadAndAverage() {
           let counter = +localStorage.getItem('acounter');
