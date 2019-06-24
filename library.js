@@ -1,4 +1,5 @@
 weightscores = [];
+pixelscores = []
 // Library local variables
 
 let scorecount = 0;
@@ -1507,7 +1508,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          }
 
         */
-         weightscores[i]=await sample(i, r, g, b);
+         
          
          
          
@@ -1754,7 +1755,7 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, we
          ctxsmall.putImageData(dataobj, 0, 0);
         // console.log('weightssc',weights);
          let score = await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions);
-         return 1000 * (score.score);
+         return  (score.score);
      }
 
 
@@ -1763,34 +1764,32 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, we
      b = 0;
 
 
-     let or = d[i * 4 + 0],
-         og = d[i * 4 + 1],
-         ob = d[i * 4 + 2];
+     let or = d[i * 4 + 0]/255,
+         og = d[i * 4 + 1]/255,
+         ob = d[i * 4 + 2]/255;
 
-
+     let m = Math.random();
 
 
 
      let samples = [
-         sample(i, 0, 0, 0),
-         sample(i, 0, 0, 1),
-         sample(i, 0, 1, 0),
-         sample(i, 0, 1, 1),
-         sample(i, 1, 0, 0),
-         sample(i, 1, 0, 1),
-         sample(i, 1, 1, 0),
-         sample(i, 1, 1, 1)
-     ]
+         [or, og, ob] ,
+         [or-m, og-m, ob-m] ,
+         [or-m, og-m, ob+m] ,
+         [or-m, og+m, ob-m] ,
+         [or-m, og+m, ob+m] ,
+         [or+m, og-m, ob-m] ,
+         [or+m, og-m, ob+m] ,
+         [or+m, og+m, ob-m] ,
+         [or+m, og+m, ob+m] 
+     ];
 
-     
-     
-     let scores = await Promise.all(samples);
+     let scores = await Promise.all(samples.map(x=>sample(i,...x)));
      let lowest = scores.reduce((a,b)=>Math.min(a,b));
      let indexoflowest = scores.indexOf(lowest);
-     minscore = await sample(i,...(('000'+indexoflowest.toString(2)).slice(-3).split('').map(x=>+x) ));
+     minscore = await sample(i,...samples[indexoflowest]);
 
-
-     debug('8colorscores',minscore,i,...(('000'+indexoflowest.toString(2)).slice(-3).split('').map(x=>+x) ));
+     debug(`8optim minscore ${minscore} i ${i} scores ${scores} indexoflowest ${indexoflowest} samples ${ samples[indexoflowest] } `);
      return minscore;
  }
 
@@ -2070,6 +2069,7 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, we
 
       if(debug){
         debugCanvas(ctx,'nscore-'+i);
+
       }
       //nscore = (Math.sqrt((nscore)) / lowestScorePerIndex[scoreidx]);
       //newscore += nscore * nscore + mscore * mscore;
