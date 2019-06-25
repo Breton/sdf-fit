@@ -49,7 +49,7 @@ minri = 0;
 time = 0;
 duration = 0;
 scoreSamples = [];
-pixelBenchmarkCount = 5;
+pixelBenchmarkCount = 100;
 scoreWindowSize = pixelBenchmarkCount;
 scoreRate = 10;
 scoreRateRate = 0;
@@ -59,9 +59,10 @@ evalSize = 64;
 modelock = false;
 scoreDebug = {};
 weightBenchmarks = [];
-weightBenchmarkCount = 10;
+weightBenchmarkCount = 100;
 pixelBenchmarks = [];
 lowestScorePerIndex = [];
+
 
 
 
@@ -69,16 +70,33 @@ async function addPixelBenchmark(data,newscore) {
     //console.log("adding pixel benchmrark, newscore",!!pixelBenchmarks, pixelBenchmarks.length,(pixelBenchmarks[0]||{}).score,  newscore )
   if(pixelBenchmarks && typeof pixelBenchmarks.push === 'function' && !willAdjustWeights ){
        let sum =  score(data);
+       let range = 10;
+       let diff = 20;
+       let l = pixelBenchmarks.length;
+        let sumindex = pixelBenchmarks.map(x=>x.sum).indexOf(sum);
+         if(sumindex<0) {
+          pixelBenchmarks.push({score:(newscore),data:data,sum:Math.round(sum*100000000000)});
+         } else {
+          pixelBenchmarks[sumindex] = ({score:(newscore),data:data,sum:Math.round(sum*100000000000)});
+         }
 
-       pixelBenchmarks.push({score:(newscore),data:data,sum:Math.round(sum*100000000000)});
-       console.log('adding pixel benchmark', newscore, Math.round(sum*1000));
+       
+       
        pixelBenchmarks.sort((a,b)=>a.score-b.score);
-       pixelBenchmarks = pixelBenchmarks.filter((x,i,a)=> ( Math.floor(x.score/4) !== Math.floor((a[i-1]||{}).score/4) ) );
+       
+       if(l>2 && pixelBenchmarks[l-1]) {
+        range = pixelBenchmarks[l-1].score - pixelBenchmarks[0].score;
+       }
+
+       let crunch = diff/pixelBenchmarkCount
+       console.log('adding pixel benchmark', range, crunch, newscore, Math.round(sum*100000000000));
+       pixelBenchmarks = pixelBenchmarks.filter((x,i,a)=> ( Math.floor(x.score/crunch) !== Math.floor((a[i-1]||{}).score/crunch) ) );
        pixelBenchmarks.sort((a,b)=>a.sum-b.sum);
        pixelBenchmarks = pixelBenchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
        pixelBenchmarks.sort((a,b)=>a.score-b.score);
-       if(pixelBenchmarks.length > pixelBenchmarkCount) {
-          pixelBenchmarks.length = pixelBenchmarkCount;
+       
+       if(l > 3 && range > diff) {
+          pixelBenchmarks.length = Math.max(3,Math.min(l-1,pixelBenchmarkCount));
        }
   }
 }
@@ -91,7 +109,7 @@ function randomPixelBenchmark() {
 
 }
 
-function averagePixelPenchmark() {
+function averagePixelBenchmark() {
     let c = [];
     let avg = [];
 
@@ -123,7 +141,7 @@ function averagePixelPenchmark() {
           
           
 }
-function breedPixelPenchmark() {
+function breedPixelBenchmark() {
     let c = [];
     let avg = [];
     if(pixelBenchmarks.length > 0) {
@@ -143,6 +161,21 @@ function breedPixelPenchmark() {
           
 }
 
+function breedWeightBenchmark() {
+    let avg = [];
+    if(weightBenchmarks && weightBenchmarks.length > 0) {
+      avg.length = weightBenchmarks[0].weights.length
+      avg.fill(0).map(x=>[x,x,x]);
+      avg = avg.map((x,i) => weightBenchmarks[rollDie(weightBenchmarks.length)].weights[i] );
+      return cloneWeights(avg);
+    } else {
+      return cloneWeights(bestweights)
+    }
+
+          
+          
+}
+
 function lowestPixelBenchmark() {
   if(pixelBenchmarks && pixelBenchmarks.length) {
     return (pixelBenchmarks[0].data);
@@ -152,16 +185,36 @@ function lowestPixelBenchmark() {
 
 }
 function addWeightBenchmark(weights,newscore) {
-    if(weightBenchmarks && (weightBenchmarks[0]||{}).score !== newscore ){
+    if(weights && weightBenchmarks &&  (weightBenchmarks[0]||{}).score !== newscore ){
+
+         let range = 10;
+
          
-         weightBenchmarks.push({score: newscore,weights:bestweights,sum:sumWeights(weights)});
+         let diff = 10;
+         let l = weightBenchmarks.length;
+         let sum = sumWeights(weights);
+         let sumindex = weightBenchmarks.map(x=>x.sum).indexOf(sum);
+         if(sumindex<0) {
+          weightBenchmarks.push({score: newscore,weights:weights,sum:sum});
+         } else {
+          weightBenchmarks[sumindex]={score: newscore,weights:weights,sum:sum};
+         }
          weightBenchmarks.sort((a,b)=>a.score-b.score);
-         pixelBenchmarks = pixelBenchmarks.filter((x,i,a)=> ( Math.floor(x.score/4) !== Math.floor((a[i-1]||{}).score/4) ) );
+         if(l>2 && weightBenchmarks[l-1]) {
+
+          range = weightBenchmarks[l-1].score - weightBenchmarks[0].score;
+         }
+         
+        let crunch = diff/weightBenchmarkCount;
+         console.log('addWeightBenchmark',range,crunch,newscore,sum);
+         weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( Math.floor(x.score/crunch) !== Math.floor((a[i-1]||{}).score/crunch) ) );
          weightBenchmarks.sort((a,b)=>a.sum-b.sum);
          weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
          weightBenchmarks.sort((a,b)=>a.score-b.score);
-         if(weightBenchmarks.length > weightBenchmarkCount) {
-            weightBenchmarks.length = weightBenchmarkCount;
+
+         if(l > 3 && range > diff) {
+            
+            weightBenchmarks.length = Math.max(2,Math.min(weightBenchmarks.length-1,weightBenchmarkCount));
          }
     }
 }
@@ -331,7 +384,7 @@ function updatePixel(onepixel,diff=0) {
       
       let oindex=gindex.indexOf(onepixelmod);
 
-      debug(`gindex, ${gindex} oindex: ${oindex}, gmin: ${gmin} gmax: ${gmax} gran: ${grange} gindindex.lneght ${gindex.length}`);
+      //debug(`gindex, ${gindex} oindex: ${oindex}, gmin: ${gmin} gmax: ${gmax} gran: ${grange} gindindex.lneght ${gindex.length}`);
       if (gindex.length > 0) {
           onepixel = gindex[(oindex+1).mod(gindex.length)];  
       } 
@@ -400,9 +453,6 @@ async function main() {
     olderweights = cloneWeights(oldweights);
     oldweights = cloneWeights(weights);
     newweights = cloneWeights(weights);
-    function flipCoin(){
-      return Math.random()>0.5;
-    }
 
     if(scoreDebug && scoreDebug.nscores ){
       needsMostImprovement = indexOfMax(scoreDebug.nscores)
@@ -431,8 +481,10 @@ async function main() {
               whichweights= 'best'
               break;
             case 2: 
-              weights = cloneWeights(weightBenchmarks[0].weights);
-              whichweights= 'lowest bench'
+              if(weightBenchmarks && weightBenchmarks[0]) {
+                weights = cloneWeights(weightBenchmarks[0].weights);
+                whichweights= 'lowest bench'
+              }
               break;
             case 3: 
               weights = cloneWeights(minimumWeights);
@@ -442,52 +494,67 @@ async function main() {
               weights = randomWeights(weights);
               whichweights= 'random'
               break;
+            case 5: 
+              weights = perturbWeights(weights);
+              break;
+            case 6: case 7: case 8: case 9:
+              weights = breedWeightBenchmark();
+              whichweights= 'breed'
+              break;
             default:
               whichweights = 'no, none';
               break;
           }
-
+          console.log('weightmutation', whichweights);
            
         } 
-  
+        
 
         if (flipCoin() && scoreDebug && scoreDebug.nscores) {
           
           //console.log('weights1',weights);
           newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,needsMostImprovement,1);
-          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, newweights, instructions,needsMostImprovement,1);
-          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, newweights, instructions,needsMostImprovement,1);
+          
+          
         } else {
           //console.log('weights2',weights);
           newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(updatecount%instructions.length),1);
-          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, newweights, instructions,(updatecount%instructions.length),1);
-          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, newweights, instructions,(updatecount%instructions.length),1);
+          
+          
         }
     } else {
         onepixel = updatePixel(onepixel, oldscore-olderscore);
         let oneframe = needsMostImprovement;
-        
-        if(pixelBenchmarks && pixelBenchmarks.length > 3) {
-          //setDataImg(lowestPixelBenchmark(),'optim lowest');
-          //setDataImg(averagePixelPenchmark(),'optim average');
-          setDataImg(breedPixelPenchmark(),'optim breed');
 
-          if(flipCoin()){
-            //setDataImg(averagePixelPenchmark(),'optim average');
-          } 
+        if(flipCoin() && pixelBenchmarks && pixelBenchmarks.length > 3) {
+          //setDataImg(lowestPixelBenchmark(),'optim lowest');
+          //setDataImg(averagePixelBenchmark(),'optim average');
           if(flipCoin()) {
-            //setDataImg(breedPixelPenchmark(),'optim breed');
+             setDataImg(breedPixelBenchmark(),'optim breed');
+          }
+          else {
+              setDataImg(averagePixelBenchmark(),'optim average');
           } 
+          
+ 
+  
+        } else {
+          setDataImg(lowestPixelBenchmark(),'optim lowest');
+          if(flipCoin()) {
+            await optimise8colorPixel(ctx, ctxsmall, [weights[oneframe]], [instructions[oneframe]], onepixel,needsMostImprovement);
+          } else {
+            await optimise8colorPixel(ctx, ctxsmall, weights, instructions, onepixel,needsMostImprovement);
+          }
         }
 
           
         
 
-        await optimise8colorPixel(ctx, ctxsmall, [weights[oneframe]], [instructions[oneframe]], onepixel,needsMostImprovement);
+        
         //flipCoin() && (await optimisePixelForWeights(ctx, ctxsmall, [weights[oneframe]], [instructions[oneframe]], onepixel,needsMostImprovement));
-       if (scoreRate > 1) {
+       // if (scoreRate > 1) {
         //await optimisePixelForWeights(ctx, ctxsmall, [weights[indexOfMax(weightscores)]], [instructions[indexOfMax(weightscores)]], onepixel,needsMostImprovement);
-       }
+       //}
         /*
         flipCoin() && await optimise9PixelsForWeights(ctx, ctxsmall, weights, instructions, onepixel,needsMostImprovement);
         flipCoin() && (onepixel = updatePixel(onepixel, oldscore-olderscore));
@@ -519,10 +586,11 @@ async function main() {
     if (willAdjustWeights && newscore < minimumScore) {
       minimumScore = newscore;
       minimumWeights = cloneWeights(newweights);
+      addWeightBenchmark(minimumWeights,newscore);
+
     }
 
     if (willAdjustWeights){
-      addWeightBenchmark(minimumWeights,newscore);
     
       addWeightBenchmark(newweights,newscore);
    
@@ -541,9 +609,9 @@ async function main() {
        
        if(!willAdjustWeights){
         if(flipCoin()){
-        //  setDataImg(averagePixelPenchmark(),'newscore > oldscore: average');
+        //  setDataImg(averagePixelBenchmark(),'newscore > oldscore: average');
         } else {
-        //  setDataImg(breedPixelPenchmark(),'newscore > oldscore: breed');
+        //  setDataImg(breedPixelBenchmark(),'newscore > oldscore: breed');
         }
        }
        //setWeights(oldweights);
@@ -665,7 +733,8 @@ async function main() {
     debug(`
   globalscore ${globalscore}
   minimumScore ${minimumScore}  
-  windowScore ${ pixelBenchmarks.map(x=>x.score).filter((x,i,a)=>i===0||i===a.length-1) }
+  pixelscores ${ pixelBenchmarks.map(x=>x.score).filter((x,i,a)=>i===0||i===a.length-1) }
+  weightscores ${ weightBenchmarks.map(x=>x.score).filter((x,i,a)=>i===0||i===a.length-1) }
   weightSuccess ${weightSuccess}
   weightFail ${weightFail}
   pixelSuccess ${pixelSuccess}

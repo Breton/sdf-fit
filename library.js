@@ -13,6 +13,13 @@ let maxpixelcounter = 50;
       return ((this%n)+n)%n;
   };
 
+  function flipCoin(){
+    return Math.random()>0.5;
+  }
+  function rollDie(n=6) {
+    return Math.floor(Math.random()*n);
+  }
+  
  function round(n,digits=4){
     let f = Math.pow(10,digits);
     return (n*f|0)/f;
@@ -1772,17 +1779,30 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, we
 
 
 
-     let samples = [
-         [or, og, ob] ,
-         [or-m, og-m, ob-m] ,
-         [or-m, og-m, ob+m] ,
-         [or-m, og+m, ob-m] ,
-         [or-m, og+m, ob+m] ,
-         [or+m, og-m, ob-m] ,
-         [or+m, og-m, ob+m] ,
-         [or+m, og+m, ob-m] ,
-         [or+m, og+m, ob+m] 
-     ];
+
+     /*
+     000
+     001
+     002
+     010
+     011
+     012
+     020
+     021
+     022
+    
+     */
+      /* create an array with numbers 0 to 26, and do something with each */
+      let samples = (new Array(27).fill(0)).map((x,i)=>(
+        /*convert index to base 3 number string  with extra padding */
+        ('000'+(i).toString(3)).
+        /* cut to 3 digits and convert to 3 element array*/
+        slice(-3).split('')
+        /* convert to 3 numbers that are -1, 0 or 1, multiply by m*/
+        /* add to cooresponding color component */
+        .map((x,i)=>[or,og,ob][i]+(+x-1)*m)
+      ));
+      
 
      let scores = await Promise.all(samples.map(x=>sample(i,...x)));
      let lowest = scores.reduce((a,b)=>Math.min(a,b));
