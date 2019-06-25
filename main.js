@@ -417,7 +417,7 @@ async function main() {
     let deltapixel = [0, 0, 0];
     let idx = onepixel % (bestdata.data.length / 4);
     if(!modelock) {
-      if (weightFail > 1 && scoreRateRate >= 0 && scoreRate >= 0 || lastimprovement ===0 ) {
+      if (weightFail > 100 && scoreRateRate >= 0 && scoreRate >= 0 || lastimprovement ===0 ) {
           
           modebias = 1;
           weightFail = 1;
@@ -427,7 +427,7 @@ async function main() {
           oldweights=cloneWeights(minimumWeights)
           olderweights=cloneWeights(minimumWeights)
       }
-      if (pixelFail > 1 && scoreRateRate >= 0 && scoreRate >= 0  || lastimprovement ===0) {
+      if (pixelFail > 100 && scoreRateRate >= 0 && scoreRate >= 0  || lastimprovement ===0) {
           
           modebias = 0.0;
           pixelFail = 0;
