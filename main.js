@@ -190,7 +190,7 @@ function addWeightBenchmark(weights,newscore) {
          let range = 10;
 
          
-         let diff = 10;
+         let diff = 30;
          let l = weightBenchmarks.length;
          let sum = sumWeights(weights);
          let sumindex = weightBenchmarks.map(x=>x.sum).indexOf(sum);
