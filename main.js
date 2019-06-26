@@ -54,7 +54,7 @@ scoreWindowSize = pixelBenchmarkCount;
 scoreRate = 10;
 scoreRateRate = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
-letters = '0123456789';
+letters = '1';
 evalSize = 64;
 modelock = false;
 scoreDebug = {};
@@ -374,7 +374,7 @@ function updatePixel(onepixel,diff=0) {
 
 
       gindex = (gradient.map((x, i) => ( x===gmax || x !== gmin && ((x-gmin)/grange < Math.random()) ? i : 0) )).filter(x => !!x);
-      
+    
       let onepixelmod = onepixel.mod(gradient.length);
 
       if(gindex.indexOf(onepixelmod) < 0 ) {
@@ -391,7 +391,8 @@ function updatePixel(onepixel,diff=0) {
      
     }
     onepixel += ([-1,1,-16,16,0,0,0,0,0,0,0,0,0,0,0,0])[Math.floor(Math.random()*16)];
-    return Math.abs(onepixel);
+    let gval = ((gradient[onepixel]-gmin)/grange
+    return {pixel:Math.abs(onepixel),value:gval};
 }
 minimumWeights=cloneWeights(weights);
 let minimumScore=10000;
@@ -468,7 +469,7 @@ async function main() {
     debug('maxweightscore',needsMostImprovement);
     //console.log('weights',weights);
     if (willAdjustWeights) {
-        if(flipCoin()) {
+        
           let whichweights = 'none';
           switch (updatecount % 10){
             case 0: 
@@ -477,24 +478,20 @@ async function main() {
               whichweights= 'random benchmark'
               break;
             case 1: 
-              weights = cloneWeights(bestweights);
-              whichweights= 'best'
-              break;
-            case 2: 
               if(weightBenchmarks && weightBenchmarks[0]) {
                 weights = cloneWeights(weightBenchmarks[0].weights);
                 whichweights= 'lowest bench'
               }
               break;
-            case 3: 
+            case 2: 
               weights = cloneWeights(minimumWeights);
               whichweights= 'minimal'
               break;
-            case 4: 
+            case 3: 
               weights = randomWeights(weights);
               whichweights= 'random'
               break;
-            case 5: 
+            case 4: 
               weights = perturbWeights(weights);
               break;
             case 6: case 7: case 8: case 9:
@@ -507,7 +504,7 @@ async function main() {
           }
           console.log('weightmutation', whichweights);
            
-        } 
+        
         
 
         if (flipCoin() && scoreDebug && scoreDebug.nscores) {
@@ -524,6 +521,9 @@ async function main() {
         }
     } else {
         onepixel = updatePixel(onepixel, oldscore-olderscore);
+        let value = onepixel.value;
+        onepixel=onepixel.pixel;
+
         let oneframe = needsMostImprovement;
 
         if(flipCoin() && pixelBenchmarks && pixelBenchmarks.length > 3) {
@@ -541,9 +541,9 @@ async function main() {
         } else {
           setDataImg(lowestPixelBenchmark(),'optim lowest');
           if(flipCoin()) {
-            await optimise8colorPixel(ctx, ctxsmall, [weights[oneframe]], [instructions[oneframe]], onepixel,needsMostImprovement);
+            await optimise8colorPixel(ctx, ctxsmall, [weights[oneframe]], [instructions[oneframe]], onepixel,value);
           } else {
-            await optimise8colorPixel(ctx, ctxsmall, weights, instructions, onepixel,needsMostImprovement);
+            await optimise8colorPixel(ctx, ctxsmall, weights, instructions, onepixel,value);
           }
         }
 

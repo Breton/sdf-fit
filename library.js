@@ -16,6 +16,7 @@ let maxpixelcounter = 50;
   function flipCoin(){
     return Math.random()>0.5;
   }
+
   function rollDie(n=6) {
     return Math.floor(Math.random()*n);
   }
@@ -1160,11 +1161,11 @@ function thresholdKernelCiirckle(d, r, g, b) {
          a[i][0] = weights[i][0];
          a[i][1] = weights[i][1];
          a[i][2] = weights[i][2];
-         if (i < count) {
+       //  if (i < count) {
              a[i][2] = weights[i][2] + Math.random() * amount - amount/2;
              a[i][0] = weights[i][0] + Math.random() * amount - amount/2;
              a[i][1] = weights[i][1] + Math.random() * amount - amount/2;
-         }
+        // }
 
 
      }
