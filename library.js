@@ -19,7 +19,7 @@ let maxpixelcounter = 50;
   function rollDie(n=6) {
     return Math.floor(Math.random()*n);
   }
-  
+
  function round(n,digits=4){
     let f = Math.pow(10,digits);
     return (n*f|0)/f;
@@ -1152,43 +1152,25 @@ function thresholdKernelCiirckle(d, r, g, b) {
      return [(n1 - o1) || 0, (n2 - o2) || 0, (n3 - o3) || 0];
  }
 
- function perturbWeights(weights, count = 1, amount = 0.5) {
+ function perturbWeights(weights, amount = 0.5) {
      let a = [];
-     let idx = Math.min(count - 1, Math.random() * weights.length | 0);
+     
      for (let i = 0; i < weights.length; i++) {
          a[i] = [];
          a[i][0] = weights[i][0];
          a[i][1] = weights[i][1];
          a[i][2] = weights[i][2];
-         if (i < count) {
+         //if (i < count) {
              a[i][2] = weights[i][2] + Math.random() * amount - amount/2;
              a[i][0] = weights[i][0] + Math.random() * amount - amount/2;
              a[i][1] = weights[i][1] + Math.random() * amount - amount/2;
-         }
+         //}
 
 
      }
      return a
  }
 
- function perturbWeights2(weights, count = 1) {
-     let a = [];
-     let idx = Math.min(count - 1, Math.random() * weights.length | 0);
-     for (let i = 0; i < weights.length; i++) {
-         a[i] = [];
-         a[i][0] = weights[i][0];
-         a[i][1] = weights[i][1];
-         a[i][2] = weights[i][2];
-         if (i < count) {
-             a[i][2] = weights[i][2] + Math.random() * 0.01 - 0.005;
-             a[i][0] = weights[i][0] + Math.random() * 0.01 - 0.005;
-             a[i][1] = weights[i][1] + Math.random() * 0.01 - 0.005;
-         }
-
-
-     }
-     return a
- }
 
  function subWeights(a, b) {
      return a.map((a, i) => ([a[0] - b[i][0], a[1] - b[i][1], a[2] - b[i][2]]))
@@ -1282,7 +1264,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
     let score=0;
      async function sample(idx, r, g, b) {
         let key = `${idx},${Math.floor(r*255)},${Math.floor(g*255)},${Math.floor(b*255)}`;
-        if(weightMemo.has(key)) {
+        if( false && weightMemo.has(key)) {
             return weightMemo.get(key)
         } else {
          let mscore, nscore, cscore;
@@ -1326,10 +1308,8 @@ function thresholdKernelCiirckle(d, r, g, b) {
      let r, g, b;
      let phi = Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(2))))));// 
      
-     let inc = 1/4096;
-     if(Math.random()>0.5) {
-        inc = Math.random();
-     }
+     let inc = Math.random();
+
      let f = (x) => (Math.floor(x * 1000) / 1000);
      let minr = 1000000,
          ming = 1000000,
@@ -1352,7 +1332,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
 
      async function sample(idx, r, g, b) {
         let key = `${idx},${Math.floor(r*2048)},${Math.floor(g*2048)},${Math.floor(b*2048)}`;
-        if(weightMemo.has(key)) {
+        if(false && weightMemo.has(key)) {
             return weightMemo.get(key)
         } else {
          let mscore, nscore, cscore;
@@ -1523,7 +1503,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
 
          if ( weightscores[i] <  startscore ) {
      
-             newweights[i][0] = r.mod(1), newweights[i][1] = g.mod(1), newweights[i][2] = b.mod(1);
+             newweights[i][0] = r, newweights[i][1] = g, newweights[i][2] = b;
              
              
 

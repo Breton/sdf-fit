@@ -54,7 +54,7 @@ scoreWindowSize = pixelBenchmarkCount;
 scoreRate = 10;
 scoreRateRate = 0;
 letters = '0123456789ABCDEFGHIJKLMNOP';
-letters = '0123456789';
+letters = '149';
 evalSize = 64;
 modelock = false;
 scoreDebug = {};
@@ -190,7 +190,7 @@ function addWeightBenchmark(weights,newscore) {
          let range = 10;
 
          
-         let diff = 30;
+         let diff = 100;
          let l = weightBenchmarks.length;
          let sum = sumWeights(weights);
          let sumindex = weightBenchmarks.map(x=>x.sum).indexOf(sum);
@@ -468,38 +468,41 @@ async function main() {
     debug('maxweightscore',needsMostImprovement);
     //console.log('weights',weights);
     if (willAdjustWeights) {
-        if(flipCoin()) {
+        if(true || flipCoin()) {
           let whichweights = 'none';
-          switch (updatecount % 10){
-            case 0: 
-              if(weightBenchmarks && weightBenchmarks.length)
-              weights = cloneWeights(weightBenchmarks[Math.floor(weightBenchmarks.length*Math.random())].weights);
-              whichweights= 'random benchmark'
-              break;
-            case 1: 
-              weights = cloneWeights(bestweights);
-              whichweights= 'best'
-              break;
-            case 2: 
+
+          switch (updatecount % 6){
+            case 0:
               if(weightBenchmarks && weightBenchmarks[0]) {
                 weights = cloneWeights(weightBenchmarks[0].weights);
                 whichweights= 'lowest bench'
               }
               break;
+            case 1:
+              weights = breedWeightBenchmark();
+              whichweights= 'breed'
+              break;
+            case 2: 
+              weights = perturbWeights(weights,Math.random()*Math.random());
+              whichweights= 'perturb'
+              break;
             case 3: 
+              if(weightBenchmarks && weightBenchmarks.length)
+              weights = cloneWeights(weightBenchmarks[Math.floor(weightBenchmarks.length*Math.random())].weights);
+              whichweights= 'random benchmark'
+              break;
+            case 4: 
               weights = cloneWeights(minimumWeights);
               whichweights= 'minimal'
               break;
-            case 4: 
+            case 5: 
               weights = randomWeights(weights);
               whichweights= 'random'
               break;
-            case 5: 
-              weights = perturbWeights(weights);
-              break;
-            case 6: case 7: case 8: case 9:
-              weights = breedWeightBenchmark();
-              whichweights= 'breed'
+
+            case 6: 
+              weights = cloneWeights(bestweights);
+              whichweights= 'best'
               break;
             default:
               whichweights = 'no, none';
@@ -510,10 +513,10 @@ async function main() {
         } 
         
 
-        if (flipCoin() && scoreDebug && scoreDebug.nscores) {
+        if (scoreDebug && scoreDebug.nscores) {
           
-          //console.log('weights1',weights);
           newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,needsMostImprovement,1);
+          
           
           
         } else {
@@ -637,7 +640,7 @@ async function main() {
        debug('scores', newscore,oldscore,olderscore,globalscore,'no change', newscore - globalscore);
     }
     if (willAdjustWeights) {
-        if (newscore < oldscore) {
+        if (scoreRate < 0 && scoreRateRate < 0) {
             weightSuccess += 1
             // modebias *= 0.9;
         } else {
@@ -646,7 +649,7 @@ async function main() {
             
         }
     } else {
-        if (newscore < oldscore) {
+        if (scoreRate < 0 && scoreRateRate < 0) {
             pixelSuccess += 1
             // modebias = 1 * 0.1 + modebias * 0.9
             
@@ -656,24 +659,6 @@ async function main() {
         }
     }
 
-
-
-    if (false && !willAdjustWeights ) {
-        //if newscore is greater than oldscore, 
-        //that's worse, so invert whatever was just done to the pixel.
-        //if newscore is less, then that's better, do it again.
-        let dir =  (oldscore - newscore) > 0 ? 1 : -1;
-
-        //gradient[onepixel % 256] = (gradient[onepixel % 256] || 0) + dir;
-        
-        
-
-        if(dir === 0) {
-          gradient[(onepixel % 256)] = 0;
-        }
-
-        //gradient = gradient.map(x =>  x*0.9 );
-    }
 
 
     
