@@ -1,5 +1,6 @@
 0147-2.png
 0147.png
+149.png
 16-blend-square.png
 25-b.png
 25.png
@@ -8,6 +9,7 @@
 360box3.png
 360box4.png
 360box5.png
+747points.png
 all-numbers-800points.png
 almost all numbers.png
 download (1).png
@@ -18,4 +20,7 @@ download (5).png
 download (6).png
 download (7).png
 download.png
+number-sdf-1.png
+number-sdf-2.png
+number-sdf-3.png
 pentagonal.png

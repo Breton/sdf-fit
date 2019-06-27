@@ -239,9 +239,13 @@
 
 
   function saveCtx(key = 'ctxsmalldata') {
+      setDataImg(lowestPixelBenchmark(),'save lowest');
       let imgdata = ctxsmall.getImageData(0, 0, 16, 16);
-      imgdata.data = Array.from(imgdata.data);
-      localStorage.setItem(key, JSON.stringify(imgdata));
+      let savekey = {};
+      savekey.data = Array.from(imgdata.data);
+      savekey.width = imgdata.width;
+      savekey.height = imgdata.height;
+      localStorage.setItem(key, JSON.stringify(savekey));
   }
 
   function saveWeights() {
