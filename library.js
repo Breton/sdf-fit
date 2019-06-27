@@ -1707,7 +1707,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
      debug("new", minscore);
      return minscore;
  }
-async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, weightindex=0) {
+async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, amount ) {
      /* outer: lowestScorePErIndex */
      let newscore = 0;
      let mscore = 14100;
@@ -1734,9 +1734,9 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, we
 
      async function sample(pixelidx, r, g, b) {
 
-         d[pixelidx * 4 + 0] = 255*r
-         d[pixelidx * 4 + 1] = 255*g
-         d[pixelidx * 4 + 2] = 255*b
+         d[pixelidx * 4 + 0] = (255*r).mod(256);
+         d[pixelidx * 4 + 1] = (255*g).mod(256);
+         d[pixelidx * 4 + 2] = (255*b).mod(256);
 
          ctxsmall.putImageData(dataobj, 0, 0);
         // console.log('weightssc',weights);
@@ -1754,7 +1754,7 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, we
          og = d[i * 4 + 1]/255,
          ob = d[i * 4 + 2]/255;
 
-     let m = Math.random();
+     let m = amount*Math.random();
 
 
 
@@ -1788,7 +1788,7 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, we
      let indexoflowest = scores.indexOf(lowest);
      minscore = await sample(i,...samples[indexoflowest]);
 
-     debug(`8optim minscore ${minscore} i ${i} scores ${scores} indexoflowest ${indexoflowest} samples ${ samples[indexoflowest] } `);
+     debug(`8optim minscore ${minscore} amount ${amount} m ${m} i ${i} scores ${scores.map( x=> round(x) )} indexoflowest ${indexoflowest} samples ${ samples[indexoflowest] } `);
      return minscore;
  }
 

@@ -369,13 +369,12 @@ function scoreLoopAsync(ctx, ctxsmall, weights, instructions, start, letterCount
 smoothduration = 1000;
 /* outer gradient */
 function updatePixel(onepixel,diff=0) {
-    
-
+    let gval = 1, gmax =1, gmin=0, grange=1; 
     if(gradient && gradient.length){
-      let gmax = (gradient.reduce((a, b) => Math.max(a,b) ));
-      let gmin = (gradient.reduce((a, b) => Math.min(a,b) ));
-      let grange = gmax-gmin;
-
+      gmax = (gradient.reduce((a, b) => Math.max(a,b) ));
+      gmin = (gradient.reduce((a, b) => Math.min(a,b) ));
+      grange = gmax-gmin;
+      
 
       gindex = (gradient.map((x, i) => ( x===gmax || x !== gmin && ((x-gmin)/grange < Math.random()) ? i : 0) )).filter(x => !!x);
     
@@ -395,7 +394,8 @@ function updatePixel(onepixel,diff=0) {
      
     }
     onepixel += ([-1,1,-16,16,0,0,0,0,0,0,0,0,0,0,0,0])[Math.floor(Math.random()*16)];
-    let gval = ((gradient[onepixel]-gmin)/grange
+    gval = (gradient[onepixel]-gmin)/grange;
+
     return {pixel:Math.abs(onepixel),value:gval};
 }
 minimumWeights=cloneWeights(weights);
@@ -474,7 +474,7 @@ async function main() {
     //console.log('weights',weights);
     if (willAdjustWeights) {
 
-        if(true || flipCoin()) {
+        
           let whichweights = 'none';
 
           switch (updatecount % 6){
@@ -519,25 +519,12 @@ async function main() {
           }
           console.log('weightmutation', whichweights);
            
-        
-        
-
         if (scoreDebug && scoreDebug.nscores) {
-          
           newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,needsMostImprovement,1);
-          
-          
-          
         } else {
-          //console.log('weights2',weights);
           newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(updatecount%instructions.length),1);
-          
-          
         }
     } else {
-        onepixel = updatePixel(onepixel, oldscore-olderscore);
-        let value = onepixel.value;
-        onepixel=onepixel.pixel;
 
         let oneframe = needsMostImprovement;
 
@@ -555,6 +542,10 @@ async function main() {
   
         } else {
           setDataImg(lowestPixelBenchmark(),'optim lowest');
+          onepixel = updatePixel(onepixel, oldscore-olderscore);
+          let value = onepixel.value;
+          onepixel=onepixel.pixel;
+
           if(flipCoin()) {
             await optimise8colorPixel(ctx, ctxsmall, [weights[oneframe]], [instructions[oneframe]], onepixel,value);
           } else {
@@ -787,7 +778,7 @@ setTimeout(main, 10);
   var vel = document.getElementById('v');
   var wel = document.getElementById('w');
   var iel = document.getElementById('i');
-  var idx=0;
+  let idx=0;
   var blend = 0;
   var u=0,v=0,w=0,i=0,l=0;
   var last = 0;
