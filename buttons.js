@@ -139,7 +139,7 @@
           weightMemo = new Map();
         } else {
           modebias = 1;
-          setWeights(minimumWeights);
+          setWeights(cloneWeights(weightBenchmarks[0].weights));
         }
       },
       'reset instructions': function () {

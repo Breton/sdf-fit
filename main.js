@@ -428,9 +428,12 @@ async function main() {
           weightFail = 1;
           //smoothduration=500;
           weightSuccess = 1;
-          weights=cloneWeights(minimumWeights);
-          oldweights=cloneWeights(minimumWeights)
-          olderweights=cloneWeights(minimumWeights)
+          if(weightBenchmarks && weightBenchmarks[0] ) {}
+          setWeights(cloneWeights(weightBenchmarks[0].weights));
+
+          //weights=cloneWeights(minimumWeights);
+          //oldweights=cloneWeights(minimumWeights)
+          //olderweights=cloneWeights(minimumWeights)
       }
       if (pixelFail > 100 && scoreRateRate >= 0 && scoreRate >= 0  || lastimprovement ===0) {
           
@@ -442,6 +445,7 @@ async function main() {
           weightMemo = new Map();
           //smoothduration=500;
           pixelSuccess = 0;
+          setDataImg(lowestPixelBenchmark(),'optim lowest');
       }
     }
     //modebias = Math.sin(time * Math.PI / 10000 ) * 0.25 + 0.75;
@@ -495,8 +499,10 @@ async function main() {
               whichweights= 'perturb'
               break;
             case 3: 
-              if(weightBenchmarks && weightBenchmarks.length)
-              weights = cloneWeights(weightBenchmarks[Math.floor(weightBenchmarks.length*Math.random())].weights);
+              if(weightBenchmarks && weightBenchmarks.length) {
+                weights = cloneWeights(weightBenchmarks[Math.floor(weightBenchmarks.length*Math.random())].weights);  
+              }
+              
               whichweights= 'random benchmark'
               break;
             case 4: 
