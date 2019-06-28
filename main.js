@@ -77,7 +77,7 @@ async function addBenchmark(data,weights,newscore) {
        let diff = 100;
        let l = benchmarks.length;
        let sumindex = benchmarks.map(x=>x.sum).indexOf(sum);
-
+       let min=0,max=range;
        if(sumindex<0) {
         benchmarks.push({score:(newscore),weights:weights, data:data,sum:Math.round(sum*100000000000)});
        } else {
@@ -87,7 +87,9 @@ async function addBenchmark(data,weights,newscore) {
        benchmarks.sort((a,b)=>a.score-b.score);
        
        if(l>2 && benchmarks[l-1]) {
-        range = benchmarks[l-1].score - benchmarks[0].score;
+        min = benchmarks[0].score;
+        max = benchmarks[l-1].score;
+        range = max - min;
        }
 
        let crunch = diff/benchmarkCount
@@ -97,8 +99,8 @@ async function addBenchmark(data,weights,newscore) {
        benchmarks = benchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
        benchmarks.sort((a,b)=>a.score-b.score);
        
-       if(l > 3 && range > diff) {
-          benchmarks.length = Math.max(3,Math.min(l-1,benchmarkCount));
+       if(l > benchmarkCount && range > diff) {
+          benchmarks = benchmarks.filter((x,i,a)=> ( x.userAction || x.score < min+diff || flipCoin() ) );
        }
   }
 }
@@ -255,6 +257,7 @@ function addWeightBenchmark(weights,newscore) {
     if(weights && weightBenchmarks &&  (weightBenchmarks[0]||{}).score !== newscore ){
          let sum = sumWeights(weights);
          let range = 10;
+         let min = 0, max = range;
          let phi = Math.sqrt(Math.sqrt(2));
          let l = weightBenchmarks.length;
          let sumindex = weightBenchmarks.map(x=>x.sum).indexOf(sum);
@@ -269,7 +272,9 @@ function addWeightBenchmark(weights,newscore) {
          weightBenchmarks.sort((a,b)=>a.score-b.score);
         
          if(l>2 && weightBenchmarks[l-1]) {
-            range = weightBenchmarks[l-1].score - weightBenchmarks[0].score;
+            min =  weightBenchmarks[0].score;
+            max = weightBenchmarks[l-1].score ;
+            range = max-min;
          }
 
          if(l>weightBenchmarkCount && range > 100) {
@@ -294,6 +299,9 @@ function addWeightBenchmark(weights,newscore) {
          weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
          weightBenchmarks.sort((a,b)=>a.score-b.score);
 
+        if(weightBenchmarks.length > weightBenchmarkCount){
+          weightBenchmarks = weightBenchmarks.filter((x,i,a)=> ( x.userAction || x.score < min+20 || flipCoin() ) );
+        }
     
     }
 }
