@@ -88,9 +88,15 @@ let maxpixelcounter = 50;
             
         }
         if(label==="userAction"){
-            console.log('truncate pixel benchmarks')
-            pixelBenchmarks.length=0;
-            addPixelBenchmark(data,10000);
+            
+            //pixelBenchmarks.length=0;
+            newscore = scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
+            newscore.then(function(newscore){
+                gradient = newscore.bins.map((x,i)=> Math.floor(x*0.5+gradient[i]*0.5) );
+                newscore = newscore.score;
+                addPixelBenchmark(data,newscore,true);
+                console.log('user load',newscore);
+            });
         }
     
     
