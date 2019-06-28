@@ -57,7 +57,7 @@ letters = '0123456789ABCDEFGHIJKLMNOP';
 
 letters = '1';
 
-letters = '149';
+letters = '0123456789';
 
 evalSize = 64;
 modelock = false;
@@ -108,6 +108,8 @@ async function addPixelBenchmark(data,newscore,userAction) {
   if(pixelBenchmarks && typeof pixelBenchmarks.push === 'function'){
        let sum =  score(data);
        let range = 10;
+       let min = 0; 
+       let max = 10;
        addPixelBenchmark.diff =  addPixelBenchmark.diff || 20;
        let nonuser = pixelBenchmarks.filter(x=>!x.userAction);
        let l = nonuser.length;
@@ -123,7 +125,9 @@ async function addPixelBenchmark(data,newscore,userAction) {
        pixelBenchmarks.sort((a,b)=>a.score-b.score);
        
        if(l>2 && nonuser[l-1]) {
-        range = nonuser[l-1].score - nonuser[0].score;
+        min =nonuser[0].score;
+        max = nonuser[l-1].score;
+        range = max-min;
        }
        if(l < pixelBenchmarkCount) {
          addPixelBenchmark.diff*=1/phi;
@@ -132,7 +136,7 @@ async function addPixelBenchmark(data,newscore,userAction) {
          addPixelBenchmark.diff*=phi;
        } 
 
-       let crunch = addPixelBenchmark.diff/l;
+       let crunch = 20/l;
 
        debug('adding pixel benchmark', range, crunch, newscore, Math.round(sum*100000000000));
        pixelBenchmarks = pixelBenchmarks.filter((x,i,a)=> ( x.userAction || Math.floor(x.score/crunch) !== Math.floor((a[i-1]||{}).score/crunch) ) );
@@ -141,7 +145,7 @@ async function addPixelBenchmark(data,newscore,userAction) {
        pixelBenchmarks.sort((a,b)=>a.score-b.score);
      
        if(l>pixelBenchmarkCount && range > 20) {
-          pixelBenchmarks.length = pixelBenchmarkCount;
+          pixelBenchmarks = pixelBenchmarks.filter((x,i,a)=> ( x.userAction || x.score > min+20 && i > pixelBenchmarkCount/2 ) );
        }
 
 
