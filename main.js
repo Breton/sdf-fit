@@ -144,8 +144,8 @@ async function addPixelBenchmark(data,newscore,userAction) {
        pixelBenchmarks = pixelBenchmarks.filter((x,i,a)=> ( x.userAction || x.sum !== (a[i-1]||{}).sum ) );
        pixelBenchmarks.sort((a,b)=>a.score-b.score);
      
-       if(l>pixelBenchmarkCount && range > 20) {
-          pixelBenchmarks = pixelBenchmarks.filter((x,i,a)=> ( x.userAction || x.score > min+20 && i > pixelBenchmarkCount/2 ) );
+       if(pixelBenchmarks.length > pixelBenchmarkCount && range > 20) {
+          pixelBenchmarks = pixelBenchmarks.filter((x,i,a)=> ( x.userAction || x.score < min+20 || flipCoin() ) );
        }
 
 
