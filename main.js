@@ -10,9 +10,7 @@ ctxsmall = canvassmall.getContext('2d');
 ctxresult = canvasresult.getContext('2d');
 letter = 'g';
 onepixel = 0;
-temp = 0.1;
-lasti = 0;
-listd = 0;
+
 
 weightSuccess = 1;
 weightFail = 1;
@@ -22,12 +20,13 @@ pixelFail = 1;
 oldscore = 0;
 gindex = [];
 olderscore = 0;
-bestScore = 0;
+
 modebias = 0;
 weightbias = 0.5;
 pixelbias = 0.5;
-twopixel = 0;
+
 willAdjustWeights = true;
+willMutate = false;
 lastimprovement = 0;
 globalscore = 1000000;
 updatecount = 0;
@@ -42,10 +41,9 @@ rotation = Math.random();
 gradient = [0, 0, 0]; // (r,g,b,r,g,b...)
 gradient.length = 256;
 gradient.fill(1);
-enhancementLoopCount = 0;
-anneal = 0;
-maxri = 0;
-minri = 0;
+
+
+
 time = 0;
 duration = 0;
 scoreSamples = [];
@@ -59,7 +57,7 @@ letters = '1';
 
 letters = '0123456789';
 
-evalSize = 64;
+evalSize = 32  ;
 modelock = false;
 scoreDebug = {};
 weightBenchmarks = [];
@@ -78,6 +76,9 @@ async function addBenchmark(data,weights,newscore) {
        let l = benchmarks.length;
        let sumindex = benchmarks.map(x=>x.sum).indexOf(sum);
 
+       if(l>=2 && newscore > benchmarks[l-1].score ) {
+            return ;
+       }
        if(sumindex<0) {
         benchmarks.push({score:(newscore),weights:weights, data:data,sum:Math.round(sum*100000000000)});
        } else {
@@ -251,7 +252,16 @@ function lowestPixelBenchmark() {
   }
 
 }
-function addWeightBenchmark(weights,newscore) {
+function lowestWeightBenchmark() {
+  if(weights && weightBenchmarks &&  (weightBenchmarks[0]||{}).score !== newscore ){
+    return cloneWeights(weightBenchmarks[0].weights);
+  } else {
+    return cloneWeights(bestweights);
+  }
+  
+
+}
+function addWeightBenchmark(weights,newscore,internal) {
     if(weights && weightBenchmarks &&  (weightBenchmarks[0]||{}).score !== newscore ){
          let sum = sumWeights(weights);
          let range = 10;
@@ -259,11 +269,13 @@ function addWeightBenchmark(weights,newscore) {
          let l = weightBenchmarks.length;
          let sumindex = weightBenchmarks.map(x=>x.sum).indexOf(sum);
          addWeightBenchmark.diff =  addWeightBenchmark.diff || 100;
-
+         if(l>=2 && newscore > weightBenchmarks[l-1].score ) {
+            return ;
+         }
          if(sumindex<0) {
-          weightBenchmarks.push({score: newscore,weights:weights,sum:sum});
+          weightBenchmarks.push({internal: internal, score: newscore,weights:weights,sum:sum});
          } else {
-          weightBenchmarks[sumindex]={score: newscore,weights:weights,sum:sum};
+          weightBenchmarks[sumindex]={internal: internal, score: newscore,weights:weights,sum:sum};
          }
 
          weightBenchmarks.sort((a,b)=>a.score-b.score);
@@ -372,7 +384,7 @@ function resetInstructions(){
 }
 
 
-iterations = 1;
+
 r = Math.random;
 weights = [];
 oldweights = [];
@@ -471,7 +483,7 @@ function updatePixel(onepixel,diff=0) {
     onepixel += ([-1,1,-16,16,0,0,0,0,0,0,0,0,0,0,0,0])[Math.floor(Math.random()*16)];
     gval = (gradient[onepixel]-gmin)/grange;
 
-    return {pixel:Math.abs(onepixel),value:gval};
+    return {pixel:Math.abs(onepixel),value:Math.sqrt(gval)};
 }
 minimumWeights=cloneWeights(weights);
 let minimumScore=10000;
@@ -500,12 +512,13 @@ async function main() {
       if (weightFail > 100 && scoreRateRate >= 0 && scoreRate >= 0 || lastimprovement ===0 ) {
           
           modebias = 1;
+          willMutate = flipCoin();
           weightFail = 1;
           //smoothduration=500;
           weightSuccess = 1;
-          if(weightBenchmarks && weightBenchmarks[0] ) {
-            setWeights(cloneWeights(weightBenchmarks[0].weights));
-          }
+          
+          setWeights(lowestWeightBenchmark());
+          
           
 
           //weights=cloneWeights(minimumWeights);
@@ -514,7 +527,8 @@ async function main() {
       }
       if (pixelFail > 100 && scoreRateRate >= 0 && scoreRate >= 0  || lastimprovement ===0) {
           
-          modebias = 0.0;
+          modebias = 0;
+          willMutate = flipCoin();
           pixelFail = 0;
 
           
@@ -527,7 +541,9 @@ async function main() {
     }
     //modebias = Math.sin(time * Math.PI / 10000 ) * 0.25 + 0.75;
 
-    willAdjustWeights = Math.random() > modebias;
+    willAdjustWeights = 0.5 > modebias;
+
+    
 
     olderscore = oldscore;
     oldscore = newscore;
@@ -555,7 +571,7 @@ async function main() {
 
     debug('maxweightscore',needsMostImprovement);
 
-    if(!willAdjustWeights && rollDie(10) === 3 && benchmarks && benchmarks[0] && weightBenchmarks && weightBenchmarks[0] && pixelBenchmarks && pixelBenchmarks[0]) {
+    if(willMutate && benchmarks && benchmarks[0] && weightBenchmarks && weightBenchmarks[0] && pixelBenchmarks && pixelBenchmarks[0]) {
       switch (rollDie(4)) {
         case 0:
             weights = randomWeightBenchmark();
@@ -587,15 +603,15 @@ async function main() {
 
           switch (updatecount % 6){
             case 0:
-
-              if(weightBenchmarks && weightBenchmarks[0]) {
-                weights = cloneWeights(weightBenchmarks[0].weights);
-                whichweights= 'lowest bench'
-              }
+              weights = lowestWeightBenchmark();
+              whichweights= 'lowest bench'
+              
               break;
 
             case 1:
-              weights = breedWeightBenchmark();
+              if(willMutate) {
+                weights = breedWeightBenchmark();
+              }
               whichweights= 'breed'
               break;
             case 2: 
@@ -603,10 +619,7 @@ async function main() {
               whichweights= 'perturb'
               break;
             case 3: 
-              if(weightBenchmarks && weightBenchmarks.length) {
-                weights = cloneWeights(weightBenchmarks[Math.floor(weightBenchmarks.length*Math.random())].weights);  
-              }
-              
+              weights = randomWeightBenchmark();
               whichweights= 'random benchmark'
               break;
             case 4: 
@@ -638,7 +651,7 @@ async function main() {
 
         let oneframe = needsMostImprovement;
 
-        if(flipCoin() && pixelBenchmarks && pixelBenchmarks.length > 3) {
+        if(willMutate && pixelBenchmarks && pixelBenchmarks.length > 3) {
           //setDataImg(lowestPixelBenchmark(),'optim lowest');
           //setDataImg(averagePixelBenchmark(),'optim average');
           if(flipCoin()) {
@@ -684,13 +697,7 @@ async function main() {
     
     newdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
     
-    //ctxsmall.putImageData(bestdata, 0, 0);
-    //bestScore = await scoreLoopAsync(ctx, ctxsmall, bestweights, instructions, 0, letterCounter);
-    
-    //minimumScoreDiff = (await scoreLoopAsync(ctx, ctxsmall, minimumWeights, instructions, 0, letterCounter));
-    //minimumScoreDiff = minimumScore - minimumScoreDiff.score;
-    //ctxsmall.putImageData(newdata, 0, 0);
-
+  
     newscore = await scoreLoopAsync(ctx, ctxsmall, newweights, instructions, 0, letterCounter);
     gradient = newscore.bins.map((x,i)=> Math.floor(x*0.5+gradient[i]*0.5) );
 
@@ -788,7 +795,7 @@ async function main() {
         globalscore = newscore;
         lastimprovement = 1;
     }
-    //globalscore = Math.max(globalscore, bestScore);
+    
     if (lowestever > globalscore) {
         lowestever = globalscore;
     }
@@ -827,50 +834,21 @@ async function main() {
 
     //sctx.drawImage(ocanvas,0,0);
     debug('clear');
-
+    pollution.main
+      .filter(x=> typeof window[x] === 'number' || typeof window[x] === 'boolean'  )
+      .forEach(function(x){
+        debugVariable(x,window[x]);
+      });
+    
     debug(`
-  globalscore ${globalscore}
-  minimumScore ${minimumScore}  
   pixelscores ${ pixelBenchmarks.filter(x=>!x.userAction).map(x=>x.score).filter((x,i,a)=>i===0||i===a.length-1) }
   weightscores ${ weightBenchmarks.filter(x=>!x.userAction).map(x=>x.score).filter((x,i,a)=>i===0||i===a.length-1) }
   combinedscores ${ benchmarks.filter(x=>!x.userAction).map(x=>x.score).filter((x,i,a)=>i===0||i===a.length-1) }
-  weightSuccess ${weightSuccess}
-  weightFail ${weightFail}
-  pixelSuccess ${pixelSuccess}
-  pixelFail ${pixelFail}
   mscore ${scoreDebug.mscore} nscore ${scoreDebug.nscore} cscore ${scoreDebug.cscore}
   mscores ${scoreDebug.mscores} 
   nscores ${scoreDebug.nscores} 
   cscores ${scoreDebug.cscores}
   lscores ${lowestScorePerIndex}
-  scoreRate ${scoreRate}
-  scoreRateRate ${scoreRateRate}
-  samplecount ${samplecount}
-  scorecount ${scorecount}
-  duration ${duration}
-  smoothduration ${smoothduration}
-  modebias ${modebias}
-  willAdjustWeights ${willAdjustWeights}
-  iterations ${iterations}
-  onepixel ${onepixel}
-  bestScore ${bestScore}
-  olderscore ${olderscore}
-  oldscore ${oldscore}
-  newscore ${newscore}
-  diff ${newscore - oldscore }
-  differ ${newscore - olderscore}
-  lowestever ${lowestever}
-  lastimprovement ${lastimprovement}
-  updatecount ${updatecount}
-  minimumScoreDiff ${minimumScoreDiff}  
-  letters ${letters}
-  difference ${difference}
-  gindex.length ${gindex.length}
-  
-    
- 
-
-
   `)
 
     lasttime = time;
@@ -882,6 +860,7 @@ async function main() {
 
 setTimeout(main, 10);
 
+{ let bestscore=1000; let interval = (setInterval(function () { if(benchmarks && benchmarks[0] && bestscore !== benchmarks[0].score ) { buttons.showbest(); bestscore=benchmarks[0].score }    } ,100)) }
 
 
 {

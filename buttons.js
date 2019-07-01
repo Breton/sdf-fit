@@ -137,6 +137,7 @@
           minimumWeights=cloneWeights(weights);
           minimumScore=globalscore;
           weightMemo = new Map();
+          setDataImg(lowestPixelBenchmark(),'optim lowest');
         } else {
           modebias = 1;
           setWeights(cloneWeights(weightBenchmarks[0].weights));
@@ -151,6 +152,36 @@
         buttons['reset instructions']();
         buttons['toggle mode']();
 
+      },
+      'showbest': function () {
+        let lowest;
+        if(benchmarks && benchmarks.length) {
+          lowest = benchmarks[0];
+        }
+        setDataImg(lowest.data,'show best');
+        ctxresult.drawImage(canvassmall, 0, 0, 256, 256);
+        debugCanvas(ctxresult,'bestdata');
+        let weights = lowest.weights;
+        for(let i = 0; i < weights.length; i++ ) {
+          let dataobj = ctxresult.getImageData(0, 0, ctxresult.canvas.width, ctxresult.canvas.height);
+          let u = weights[i][0];
+          let v = weights[i][1];
+          let w = weights[i][2];  
+          let wd = ctxresult.canvas.width;
+          let hd = ctxresult.canvas.height; 
+          let dd = thresholdKernel(dataobj.data, u, v, w);
+          ctxresult.putImageData(dataobj, 0, 0);
+          debugCanvas(ctxresult,'bestdata-'+i);
+          ctxresult.drawImage(canvassmall, 0, 0, 256, 256);
+        }
+        
+      },
+      'cull benchmarks': function () {
+        pixelBenchmarks.length=2;weightBenchmarks.length=2;benchmarks.length=2;
+      },
+      'cull generated': function () {
+        pixelBenchmarks = pixelBenchmarks.filter((x,i) => ( x.userAction || !i ) )
+        benchmarks.length=2;
       },
       'random pixels': function randomize() {
 

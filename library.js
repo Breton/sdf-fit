@@ -8,7 +8,7 @@ let maxpixelcounter = 50;
 
  //library functions
 
- let debugbuffer = "";
+ 
   Number.prototype.mod = function(n) {
       return ((this%n)+n)%n;
   };
@@ -26,14 +26,19 @@ let maxpixelcounter = 50;
     return (n*f|0)/f;
  } 
  // median = max(min(a,b), min(max(a,b),c));
+ let debugbuffer = "";
  function debug(str, ...rest) {
+     if (typeof str === 'number') {
+        str = round(str);
+     }
 
      if (str === 'clear') {
          document.getElementById('debug').value = debugbuffer;
          debugbuffer = ""
      } else if (str === 'log') {
         console.log(debugbuffer);
-     } else {
+     } 
+     else {
          debugbuffer += str + "\n";
          if (rest && rest.length) {
 
@@ -43,6 +48,56 @@ let maxpixelcounter = 50;
      }
 
  }
+ function debugVariable(name,value){
+    if(!debugVariable.cache) { debugVariable.cache = {} }
+    if(!debugVariable.counter) { debugVariable.counter = {} }
+    if(!debugVariable.widths) { debugVariable.widths = {} }
+    if(debugVariable.cache[name] !== value) {
+        debugVariable.cache[name] = value;
+        debugVariable.counter[name] = debugVariable.counter[name] || 0;
+        debugVariable.counter[name]++;
+
+        let container = document.getElementById('variables');
+        let varel = document.getElementById('v-'+name);
+        if(!varel){
+            varel=document.createElement("span");
+            varel.setAttribute('id','v-'+name);
+            container.prepend(varel);
+        }
+        if(typeof value === 'number'){
+            varel.innerHTML=`<dl class='v-number'><dt>${name}</dt><dd>${round(value)}</dd></dl>`
+        } else {
+            varel.innerHTML=`<dl><dt>${name}</dt><dd>${(value)}</dd></dl>`
+        }
+        varel.style.width='';
+
+        let offsetWidth=varel.offsetWidth;
+        console.log('name',name,offsetWidth,debugVariable.widths[name],varel,varel.style.width);
+        if(offsetWidth > debugVariable.widths[name] || debugVariable.widths[name] === undefined ){
+            debugVariable.widths[name] = offsetWidth;
+        }
+        varel.style.width=debugVariable.widths[name]+'px';
+        
+
+        
+        sortVariables(debugVariable.counter,container)
+    }
+
+ }
+
+ function sortVariables(counts,container) {
+    let buttonorder = Object.keys(counts).sort((a,b)=> counts[b]-counts[a] );
+    if(buttonorder.join()!==sortVariables.buttonorder){
+        sortVariables.buttonorder=buttonorder.join();
+        buttonorder.forEach(function (key){
+          let id = '#v-'+key;
+          let el = container.querySelector(id);
+          container.removeChild(el);
+          container.appendChild(el);
+        });
+    }
+ }
+
  function debugTable (table,columns) {
 
  }
@@ -61,6 +116,8 @@ let maxpixelcounter = 50;
         el.setAttribute('width', ctx.canvas.width);
         el.setAttribute('height', ctx.canvas.height);
         el.setAttribute("id", "img-"+id.trim());
+        el.style.width='256px';
+        el.style.height='256px';
         p.appendChild(el);
     }
     let tctx = el.getContext('2d');
@@ -204,7 +261,7 @@ function setWeights(w) {
 }
 function cloneWeights(w) {
     if(w.length > 0 && w[0] && w[0].length) {
-        let c = Array.from(w.map((x)=>Array.from(x).map(x=> x  ) ));
+        let c = Array.from(w.map((x)=>Array.from(x).map(x=> x.mod(1)  ) ));
         
         return c;
     } else {
@@ -1346,8 +1403,9 @@ function thresholdKernelCiirckle(d, r, g, b) {
 
          
          let result = await scoreInstructionsAndWeights(ctx, ctxsmall, [[r,g,b]], [instructions[idx]], 0, 1)
-
-          weightMemo.set(key, result.score/1000);
+         //let newweights = cloneWeights(weights);
+         //newweights[idx]=[r,g,b];
+         
           
          return result.score/1000;
        }
