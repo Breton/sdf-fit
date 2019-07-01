@@ -346,6 +346,9 @@ textarea#debug {
 <script src="library.js"></script>
 <script> pollution.library = Object.getOwnPropertyNames(window).filter((x)=>(!pollution.window.has(x)));</script>
 <script> pollution.window= new Set(Object.getOwnPropertyNames(window)) </script>
+<script src="benchmarks.js"></script>
+<script> pollution.benchmarks = Object.getOwnPropertyNames(window).filter((x)=>(!pollution.window.has(x)));</script>
+<script> pollution.benchmarks= new Set(Object.getOwnPropertyNames(window)) </script>
 <script src="main.js"></script>
 <script> pollution.main = Object.getOwnPropertyNames(window).filter((x)=>(!pollution.window.has(x)));</script>
 <script> pollution.window = new Set(Object.getOwnPropertyNames(window))</script>
