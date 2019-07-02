@@ -52,7 +52,12 @@ let maxpixelcounter = 50;
     if(!debugVariable.cache) { debugVariable.cache = {} }
     if(!debugVariable.counter) { debugVariable.counter = {} }
     if(!debugVariable.widths) { debugVariable.widths = {} }
-    if(debugVariable.cache[name] !== value) {
+    if(Array.isArray(value)) {
+        return debugTable(name,value);    
+    }
+    if(undefined === debugVariable.cache[name]) {debugVariable.cache[name]=0}
+
+    if( debugVariable.cache[name].toString() !== value.toString()) {
         debugVariable.cache[name] = value;
         debugVariable.counter[name] = debugVariable.counter[name] || 0;
         debugVariable.counter[name]++;
@@ -63,11 +68,20 @@ let maxpixelcounter = 50;
             varel=document.createElement("span");
             varel.setAttribute('id','v-'+name);
             container.prepend(varel);
+            if(typeof value === 'number'){
+                varel.innerHTML=`<dl class='v-number'><dt>${name}</dt><dd>${round(value)}</dd></dl>`
+            } else if(Array.isArray(value)) {
+               // varel.innerHTML=`<dl class='v-number'><dt>${name}</dt><dd><ol>${ value.map(x=>`<li>${x}<li/>` )}</ol></dd></dl>`
+            } else {
+                varel.innerHTML=`<dl><dt>${name}</dt><dd>${(value)}</dd></dl>`
+            }
         }
         if(typeof value === 'number'){
-            varel.innerHTML=`<dl class='v-number'><dt>${name}</dt><dd>${round(value)}</dd></dl>`
+            varel.querySelector('dd').textContent=round(value);
+        } else if(Array.isArray(value)) {
+            // varel.innerHTML=`<dl class='v-number'><dt>${name}</dt><dd><ol>${ value.map(x=>`<li>${x}<li/>` )}</ol></dd></dl>`
         } else {
-            varel.innerHTML=`<dl><dt>${name}</dt><dd>${(value)}</dd></dl>`
+            varel.querySelector('dd').textContent=(value);
         }
         varel.style.width='';
 

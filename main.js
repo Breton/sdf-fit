@@ -53,10 +53,10 @@ letters = '0123456789ABCDEFGHIJKLMNOP';
 
 letters = '1';
 
-letters = '0123456789';
+letters = '865';
 
 lowestScorePerIndex = [];
-evalSize = 32  ;
+evalSize = 64  ;
 modelock = false;
 scoreDebug = {};
 scoreWindowSize = 100;
@@ -182,7 +182,8 @@ function primeCanvas() {
   setDataImg(canvas,'userAction');
 }
 
-primeCanvas();
+
+buttons['load and average']();
 
 ctx.globalCompositeOperation = "source-over";
 ctxsmall.globalCompositeOperation = "source-over";
@@ -581,7 +582,7 @@ async function main() {
     //sctx.drawImage(ocanvas,0,0);
     debug('clear');
     pollution.main
-      .filter(x=> typeof window[x] === 'number' || typeof window[x] === 'boolean'  )
+      .filter(x=> typeof window[x] === 'number' || typeof window[x] === 'boolean' || Array.isArray(window[x]) )
       .forEach(function(x){
         debugVariable(x,window[x]);
       });
