@@ -56,6 +56,29 @@ img {
 .debugImages {
   display:inline-block;
 }
+#variables {
+  display: flex;
+  flex-flow: wrap;
+  justify-content: space-between;
+  background: #ddd;
+}
+#variables span dl, #variables span dd, #variables span dt {
+  display: inline-block;
+  padding: 3px;
+  margin-inline-start: 0px;
+
+}
+#variables span dl {
+  border: 1px solid #555;
+  background: #ddd;
+  font-family: sans-serif;
+  margin: 3px;
+
+}
+#variables span {
+  display: inline-block;
+  white-space: nowrap;
+}
 body {
   font-family: sans-serif;
 }
@@ -214,15 +237,25 @@ input[type=range].slider:focus::-ms-fill-upper {
 }
 
 
-
-textarea {
-
-  bottom:0;
+#bottom-panel {
+  overflow:scroll;
+  height:200px;
+    bottom:0;
   left:0px;
   right:0px;
   margin: 0;
-  font-family: monospace;
   position: fixed;
+}
+#variables {
+  
+  
+
+  
+  
+  
+}
+textarea#debug {
+  font-family: monospace;
   width: -webkit-fill-available;
 }
 #img-gradient {
@@ -240,6 +273,7 @@ textarea {
 </head>
 <body>
   <div id="buttons"></div>
+  
 <div id="panel">
 
 <div id='imagestoload'></div>
@@ -263,10 +297,19 @@ textarea {
   </div>
 
   <div id="debugtables"></div>
+    
+<div id="bottom-panel">
+<div id="variables">
+
+
+
+
+</div>
+<textarea  name="debug" id="debug" cols="30" rows="10"></textarea>
+</div>
 
 </div>
 
-<textarea name="debug" id="debug" cols="30" rows="10"></textarea>
 
 <script>
   {
@@ -303,6 +346,9 @@ textarea {
 <script src="library.js"></script>
 <script> pollution.library = Object.getOwnPropertyNames(window).filter((x)=>(!pollution.window.has(x)));</script>
 <script> pollution.window= new Set(Object.getOwnPropertyNames(window)) </script>
+<script src="benchmarks.js"></script>
+<script> pollution.benchmarks = Object.getOwnPropertyNames(window).filter((x)=>(!pollution.window.has(x)));</script>
+<script> pollution.benchmarks= new Set(Object.getOwnPropertyNames(window)) </script>
 <script src="main.js"></script>
 <script> pollution.main = Object.getOwnPropertyNames(window).filter((x)=>(!pollution.window.has(x)));</script>
 <script> pollution.window = new Set(Object.getOwnPropertyNames(window))</script>
