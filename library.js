@@ -1358,20 +1358,23 @@ function thresholdKernelCiirckle(d, r, g, b) {
      let w=64,h=65,c=weights.length;
      let min = 5000;
      let max = 0;
+     let scores = [];
      for(let i=0;i<w;i++) {
+        scores[i]=[]
         for(let j=0;j<h;j++) {
 
             score = await sample(start, i/w, j/h, b);
             if(score > max){max=score};
             if(score < min){min=score};
+            scores[i][j]=score;
         }
      }
 
      for(let i=0;i<w;i++) {
         for(let j=0;j<h;j++) {
-            score = await sample(start, i/w, j/h, b);
-            console.log("plot",max,min,score,(score-min)/(max-min),i,j);
-            plotWeight(start,i+start*64,j,(score-min)/(max-min));
+            score = scores[i][j];
+            
+            plotWeight(start,i+(start%4)*64,j+Math.floor(start/4)*64 ,(score-min)/(max-min));
         }
      }
  

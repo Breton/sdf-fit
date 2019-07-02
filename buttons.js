@@ -61,6 +61,11 @@
         modelock = !modelock;
         this.style.backgroundColor= modelock ? 'red' : 'blue';
       },
+      'plot weights' : function () {
+        for(let i = 0; i<weights.length;i++){
+          plotWeightForInstructions(weights, instructions, i, b=0.5) 
+        }
+      },
       'save data point': function saveDataPoint() {
           let counter = +localStorage.getItem('acounter');
           let index =  +localStorage.getItem('aindex');
