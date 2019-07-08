@@ -53,10 +53,10 @@ letters = '0123456789ABCDEFGHIJKLMNOP';
 
 letters = '1';
 
-letters = '8866553399';
+letters = '88888888';
 
 lowestScorePerIndex = [];
-evalSize = 64  ;
+evalSize = 16  ;
 modelock = false;
 scoreDebug = {};
 scoreWindowSize = 100;
@@ -119,9 +119,9 @@ for (let i = 0; i < letters.length; i++) {
         ["font", "256px sans-serif"],
         ["textAlign", "center"],
         ["translate", 128, 128],
-        //["rotate",  rotation + (i) * ( 2*( Math.PI )/ (letters.length ))],
-        //["fillRect", 0, 0, 96, 96]
-        ["fillText", letters[i], 20, 90, 256]
+        ["rotate",  rotation + (i) * ( 2*( Math.PI )/ (letters.length ))],
+        ["fillRect", 0, 0, 96, 96]
+        //["fillText", letters[i], 20, 90, 256]
     ];
 }
 console.log("instructions populated",instructions.length, instructions[0][6][1]);

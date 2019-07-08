@@ -868,6 +868,24 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
     }
     return d;
  }
+ //given a desired gray value
+ //and a u,v,w value
+ //return a range of valid RGB values.
+
+ //
+ invertThresholdMap = {};
+
+ function invertThreshold(value, u,v,w) {
+    let key = `${value},${Math.floor(u*255)},${Math.floor(v*255)},${Math.floor(w*255)}`;
+    if(invertThresholdMap.hasOwnProperty(key)){
+        invertThresholdMap[key].sort((a,b)=>( 0xFFFF*a[0]+0xFF*a[1]+a[2]-(0xFFFF*b[0]+0xFF*b[1]+b[2] ) ) )
+        invertThresholdMap[key]=invertThresholdMap[key].filter((x,i,a)=> x.toString()!==a[i-1].toString()  );
+        return invertThresholdMap[key];
+    }
+ }
+
+ 
+ 
  function thresholdKernelMinMaxCone(d, r, g, b) {
 
      const pi = Math.PI;
@@ -908,10 +926,12 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
         
         const left = (r - u) * cos(a - t) - (g - v) * sin(a - t);
         const rite = (r - u) * sin(a + t) + (g - v) * cos(a + t);
-        d[i + 0] = d[i + 1] = d[i + 2] = (maxormin( left , rite ) / 0.01 + 0.5) * 255
+        d[i + 0] = d[i + 1] = d[i + 2] = (maxormin( left , rite ) / 0.01 + 0.5) * 255;
+
+
     }
-     
-     
+    
+
 
 
     return d;
@@ -992,8 +1012,18 @@ function thresholdKernelCiirckle(d, r, g, b) {
      robin += 1;
      let w = ctx.canvas.width;
      let h = ctx.canvas.height;
-     dataobj = ctx.getImageData(0, 0, w, h);
+     odataobj = dataobj = ctx.getImageData(0, 0, w, h);
      dataobj = new ImageData(await thresholdKernel(dataobj.data, r, g, b), w, h);
+     let d = dataobj.data;
+     let o = odataobj.data;
+     // for(let i = 0; i<d.length;i+=4){
+     //    let key = `${d[i + 0]},${Math.floor(r*255)},${Math.floor(g*255)},${Math.floor(b*255)}`;
+     //    invertThresholdMap[key]=invertThresholdMap[key]||[];
+     //    invertThresholdMap[key].push([o[i+0],o[i+1],o[i+2]]);
+     //    invertThresholdMap[key].sort((a,b)=>( 0xFFFF*a[0]+0xFF*a[1]+a[2]-(0xFFFF*b[0]+0xFF*b[1]+b[2] ) ) )
+     //    invertThresholdMap[key]=invertThresholdMap[key].filter((x,i,a)=> x.toString()!==(a[i-1]||[]).toString()  );
+    
+     // }
      ctx.putImageData(dataobj, 0, 0);
      return dataobj;
  }
