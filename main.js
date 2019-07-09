@@ -53,7 +53,7 @@ letters = '0123456789ABCDEFGHIJKLMNOP';
 
 letters = '1';
 
-letters = '88888888';
+letters = '01234567';
 
 lowestScorePerIndex = [];
 evalSize = 16  ;

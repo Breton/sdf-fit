@@ -16,21 +16,26 @@ async function addBenchmark(data,weights,newscore,userAction) {
        let diff = 100;
        let nonuser = benchmarks.filter(x=>!x.userAction);
        let l = nonuser.length;
-       if(l>=2 && newscore > benchmarks[l-1].score ) {
+       if(l>=2 && newscore > benchmarks[l-1].score && !userAction ) {
             return ;
        }
-       
+       let scoremy = score(data);
+       let weightsum = sumWeights(weights);
+       sum = Math.round(Math.sqrt( ((Math.round(scoremy*10000)*1e8) + weightsum) ));
        let sumindex = benchmarks.map(x=>x.sum).indexOf(sum);
-
-       sum = Math.sqrt(score(data) * sumWeights(weights));
+       if(userAction){
+        console.log('adding user benchmark', userAction, sumindex, newscore, sum, weightsum, scoremy);
+       }
+       
        if(sumindex<0) {
-        benchmarks.push({userAction: userAction, score:(newscore),weights:weights, data:data,sum:Math.round(sum*100000000000)});
+        benchmarks.push({userAction: userAction, score:(newscore),weights:weights, data:data,sum:sum});
        } else {
-        benchmarks[sumindex] = ({userAction: userAction, score:(newscore),weights:weights,data:data,sum:Math.round(sum*100000000000)});
+        benchmarks[sumindex] = ({userAction: userAction, score:(newscore),weights:weights,data:data,sum:sum});
        }
 
        benchmarks.sort((a,b)=>a.score-b.score);
-       
+       nonuser = benchmarks.filter(x=>!x.userAction);
+
        if(l>2 && nonuser[l-1]) {
         min =nonuser[0].score;
         max = nonuser[l-1].score;
@@ -40,13 +45,14 @@ async function addBenchmark(data,weights,newscore,userAction) {
        let crunch = 1/1e10;
        debug('adding pixel benchmark', range, crunch, newscore, Math.round(sum*100000000000));
        benchmarks = benchmarks.filter((x,i,a)=> ( Math.floor(x.score/crunch) !== Math.floor((a[i-1]||{}).score/crunch) ) );
-       benchmarks.sort((a,b)=>a.sum-b.sum);
-       benchmarks = benchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
+       //benchmarks.sort((a,b)=>a.sum-b.sum);
+       //benchmarks = benchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
+       
        benchmarks.sort((a,b)=>a.score-b.score);
        
-		if(benchmarks.length > benchmarkCount && range > 20) {
-          benchmarks = benchmarks.filter((x,i,a)=> ( x.userAction || x.score < min+20 || flipCoin() ) );
-       }
+		if(benchmarks.length > benchmarkCount) {
+          benchmarks = benchmarks.filter((x,i,a)=> ( x.userAction || x.score < min+(max-min)/2 || flipCoin() ) );
+    }
   }
 }
 
