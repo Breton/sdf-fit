@@ -136,6 +136,24 @@
           
           
       },
+      'load all datapoints': function loadDt() {
+          let counter = +localStorage.getItem('acounter');
+          let index =  localStorage.getItem('aindex');
+          let c = [];
+          let avg = [];
+
+          for (let i = 0; i < (counter); i++) {
+              let item = (JSON.parse(localStorage.getItem('aavg_' + (i + 1))));
+              if(typeof item !== 'undefined') {
+                item.data.length = 16 * 16 * 4;
+                let d = new ImageData(new Uint8ClampedArray(item.data, 16, 16), 16, 16);
+                setDataImg(d,'userAction');
+              }
+              //console.log('c[i]', i, c[i]);
+          }
+          
+          
+      },
       'toggle mode': function () {
         if(modebias > 0.5) {
           modebias = 0;

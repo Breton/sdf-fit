@@ -140,7 +140,7 @@ let maxpixelcounter = 50;
  }
  function setDataImg(imgOrCanvasOrDataobj,label='none') {
     let data = {};
-    console.log('set data label',label);
+    
 
     
 
@@ -166,7 +166,7 @@ let maxpixelcounter = 50;
                 gradient = newscore.bins.map((x,i)=> Math.floor(x*0.5+gradient[i]*0.5) );
                 newscore = newscore.score;
                 addBenchmark(data,lowestWeightBenchmark(),newscore,true);
-                console.log('user load',newscore);
+                // console.log('user load',newscore);
             });
         }
     
@@ -868,8 +868,109 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
     }
     return d;
  }
- function thresholdKernelMinMaxCone(d, r, g, b) {
 
+ /*
+    the logic:
+    given that our threshold function f(u,v,w,r,g,b)=x;
+    we want to find an r,g,b for a given x,u,v,w
+    but also an r,g,b for a given set of multiple x,u,v,w
+    in other words, the intersection of 
+    fi(x1,u1,v1,w1)
+    fi(x2,u2,v2,w2)
+    ...
+    fi(xn,un,vn,wn)
+
+    which may ultimately be the null set.
+
+    That intersection function can then also be used
+    to find the set of valid u,v,w for a given x,r,g,b.
+
+    eventually we want to find a 2d matrix of RGB values
+    [x][y][r,g,b]
+
+    such that 
+    f(u1,v1,w1, matrix) = [x][y][x1]
+    
+    where n correseponds to a uvw 
+
+    
+
+ */
+ invertThresholdMapXUVW = {};
+ invertThresholdMapXRGB = {};
+
+ function invertThreshold(value, u,v,w) {
+    let key = `${value},${Math.floor(u*255)},${Math.floor(v*255)},${Math.floor(w*255)}`;
+
+    if(invertThresholdMap.hasOwnProperty(key)){
+        invertThresholdMap[key].sort((a,b)=>( 0xFFFF*a[0]+0xFF*a[1]+a[2]-(0xFFFF*b[0]+0xFF*b[1]+b[2] ) ) )
+        invertThresholdMap[key]=invertThresholdMap[key].filter((x,i,a)=> x.toString()!==a[i-1].toString()  );
+        return invertThresholdMap[key];
+    }
+ }
+ function addInvertKey(value,u,v,w,r,g,b){
+    // console.log('addInvertKey', ...arguments);
+    incrementDeepKey(invertThresholdMapXUVW, [value,u,v,w,r,g,b]);
+    incrementDeepKey(invertThresholdMapXRGB, [value,r,g,b,u,v,w]);
+ }
+
+ function addKey (object, key, value) {
+
+ }
+
+
+ function incrementDeepKey (obj, keys, value=1 ){
+    if(typeof keys === 'string'){
+        keys = [keys];
+    }
+    if(typeof keys === 'number') {
+        keys = [keys];
+    }
+    
+    
+
+    if(typeof obj === 'object'){
+        
+        keys.reduce(function(a,b,i){
+            if(typeof a === 'object') {
+                if(i===keys.length-1){
+                //if b is our last key, 
+                // then set the value. 
+                //
+                // if the last key happens to be 
+                // something other than a number
+                // we're overwriting it. 
+                    if(typeof a[b] === "number") {
+                        return a[b]=a[b] + value;
+                    } else {
+                        return a[b] = value;
+                    }
+                }
+                if( typeof a[b] === 'object' ){
+                    //if we've got an object
+                    //and we're not on the last key
+                    //then return the object for the next loop.
+
+                    return a[b];
+                } else {
+                    // otherwise, whatever non-object
+                    // thing was there is getting clobbered. 
+                    return a[b]={}
+                }
+            } else {
+                console.log('a is not object', a, b, keys);
+            }
+        },obj);
+    }
+ }
+
+ 
+ 
+ function thresholdKernelMinMaxCone(d, r, g, b) {
+    /*
+        d: a number
+
+    */
      const pi = Math.PI;
      Number.prototype.mod = function(n) {
       return ((this%n)+n)%n;
@@ -908,10 +1009,13 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
         
         const left = (r - u) * cos(a - t) - (g - v) * sin(a - t);
         const rite = (r - u) * sin(a + t) + (g - v) * cos(a + t);
-        d[i + 0] = d[i + 1] = d[i + 2] = (maxormin( left , rite ) / 0.01 + 0.5) * 255
+        d[i + 0] = d[i + 1] = d[i + 2] = (maxormin( left , rite ) / 0.01 + 0.5) * 255;
+        
+
+        
     }
-     
-     
+    
+
 
 
     return d;
@@ -992,8 +1096,11 @@ function thresholdKernelCiirckle(d, r, g, b) {
      robin += 1;
      let w = ctx.canvas.width;
      let h = ctx.canvas.height;
+     
      dataobj = ctx.getImageData(0, 0, w, h);
      dataobj = new ImageData(await thresholdKernel(dataobj.data, r, g, b), w, h);
+     
+     
      ctx.putImageData(dataobj, 0, 0);
      return dataobj;
  }
