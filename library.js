@@ -86,7 +86,7 @@ let maxpixelcounter = 50;
         varel.style.width='';
 
         let offsetWidth=varel.offsetWidth;
-        console.log('name',name,offsetWidth,debugVariable.widths[name],varel,varel.style.width);
+
         if(offsetWidth > debugVariable.widths[name] || debugVariable.widths[name] === undefined ){
             debugVariable.widths[name] = offsetWidth;
         }
@@ -1312,23 +1312,24 @@ function thresholdKernelCiirckle(d, r, g, b) {
  let weightmemocount = 0;
 
     function R(r,g,b,a) {
-      if(r < 1) { r=r*255 }
-      if(g < 1) { g=g*255 }
-      if(b < 1) { b=b*255 }
+      if(r < 1) { r=r*255; }
+      if(g < 1) { g=g*255; }
+      if(b < 1) { b=b*255; }
       a = a === undefined ? 1 : a;
       return "rgba("+(r|0)+","+(g|0)+","+(b|0)+","+a+")";
     };
 
  weightMemoCtx.fillRect(0,0,256,256);
-
- function plotWeight (idx,x,y,intensity){
-
+ 
+ function plotWeight (idx,x,y,r,g=r,b=r){
+    x=Math.max(0,Math.min(1,x));
+    y=Math.max(0,Math.min(1,y));
 
     weightMemoCtx.globalAlpha=1;
 
     weightMemoCtx.fillStyle=["red","green","blue","purple","yellow","orange","cyan"][idx];
-    weightMemoCtx.fillStyle=R(intensity,intensity,intensity);
-    weightMemoCtx.fillRect(x,y,1,1);
+    weightMemoCtx.fillStyle=R(r,g,b);
+    weightMemoCtx.fillRect(x*64+(idx%4)*64,y*64+Math.floor(idx/4)*64,4,4);
 
 
 
@@ -1355,7 +1356,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          return result.score/1000;
        }
      }
-     let w=64,h=65,c=weights.length;
+     let w=64,h=64,c=weights.length;
      let min = 5000;
      let max = 0;
      let scores = [];
@@ -1364,19 +1365,13 @@ function thresholdKernelCiirckle(d, r, g, b) {
         for(let j=0;j<h;j++) {
 
             score = await sample(start, i/w, j/h, b);
-            if(score > max){max=score};
-            if(score < min){min=score};
-            scores[i][j]=score;
+            let scorepi = ( score ) * Math.PI;
+
+            plotWeight(start,i/63,j/63,255*(Math.sin(scorepi)*0.5+0.5),255*(Math.sin(scorepi + (2*Math.PI)/3 )*0.5+0.5),255*(Math.sin(scorepi + (4*Math.PI)/3 )*0.5+0.5) );
         }
      }
 
-     for(let i=0;i<w;i++) {
-        for(let j=0;j<h;j++) {
-            score = scores[i][j];
-            
-            plotWeight(start,i+(start%4)*64,j+Math.floor(start/4)*64 ,(score-min)/(max-min));
-        }
-     }
+     
  
  }
  async function optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions, start = 0, count = 1000) {
@@ -1387,8 +1382,8 @@ function thresholdKernelCiirckle(d, r, g, b) {
      let r, g, b;
      let phi = Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(2))))));// 
      
-     let inc = Math.random();
-
+     let inc = Math.pow(2,rollDie(6)+1)/512;
+     // inc = inc*Math.random();
      let f = (x) => (Math.floor(x * 1000) / 1000);
      let minr = 1000000,
          ming = 1000000,
@@ -1410,8 +1405,8 @@ function thresholdKernelCiirckle(d, r, g, b) {
      ctx.globalCompositeOperation = 'source-over';
 
      async function sample(idx, r, g, b) {
-        let key = `${idx},${Math.floor(r*2048)},${Math.floor(g*2048)},${Math.floor(b*2048)}`;
-        if(false && weightMemo.has(key)) {
+        let key = `${idx},${Math.floor(r*2/inc)},${Math.floor(g*2/inc)},${Math.floor(b*2/inc)}`;
+        if( weightMemo.has(key)) {
             return weightMemo.get(key)
         } else {
          let mscore, nscore, cscore;
@@ -1422,8 +1417,11 @@ function thresholdKernelCiirckle(d, r, g, b) {
          let result = await scoreInstructionsAndWeights(ctx, ctxsmall, [[r,g,b]], [instructions[idx]], 0, 1)
          //let newweights = cloneWeights(weights);
          //newweights[idx]=[r,g,b];
-         
-          
+         let scorepi = ( result.score / 1000 ) * Math.PI;
+
+         //console.log('col',result.score/1000, ,Math.min(1,result.score/1000-1)*255,Math.min(1,result.score/1000)*255,Math.min(1,(result.score/1000)*2-2)*255);
+         plotWeight(idx,r - b/4,g - b/4 ,255*(Math.sin(scorepi)*0.5+0.5)*(( result.score / 1000 )),255*(Math.sin(scorepi + Math.PI )*0.5+0.5)*(( result.score / 1000 )),255*(1-b) )
+         weightMemo.set(key,result.score/1000);
          return result.score/1000;
        }
      }
@@ -1451,8 +1449,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          gsample = 0;
          bsample = 0;
 
-
-         let counter = 30;
+         let counter = 100;
          let rslope = Math.sign(Math.random()-0.5);
          let gslope = Math.sign(Math.random()-0.5);
          let bslope = Math.sign(Math.random()-0.5);
@@ -1483,13 +1480,13 @@ function thresholdKernelCiirckle(d, r, g, b) {
              
             switch (Math.floor(Math.random()*3)) {
                 case 0:
-                 binc *= phi;
+                 binc += Math.random();
                  
                 case 1:
-                 binc *= phi;
+                 binc += Math.random();
                  
                 case 2:
-                 binc *= phi;
+                 binc += Math.random();
                  
              }
 
@@ -1499,9 +1496,9 @@ function thresholdKernelCiirckle(d, r, g, b) {
 
          }
          if(diff < 0) {
-            r = r + rslope * rinc;
-            g = g + gslope * ginc;
-            b = b + bslope * binc;
+            r = r + rslope * rinc * 0.5;
+            g = g + gslope * ginc * 0.5;
+            b = b + bslope * binc * 0.5;
          }
         
          debug("wsamples b", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);

@@ -1,0 +1,22 @@
+{
+  "name": "sdf-fit",
+  "version": "1.0.0",
+  "description": "fit an image that can be treated as an sdf sort of, to a series of images at different parameters.",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/breton/sdf-fit.git"
+  },
+  "author": "Breton Slivka",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/breton/sdf-fit/issues"
+  },
+  "homepage": "https://github.com/breton/sdf-fit#readme",
+  "dependencies": {
+    "incremental-bars": "^1.0.6"
+  }
+}

@@ -53,10 +53,10 @@ letters = '0123456789ABCDEFGHIJKLMNOP';
 
 letters = '1';
 
-letters = '8866553399';
+letters = '9865';
 
 lowestScorePerIndex = [];
-evalSize = 64  ;
+evalSize = 32;
 modelock = false;
 scoreDebug = {};
 scoreWindowSize = 100;
@@ -182,7 +182,7 @@ function primeCanvas() {
   setDataImg(canvas,'userAction');
 }
 
-
+//primeCanvas();
 buttons['load and average']();
 
 ctx.globalCompositeOperation = "source-over";
@@ -382,7 +382,7 @@ async function main() {
               whichweights= 'random benchmark'
               break;
             case 4: 
-              weights = cloneWeights(minimumWeights);
+              weights = cloneWeights(lowestWeightBenchmark());
               whichweights= 'minimal'
               break;
             case 5: 
@@ -401,7 +401,7 @@ async function main() {
           }
           debug('weightmutation', whichweights);
            
-        if (scoreDebug && scoreDebug.nscores) {
+        if (scoreDebug && scoreDebug.nscores && flipCoin()) {
           newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,needsMostImprovement,1);
         } else {
           newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(updatecount%instructions.length),1);
@@ -572,9 +572,9 @@ async function main() {
     debug2D('gradient',gradient,16,16);
 
 
-    debugWeights(bestweights,letters.split('').map(x=>'b'+x ),'green' );
-    debugWeights(minimumWeights,letters.split('').map(x=>'m'+x ),'red' );
-    debugWeights(weights,letters);
+    debugWeights(bestweights,letters.split('').map((x,i)=>'b'+x+i ),'green' );
+    debugWeights(lowestWeightBenchmark(),letters.split('').map((x,i)=>'m'+x+i ),'red' );
+    debugWeights(weights,letters.split('').map((x,i)=>'t'+x+i ));
     debugTable(weights);
     debugTable(minimumWeights);
 
@@ -626,7 +626,7 @@ setTimeout(main, 10);
   iel.onchange=iel.oninput=function () { itouched = true; idx=i= Math.floor(+(this.value)); blend=+(this.value)-i; }
   iel.setAttribute('max', weights.length);
   iel.setAttribute('min', 0);
-  setTimeout(preview, 200);
+  //setTimeout(preview, 200);
   
   function preview (name,value) {
       setTimeout(preview, 100);
