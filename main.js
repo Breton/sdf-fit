@@ -535,8 +535,8 @@ async function main() {
         weights.forEach(function(weight){
           let m;
 
-          m = popuvw(4,...weight);
-          for(let i=0;i<4**3;i++){
+          m = popuvw(16,...weight);
+          for(let i=0;i<16**3;i++){
               let r = m.next();
               if(!r.done){
                   addInvertKey(...r.value);
