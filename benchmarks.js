@@ -42,13 +42,13 @@ async function addBenchmark(data,weights,newscore,userAction) {
         range = max-min;
        }
 
-       let crunch = 1/1e10;
-       debug('adding pixel benchmark', range, crunch, newscore, Math.round(sum*100000000000));
-       benchmarks = benchmarks.filter((x,i,a)=> ( Math.floor(x.score/crunch) !== Math.floor((a[i-1]||{}).score/crunch) ) );
+       
+       
+       benchmarks.sort((a,b)=>a.score-b.score);
+       benchmarks = benchmarks.filter((x,i,a)=> ( (x.score) !== ((a[i-1]||{}).score) ) );
        //benchmarks.sort((a,b)=>a.sum-b.sum);
        //benchmarks = benchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
        
-       benchmarks.sort((a,b)=>a.score-b.score);
        
 		if(benchmarks.length > benchmarkCount) {
           benchmarks = benchmarks.filter((x,i,a)=> ( x.userAction || x.score < min+(max-min)/2 || flipCoin() ) );

@@ -54,18 +54,13 @@ letters = '0123456789ABCDEFGHIJKLMNOP';
 letters = '1';
 
 
-letters = '01234567';
+letters = '012';
 
 lowestScorePerIndex = [];
 evalSize = 16  ;
 modelock = false;
 scoreDebug = {};
 scoreWindowSize = 100;
-
-
-
-
-
 
 
 
