@@ -910,6 +910,9 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
  }
  function addInvertKey(value,u,v,w,r,g,b){
     // console.log('addInvertKey', ...arguments);
+    u=Math.round(u*255)/255
+    v=Math.round(v*255)/255
+    w=Math.round(w*255)/255
     incrementDeepKey(invertThresholdMapXUVW, [value,u,v,w,r,g,b]);
     incrementDeepKey(invertThresholdMapXRGB, [value,r,g,b,u,v,w]);
  }
