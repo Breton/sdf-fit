@@ -62,7 +62,7 @@ modelock = false;
 scoreDebug = {};
 scoreWindowSize = 100;
 
-
+possiblelength = 0;
 
 debug2D('gradient',gradient,16,16);
 (function() {
@@ -190,17 +190,60 @@ ctxsmall.globalCompositeOperation = "source-over";
 
  for (let i = 0; i < instructions.length; i++){
     if (lowestScorePerIndex[i]===undefined) {
+        let size=16;
+        ctx.canvas.width=size;
+        ctx.canvas.height=size;
+        ctx.save();
+        ctx.scale(size/256,size/256);
+
          ctx.globalCompositeOperation='source-over';
          ctx.fillStyle="black";
          ctx.fillRect(0,0,256,256);
-         
          evalCanvas(ctx, instructions[i]);
+         if(!targetDataObjects[i]){
+          targetDataObjects[i]=ctx.getImageData(0,0,16,16);
+         }
          lowestScorePerIndex[i] = score(ctx);
+         ctx.restore();
+
            //debugCanvas(ctx,'lowestscore-'+i);
           //console.log(ctx.canvas.width, "lowest score per index", lowestScorePerIndex[i]);
          
      }
  }
+
+{
+
+  let m;
+  m = pop(3);
+
+  for(let i=0;i<3**6;i++){
+      let r = m.next();
+      if(!r.done){
+          addInvertKey(...r.value);
+      }
+  }
+  m = pop(4);
+
+  for(let i=0;i<4**6;i++){
+      let r = m.next();
+      if(!r.done){
+          addInvertKey(...r.value);
+      }
+  }
+  m = pop(5);
+
+  for(let i=0;i<5**6;i++){
+      let r = m.next();
+      if(!r.done){
+          addInvertKey(...r.value);
+      }
+  }
+
+}
+
+
+
 
 function scoreLoopAsync(ctx, ctxsmall, weights, instructions, start, letterCounter) {
     ctx.clearRect(0,0,256,256);
@@ -424,11 +467,33 @@ async function main() {
           let value = onepixel.value;
           onepixel=onepixel.pixel;
 
+          let possible;
+          possible = nthPossibleRGB(onepixel,0.025);
+          if(possible.length === 0) {
+            possible = nthPossibleRGB(onepixel,0.1);
+          }
+          if(possible.length === 0) {
+            possible = nthPossibleRGB(onepixel,0.15);
+          }
+
+          possiblelength = possible.length;
+          if(possible.length > 0) {
+
+            let dataobj = ctxsmall.getImageData(0, 0,16, 16);
+            let rgb = possible[rollDie(possible.length)];
+            dataobj.data[(onepixel*4+0).mod(dataobj.data.length)]=rgb[0];
+            dataobj.data[(onepixel*4+1).mod(dataobj.data.length)]=rgb[1];
+            dataobj.data[(onepixel*4+2).mod(dataobj.data.length)]=rgb[2];
+            ctxsmall.putImageData(dataobj, 0, 0);
+
+          }
+
           if(flipCoin()) {
             await optimise8colorPixel(ctx, ctxsmall, [weights[oneframe]], [instructions[oneframe]], onepixel,value);
           } else {
             await optimise8colorPixel(ctx, ctxsmall, weights, instructions, onepixel,value);
           }
+
         }
 
           
@@ -465,7 +530,24 @@ async function main() {
     addBenchmark(newdata,newweights,newscore);
 
     if (newscore < oldscore) {
-      
+      {
+        let weights = lowestWeightBenchmark();
+        weights.forEach(function(weight){
+          let m;
+
+          m = popuvw(4,...weight);
+          for(let i=0;i<4**3;i++){
+              let r = m.next();
+              if(!r.done){
+                  addInvertKey(...r.value);
+              }
+          }
+        });
+
+       
+
+      }
+
       
       debug('scores', newscore,oldscore,olderscore,globalscore,'small improvement', newscore - oldscore);
 

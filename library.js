@@ -2204,7 +2204,7 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, am
  
  let targetDataObjects = [];
  
-
+ 
  async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000, debug = false) {
     /* outer lowestScorePerIndex */
     let newscore = 0;
@@ -2244,7 +2244,7 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, am
       mscoreps[i-start]=(mscorep);
       ctx.globalCompositeOperation = 'difference';
       evalCanvas(ctx, instructions[i]);
-    
+
 
       nscorep = scoreAsync(ctx,true);
 
@@ -2428,4 +2428,137 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, am
 
      }
  }
+
+
+
+
+
+
+
+
+//deep inversion methods.
+
+function*  pop (c=4) {
+    
+    let d = c-1;
+    for(let i=0;i<c;i++) {
+        for( let j=0; j<c; j++) {
+            for( let k=0; k<c; k++) {
+                for( let l=0; l<c; l++) {
+                    for( let m=0; m<c; m++) {
+                        for( let n=0; n<c; n++) {
+
+                            let r=(i/d)*255,g=(j/d)*255,b=(k/d)*255,u=(l/d),v=(m/d),w=(n/d); 
+                            let x = thresholdKernel(new Uint8ClampedArray([r,g,b,255]),u,v,w)[0]; 
+                            yield [x,u,v,w,r,g,b];
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function*  popuvw (c=4,u=0,v=0,w=0) {
+    let d = c-1;
+    for(let i=0;i<c;i++) {
+        for( let j=0; j<c; j++) {
+            for( let k=0; k<c; k++) {
+                let r=(i/d)*255,g=(j/d)*255,b=(k/d)*255;
+                let x = thresholdKernel(new Uint8ClampedArray([r,g,b,255]),u,v,w)[0]; 
+                yield [x,u,v,w,r,g,b];
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+drill = (k,o) =>
+    Object.keys(o[k]).map( u => 
+        Object.keys(o[k][u]).map(v=> 
+            Object.keys(o[k][u][v]).map(w=>
+                Object.keys(o[k][u][v][w]).map(r=>
+                    Object.keys(o[k][u][v][w][r]).map(g=>
+                        
+                            Object.keys(o[k][u][v][w][r][g]).map(b=>
+                                [u,v,w,r,g,b]
+                            )
+                            
+                        
+                    ).reduce((a,b)=>a.concat(b)) 
+                ).reduce((a,b)=>a.concat(b)) 
+            ).reduce((a,b)=>a.concat(b)) 
+        ).reduce((a,b)=>a.concat(b)) 
+   ).reduce((a,b)=>a.concat(b)) 
+
+
+// rgb values that produce white
+// and match the U value of the first image 
+
+function fuzzymatch(index, threshold=0.1) {
+    return t=>  Math.abs(t[0]-lowestWeightBenchmark()[index][0])<threshold &&
+                Math.abs(t[1]-lowestWeightBenchmark()[index][1])<threshold &&
+                Math.abs(t[2]-lowestWeightBenchmark()[index][2])<threshold
+}
+
+
+//get the nth pixels from each image
+function nthPixels(n) {
+    return targetDataObjects.map(
+        d=> d.data[n*4]
+    )
+    
+}
+
+
+//function nth possible RGB values
+
+function nthPossibleRGB(n,threshold=0.1){
+    let ret = nthPixels(n).map(function(val,i){
+        let ret = 0;
+        let keys = Object.keys(invertThresholdMapXUVW);
+        keys=keys.map(x=>+x);
+        keys.push(val);
+        keys.sort();
+        keys = [
+            keys[keys.indexOf(val)-1],
+            keys[keys.indexOf(val)+1]
+        ].filter(x=>x!==undefined);
+
+        ret = keys.map(key=>drill(key,invertThresholdMapXUVW))
+        
+        ret = ret.reduce((a,b)=>a.concat(b));
+        ret = ret.filter(fuzzymatch(i,threshold));
+        ret = ret.map(x=> (x.slice(-3)).map(x=>Math.round(x) ) );
+
+
+        return ret;
+    });
+    //find the intersection of each set;
+    ret = ret.map(function(set){
+        return set.map(rgb=>
+            rgb.join(',')
+        )
+        .sort()
+        .filter((o,i,a)=>o!==a[i-1]) //unique rgb values
+        .map(rgb=>
+            rgb.split(',').map(x=>Math.round(x))
+        )
+    });
+    //return ret;
+    // intersect sets
+    return ret.reduce(function(a,b){
+        let set1 = new Set(a.map(x=>x.toString())), set2 = new Set(b.map(x=>x.toString()));
+        return [...set1].filter(x => set2.has(x));
+    }).map(x=>x.split(',').map(x=>+x));
+
+    
+}
+
+
 
