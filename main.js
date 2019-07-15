@@ -497,9 +497,9 @@ async function main() {
           }
 
           if(flipCoin()) {
-            await optimise8colorPixel(ctx, ctxsmall, [weights[oneframe]], [instructions[oneframe]], onepixel,value);
+            await optimise8colorPixel(ctxmain, ctxsmall, [weights[oneframe]], [instructions[oneframe]], onepixel,value);
           } else {
-            await optimise8colorPixel(ctx, ctxsmall, weights, instructions, onepixel,value);
+            await optimise8colorPixel(ctxmain, ctxsmall, weights, instructions, onepixel,value);
           }
 
         }
