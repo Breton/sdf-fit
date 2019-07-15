@@ -174,12 +174,12 @@ lowestever = letterCounter * 100000;
 function primeCanvas() {
   console.log("priming canvas");
   for (let i = 0; i < instructions.length; i++) {
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, 256, 256);
-      ctx.fillStyle = "white"
-      evalCanvas(ctx, instructions[i]);
-      ctx.globalCompositeOperation="screen";
+      ctxmain.globalAlpha = 1;
+      ctxmain.fillStyle = "black";
+      ctxmain.fillRect(0, 0, 256, 256);
+      ctxmain.fillStyle = "white"
+      evalCanvas(ctxmain, instructions[i]);
+      ctxmain.globalCompositeOperation="screen";
        
 
   }
@@ -189,7 +189,7 @@ function primeCanvas() {
 //primeCanvas();
 buttons['load and average']();
 
-ctx.globalCompositeOperation = "source-over";
+ctxmain.globalCompositeOperation = "source-over";
 ctxsmall.globalCompositeOperation = "source-over";
 
 
@@ -199,20 +199,20 @@ ctxsmall.globalCompositeOperation = "source-over";
  for (let i = 0; i < instructions.length; i++){
     if (lowestScorePerIndex[i]===undefined) {
         let size=16;
-        ctx.canvas.width=size;
-        ctx.canvas.height=size;
-        ctx.save();
-        ctx.scale(size/256,size/256);
+        ctxmain.canvas.width=size;
+        ctxmain.canvas.height=size;
+        ctxmain.save();
+        ctxmain.scale(size/256,size/256);
 
-         ctx.globalCompositeOperation='source-over';
-         ctx.fillStyle="black";
-         ctx.fillRect(0,0,256,256);
-         evalCanvas(ctx, instructions[i]);
-         if(!targetDataObjects[i]){
-          targetDataObjects[i]=ctx.getImageData(0,0,16,16);
-         }
-         lowestScorePerIndex[i] = score(ctx);
-         ctx.restore();
+        ctxmain.globalCompositeOperation='source-over';
+        ctxmain.fillStyle="black";
+        ctxmain.fillRect(0,0,256,256);
+        evalCanvas(ctxmain, instructions[i]);
+        if(!targetDataObjects[i]){
+         targetDataObjects[i]=ctxmain.getImageData(0,0,16,16);
+        }
+         lowestScorePerIndex[i] = score(ctxmain);
+         ctxmain.restore();
 
            //debugCanvas(ctx,'lowestscore-'+i);
           //console.log(ctx.canvas.width, "lowest score per index", lowestScorePerIndex[i]);
