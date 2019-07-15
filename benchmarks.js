@@ -2,7 +2,7 @@ weightBenchmarks = [];
 pixelBenchmarks = [];
 benchmarks = [];
 weightBenchmarkCount = 100;
-benchmarkCount = 100;
+benchmarkCount = 20;
 pixelBenchmarkCount = 100;
 
 
