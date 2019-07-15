@@ -5,6 +5,13 @@ weightBenchmarkCount = 100;
 benchmarkCount = 20;
 pixelBenchmarkCount = 100;
 
+function sumInstructions (instructions) {
+  let string = JSON.stringify(instructions);
+  let sum1 = string.split('').reduce((a,b) => (a+b.charCodeAt(0)) ,0);
+  let sum2 = string.split('').reduce((a,b) => (a*b.charCodeAt(0)) ,0);
+  let sum3 = string.split('').reduce((a,b) => (a^b.charCodeAt(0)) ,0);
+  return `${sum1}:${sum2};${sum3}`;
+}
 
 async function addBenchmark(data,weights,newscore,userAction) {
 
