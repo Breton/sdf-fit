@@ -127,16 +127,20 @@ let maxpixelcounter = 50;
         let p = document.getElementById('debugImages');
 
         el = document.createElement("CANVAS");
-        el.setAttribute('width', ctx.canvas.width);
-        el.setAttribute('height', ctx.canvas.height);
+
         el.setAttribute("id", "img-"+id.trim());
-        el.style.width='256px';
-        el.style.height='256px';
+        //el.style.width='256px';
+        //el.style.height='256px';
         p.appendChild(el);
     }
+    el.setAttribute('width', ctx.canvas.width);
+    el.setAttribute('height', ctx.canvas.height);
+    
     let tctx = el.getContext('2d');
-    tctx.drawImage(ctx.canvas, 0,0,ctx.canvas.width,ctx.canvas.height);
 
+    tctx.putImageData(ctx.getImageData(0,0,ctx.canvas.width,ctx.canvas.height), 0,0);
+    //tctx.drawImage(ctx.canvas, 0,0,ctx.canvas.width,ctx.canvas.height);
+    return tctx;
  }
  function setDataImg(imgOrCanvasOrDataobj,label='none') {
     let data = {};
