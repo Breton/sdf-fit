@@ -31,7 +31,9 @@ let maxpixelcounter = 50;
      if (typeof str === 'number') {
         str = round(str);
      }
-
+     if (Array.isArray(rest)){
+        rest = rest.map(x=>typeof x === 'number' ? round(x): x );
+     }
      if (str === 'clear') {
          document.getElementById('debug').value = debugbuffer;
          debugbuffer = ""
@@ -280,6 +282,10 @@ function setWeights(w) {
 }
 function cloneWeights(w) {
     if(w.length > 0 && w[0] && w[0].length) {
+        // console.log('cloneweights', w);
+        if(typeof w[0][0] !== 'number'){
+            console.log(w);
+        }
         let c = Array.from(w.map((x)=>Array.from(x).map(x=> x.mod(1)  ) ));
         
         return c;
@@ -1523,8 +1529,9 @@ function thresholdKernelCiirckle(d, r, g, b) {
      let r, g, b;
      let phi = Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(2))))));// 
      
-     let inc = Math.pow(2,rollDie(6)+1)/512;
-     // inc = inc*Math.random();
+     let inc = 1/16;
+     inc = inc*Math.random();
+     // inc = inc*inc;
      let f = (x) => (Math.floor(x * 1000) / 1000);
      let minr = 1000000,
          ming = 1000000,
@@ -1621,13 +1628,13 @@ function thresholdKernelCiirckle(d, r, g, b) {
              
             switch (Math.floor(Math.random()*3)) {
                 case 0:
-                 binc += Math.random();
+                 rinc *= phi;
                  
                 case 1:
-                 binc += Math.random();
+                 ginc *= phi;
                  
                 case 2:
-                 binc += Math.random();
+                 binc *= phi;
                  
              }
 
@@ -1645,19 +1652,24 @@ function thresholdKernelCiirckle(d, r, g, b) {
          debug("wsamples b", i, counter, rinc, ginc, binc, rslope, gslope, bslope, diff);
          //enumerate directions.
 
-
+         diff = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) - minscore;
 
          while (counter > 0) {
              while (diff >= 0 && counter > 0) {
-                 counter--;
+                 
                  //convert the counter to 3 digits of -1, 0 or 1.
                 [rslope,gslope,bslope] = ('000'+(counter+updatecount).toString(5)).slice(-3).split('').map(x=>+x-2)
-
+                rinc *= Math.random()*0.02+0.99;
+                ginc *= Math.random()*0.02+0.99;
+                binc *= Math.random()*0.02+0.99;
 
 
                  newscore = await sample(i, r + rslope * rinc, g + gslope * ginc, b + bslope * binc) 
                  diff = newscore - minscore;
-                 debug("wenumerate slope 1", rinc,ginc,binc, rslope, gslope, bslope, counter, diff);
+                 if(diff >= 0) {
+                    counter-=2;
+                 } 
+                 debug("wenumerate slope 1", counter,r,g,b,rinc,ginc,binc, rslope, gslope, bslope, counter, diff);
              }
              minscore = newscore;
              while (diff < 0 && counter > 0) {
@@ -1674,10 +1686,12 @@ function thresholdKernelCiirckle(d, r, g, b) {
                  diff = newscore - minscore;
                  if(diff < 0) {
                     minscore = newscore;
-                 }
-                 debug("wenumerate slope 2", rinc,ginc,binc, rslope, gslope, bslope, counter, diff);
+                    counter++;
+                 } 
+                 debug("wenumerate slope 2", counter, r,g,b,rinc,ginc,binc, rslope, gslope, bslope, counter, diff);
              }
          }
+         
 
         
 
@@ -2562,7 +2576,8 @@ function nthPixels(n) {
 
 //function nth possible RGB values
 
-function nthPossibleRGB(n,threshold=0.1){
+function nthPossibleRGB(n,threshold=0.1,weights=[]){
+    
     let ret = nthPixels(n).map(function(val,i){
         let ret = 0;
         let keys = Object.keys(invertThresholdMapXUVW);
@@ -2578,6 +2593,9 @@ function nthPossibleRGB(n,threshold=0.1){
         
         ret = ret.reduce((a,b)=>a.concat(b));
         ret = ret.filter(fuzzymatch(i,threshold));
+        let uvw = ret.map(x=> (x.slice(3).map(x=>Math.round(+x)/255)) );
+        weights[i]=uvw[rollDie(uvw.length)];
+        console.log('uvw',weights[i]);
         ret = ret.map(x=> (x.slice(-3)).map(x=>Math.round(x) ) );
 
 
@@ -2596,6 +2614,7 @@ function nthPossibleRGB(n,threshold=0.1){
     });
     //return ret;
     // intersect sets
+
     return ret.reduce(function(a,b){
         let set1 = new Set(a.map(x=>x.toString())), set2 = new Set(b.map(x=>x.toString()));
         return [...set1].filter(x => set2.has(x));
