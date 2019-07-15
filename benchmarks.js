@@ -97,9 +97,10 @@ async function addBenchmark(data,weights,nscore,userAction) {
 
 function randomBenchmark() {
   if(benchmarks && benchmarks.length > 0) {
-    return (benchmarks[Math.floor(benchmarks.length*Math.random())]);
+    let b = (benchmarks[Math.floor(benchmarks.length*Math.random())]);
+    return {data: cloneImageData(b.data), weights: cloneWeights(b.weights)};
   } else {
-    return {data: bestdata, weights: bestweights};
+    return {data: cloneImageData(bestdata), weights: cloneWeights(bestweights)};
   }
 }
 
@@ -158,12 +159,7 @@ async function addPixelBenchmark(data,newscore,userAction) {
 
 
 function randomPixelBenchmark() {
-  if(benchmarks && benchmarks.length) {
-    return (benchmarks[Math.floor(benchmarks.length*Math.random())].data);
-  } else {
-    return bestdata || ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
-  }
-
+  return randomBenchmark().data;
 }
 
 
@@ -214,7 +210,7 @@ function breedPixelBenchmark() {
       let d = new ImageData(new Uint8ClampedArray(avg, 16, 16), 16, 16);
       return d;
     } else {
-      return bestdata;
+      return cloneImageData(bestdata);
     }
 
           
@@ -224,9 +220,9 @@ function breedPixelBenchmark() {
 
 function lowestPixelBenchmark() {
   if(benchmarks && benchmarks.length) {
-    return (benchmarks[0].data);
+    return cloneImageData(benchmarks[0].data);
   } else {
-    return bestdata || ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
+    return cloneImageData(bestdata) || cloneImageData(ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height));
   }
 
 }
