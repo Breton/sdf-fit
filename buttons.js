@@ -200,11 +200,19 @@
         
       },
       'cull benchmarks': function () {
-        pixelBenchmarks.length=2;weightBenchmarks.length=2;benchmarks.length=2;
+       let l = benchmarks.length;
+       if(l>2 && benchmarks[l-1]) {
+        min =benchmarks[0].score;
+        max = benchmarks[l-1].score;
+        range = max-min;
+       }
+        if(benchmarks.length > benchmarkCount) {
+              benchmarks = benchmarks.filter((x,i,a)=> ( x.userAction || x.score < min+(max-min)/2 || flipCoin() ) );
+        }        
       },
       'cull generated': function () {
-        pixelBenchmarks = pixelBenchmarks.filter((x,i) => ( x.userAction || !i ) )
-        benchmarks.length=2;
+        benchmarks = benchmarks.filter((x,i) => ( x.userAction || !i ) )
+        //benchmarks.length=2;
       },
       'random pixels': function randomize() {
 
