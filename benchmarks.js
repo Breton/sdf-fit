@@ -13,11 +13,15 @@ function sumInstructions (instructions) {
   return `${sum1}:${sum2};${sum3}`;
 }
 
-async function addBenchmark(data,weights,newscore,userAction) {
-
 function cloneImageData(data) {
   return new ImageData(new Uint8ClampedArray(data.data), 16, 16);
 }
+async function addBenchmark(data,weights,nscore,userAction) {
+  ctxbenchmarksmall.putImageData(data,0,0);
+  newscore = await scoreLoopAsync('benchmark',ctxbenchmark, ctxbenchmarksmall, weights, instructions, 0, letterCounter);
+  let d = new ImageData(new Uint8ClampedArray(data.data), 16, 16);
+  data = d;
+  // console.log("newscore add",newscore);
   if(weights && benchmarks && typeof benchmarks.push === 'function' ){
        let sum; 
        let range = 10;
