@@ -12,7 +12,30 @@ function sumInstructions (instructions) {
   let sum3 = string.split('').reduce((a,b) => (a^b.charCodeAt(0)) ,0);
   return `${sum1}:${sum2};${sum3}`;
 }
+async function recheckBenchmarks(update=false) {
+  for(let i = 0; i < benchmarks.length; i++){
+    let benchmark = benchmarks[i];
+    ctxchecksmall.putImageData(benchmark.data,0,0);
+    // setDataImg(benchmark.data,'recheck');
+    let checkscore = await scoreLoopAsync('recheck',ctxcheck, ctxchecksmall, benchmark.weights, instructions, 0, letterCounter);
+    let newscore = checkscore;
+    let weightsum = sumWeights(benchmark.weights);
+    let instructionssum = sumInstructions(instructions);
+    let pixsum = sumPixels(benchmark.data);
+    const trunc = x=>(x).toString().slice(-5);
+    let sum = `${instructionssum}-${newscore.score}-d${newscore.checksumd}-${newscore.checksumsa.join(':')}-${newscore.checksumsb.join(':')}-${newscore.checksumsc.join(':')}-${weightsum}-${pixsum}`;
+    if(benchmark.sum !== sum) {
+     console.log('checkscore',benchmark.sum, sum, benchmark.score, checkscore.score, checkscore.mscores, checkscore.nscores, checkscore.cscores);
+     if(update){
+      benchmark.score=checkscore.score;
+      benchmark.sum=sum
+      }
+    } else {
+      console.log('good score',checkscore.nscores, checkscore.cscores)
+    }
+  }
 
+}
 function cloneImageData(data) {
   return new ImageData(new Uint8ClampedArray(data.data), 16, 16);
 }
