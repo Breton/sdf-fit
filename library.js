@@ -161,11 +161,12 @@ let maxpixelcounter = 50;
         if(label==="userAction"){
             
             //pixelBenchmarks.length=0;
-            newscore = scoreLoopAsync(ctx, ctxsmall, lowestWeightBenchmark(), instructions, 0, letterCounter);
+            let weights = randomWeights(lowestWeightBenchmark());
+            let newscore = scoreLoopAsync('setdataimg',ctxmain, ctxsmall, weights, instructions, 0, letterCounter);
             newscore.then(function(newscore){
                 gradient = newscore.bins.map((x,i)=> Math.floor(x*0.5+gradient[i]*0.5) );
                 newscore = newscore.score;
-                addBenchmark(data,lowestWeightBenchmark(),newscore,true);
+                addBenchmark(data,weights,newscore,true);
                 // console.log('user load',newscore);
             });
         }
@@ -1485,7 +1486,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          samplecount+=1;
 
          
-         let result = await scoreInstructionsAndWeights(ctx, ctxsmall, [[r,g,b]], [instructions[idx]], 0, 1)
+         let result = await scoreInstructionsAndWeights('plotWeightForInstructions',ctxmain, ctxsmall, [[r,g,b]], [instructions[idx]], 0, 1)
 
           weightMemo.set(key, result.score/1000);
           
@@ -1550,7 +1551,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
          samplecount+=1;
 
          
-         let result = await scoreInstructionsAndWeights(ctx, ctxsmall, [[r,g,b]], [instructions[idx]], 0, 1)
+         let result = await scoreInstructionsAndWeights('optimiseWeightsForInstructions',ctx, ctxsmall, [[r,g,b]], [instructions[idx]], 0, 1)
          //let newweights = cloneWeights(weights);
          //newweights[idx]=[r,g,b];
          let scorepi = ( result.score / 1000 ) * Math.PI;
@@ -1763,7 +1764,7 @@ function thresholdKernelCiirckle(d, r, g, b) {
 
          ctxsmall.putImageData(dataobj, 0, 0);
         // console.log('weightssc',weights);
-         let score = await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions);
+         let score = await scoreInstructionsAndWeights('optimisePixelForWeights',ctx, ctxsmall, weights, instructions);
          return 1000 * (score.score);
      }
 
@@ -1954,7 +1955,7 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, am
 
          ctxsmall.putImageData(dataobj, 0, 0);
         // console.log('weightssc',weights);
-         let score = await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions);
+         let score = await scoreInstructionsAndWeights('optimise8colorPixel',ctx, ctxsmall, weights, instructions);
          return  (score.score);
      }
 
@@ -2068,7 +2069,7 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, am
 
          ctxsmall.putImageData(dataobj, 0, 0);
         // console.log('weightssc',weights);
-         let score = await scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions);
+         let score = await scoreInstructionsAndWeights('optimise9PixelsForWeights',ctx, ctxsmall, weights, instructions);
          return 1000 * (score.score);
      }
 
@@ -2234,7 +2235,7 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, am
  let targetDataObjects = [];
  
  
- async function scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, start = 0, count = 1000, debug = false) {
+ async function scoreInstructionsAndWeights(name='none', ctx, ctxsmall, weights, instructions, start = 0, count = 1000, debug = false) {
     /* outer lowestScorePerIndex */
     let newscore = 0;
     let mscore = 14100;
@@ -2246,6 +2247,10 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, am
     let mscoreps = [];
     let nscoreps = [];
     let size=evalSize;
+    let checksumsa = [];
+    let checksumsb = [];
+    let checksumsc = [];
+    let checksumd = 0;
     //outer functions:
     // threshold
     // score
@@ -2256,6 +2261,7 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, am
     ctx.save();
     ctx.scale(size/256,size/256);
     
+    checksumd = (sumPixels(ctxsmall.getImageData(0,0,size,size)));
 
 
     
@@ -2266,26 +2272,31 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, am
       ctx.globalAlpha = 1;
 
       ctx.globalCompositeOperation = 'source-over';
-      ctx.drawImage(canvassmall, 0, 0, 256, 256);  
-      
-      tmpdata = await thresholdAsync(ctx, weights[i][0], weights[i][1], weights[i][2]);
-      mscorep = scoreAsync(tmpdata);
+      ctx.clearRect(0,0,256,256);
+      ctx.drawImage(ctxsmall.canvas, 0, 0, 256, 256);
+      let sctx = debugCanvas(ctx,name+'-nscore-'+(i+1)+'-'+count);
+      sctx.save();
+      sctx.globalCompositeOperation = 'source-over';
+      sctx.scale(size/256,size/256);
+      tmpdata = await thresholdAsync(sctx, weights[i][0], weights[i][1], weights[i][2]);
+      checksumsb.push(sumPixels(sctx.getImageData(0,0,16,16)));
+      mscorep = scoreAsync(sctx);
       mscoreps[i-start]=(mscorep);
-      ctx.globalCompositeOperation = 'difference';
-      evalCanvas(ctx, instructions[i]);
-
-
-      nscorep = scoreAsync(ctx,true);
+      sctx.globalCompositeOperation = 'difference';
+      evalCanvas(sctx, instructions[i]);
+      checksumsc.push(sumPixels(sctx.getImageData(0,0,16,16)));
+      nscorep = scoreAsync(sctx,true);
 
       nscoreps[i-start]=(nscorep);
       
 
       if(debug){
-        debugCanvas(ctx,'nscore-'+i);
+        //debugCanvas(ctx,'nscore-'+i);
 
       }
       //nscore = (Math.sqrt((nscore)) / lowestScorePerIndex[scoreidx]);
       //newscore += nscore * nscore + mscore * mscore;
+      sctx.restore();
     }
     ctx.restore();
     const binsreduce = (a,b)=>( 
@@ -2306,7 +2317,7 @@ async function optimise8colorPixel(ctx, ctxsmall, weights, instructions, idx, am
 
     nscorebins = nscores.map(x=>x.bins).reduce(binsreduce).map(x=>Math.sqrt(x));
     
-    return {score:(Math.sqrt(nscore*nscore+mscore*mscore+cscore*cscore)) * 1000 / Math.sqrt(count), bins:nscorebins, mscore, nscore, cscore, mscores:mscores.map( (x, idx) =>  shapeMscore(x,lowestScorePerIndex[idx])  ), nscores: nscores.map(x=>x.score).map( (x, idx) => ( (x)   / ((lowestScorePerIndex[idx]))) ) , cscores} ;
+    return { checksumd, checksumsa, checksumsb, checksumsc, score:(Math.sqrt(nscore*nscore+mscore*mscore+cscore*cscore)) * 1000 / Math.sqrt(count), bins:nscorebins, mscore, nscore, cscore, mscores:mscores.map( (x, idx) =>  shapeMscore(x,lowestScorePerIndex[idx])  ), nscores: nscores.map(x=>x.score).map( (x, idx) => ( (x)   / ((lowestScorePerIndex[idx]))) ) , cscores} ;
   }
 
  function evalCanvas(ctx, instructions, variables) {

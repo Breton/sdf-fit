@@ -245,10 +245,10 @@ ctxsmall.globalCompositeOperation = "source-over";
 
 
 
-function scoreLoopAsync(ctx, ctxsmall, weights, instructions, start, letterCounter) {
+function scoreLoopAsync(name='main',ctx, ctxsmall, weights, instructions, start, letterCounter) {
     ctx.clearRect(0,0,256,256);
     return new Promise(function(res, err) {
-        res(scoreInstructionsAndWeights(ctx, ctxsmall, weights, instructions, 0, letterCounter,true));
+        res(scoreInstructionsAndWeights(name,ctx, ctxsmall, weights, instructions, 0, letterCounter,true));
     });
 }
 smoothduration = 1000;
@@ -518,16 +518,25 @@ async function main() {
     newdata = ctxsmall.getImageData(0, 0, canvassmall.width, canvassmall.height);
     
   
-    newscore = await scoreLoopAsync(ctx, ctxsmall, newweights, instructions, 0, letterCounter);
-    gradient = newscore.bins.map((x,i)=> Math.floor(x*0.5+gradient[i]*0.5) );
+    // newscore = await scoreLoopAsync(ctx, ctxsmall, newweights, instructions, 0, letterCounter);
+    //setDataImg(newdata,'checkscore');
+    //let checkscore = await scoreLoopAsync(ctx, ctxsmall, newweights, instructions, 0, letterCounter);
+   // let scoremy = sumWeights(newweights);
+  //  let weightsum = score(newdata);
+   // let sum = `${newscore.score}-${scoremy}-${weightsum}`;
+   // console.log("adding", newscore);
+   newscore = await addBenchmark(newdata,newweights,newscore);
+   // console.log('checkscore2',sum,newscore.score);
+  
 
+    gradient = newscore.bins.map((x,i)=> Math.floor(x*0.5+gradient[i]*0.5) );
     scoreDebug = newscore;
     newscore = newscore.score;
     
     debugWeights(newweights,letters.split('').map(x=>'n'+x ),'gray' );
+    
+    //console.log('adding benchmark');
 
-
-    addBenchmark(newdata,newweights,newscore);
 
     if (newscore < oldscore) {
       {

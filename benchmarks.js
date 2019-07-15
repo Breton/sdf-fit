@@ -53,22 +53,29 @@ async function addBenchmark(data,weights,nscore,userAction) {
        let diff = 100;
        let nonuser = benchmarks.filter(x=>!x.userAction);
        let l = nonuser.length;
-       if(l>=2 && newscore > benchmarks[l-1].score && !userAction ) {
-            return ;
-       }
-       let scoremy = score(data);
        let weightsum = sumWeights(weights);
-       sum = Math.round(Math.sqrt( ((Math.round(scoremy*10000)*1e8) + weightsum) ));
+       let instructionssum = sumInstructions(instructions);
+       let pixsum = sumPixels(data);
+       const trunc = x=>(x).toString().slice(-5);
+       sum = `${instructionssum}-${newscore.score}-d${newscore.checksumd}-${newscore.checksumsa.join(':')}-${newscore.checksumsb.join(':')}-${newscore.checksumsc.join(':')}-${weightsum}-${pixsum}`;
+       //console.log('checkscore',sum,newscore,checkscore);
+       //console.log('new',newscore,nonuser && nonuser.length && nonuser[l-1].score)
+       if(l>=1 && newscore.score > nonuser[l-1].score && !userAction && !willAdjustWeights) {
+          console.log("didn't add", newscore.score);
+            return newscore;
+       }
        let sumindex = benchmarks.map(x=>x.sum).indexOf(sum);
        if(userAction){
-        console.log('adding user benchmark', userAction, sumindex, newscore, sum, weightsum, scoremy);
+        console.log('adding user benchmark', userAction, sumindex, newscore, sum, weightsum);
        }
        
-       if(sumindex<0) {
-        benchmarks.push({userAction: userAction, score:(newscore),weights:weights, data:data,sum:sum});
-       } else {
-        benchmarks[sumindex] = ({userAction: userAction, score:(newscore),weights:weights,data:data,sum:sum});
-       }
+       //if(sumindex<0) {
+        benchmarks.push({userAction: userAction, mscore: newscore.mscore, score:(newscore.score),weights:cloneWeights(weights), data:data,sum:sum});
+       //} else {
+       // console.log('early return');
+       // return newscore;
+       // benchmarks[sumindex] = ({userAction: userAction && benchmarks[sumindex].userAction, score:(newscore.score),weights:cloneWeights(weights),data:data,sum:sum});
+       //}
 
        benchmarks.sort((a,b)=>a.score-b.score);
        nonuser = benchmarks.filter(x=>!x.userAction);
@@ -81,16 +88,22 @@ async function addBenchmark(data,weights,nscore,userAction) {
 
        
        
-       benchmarks.sort((a,b)=>a.score-b.score);
-       benchmarks = benchmarks.filter((x,i,a)=> ( (x.score) !== ((a[i-1]||{}).score) ) );
-       //benchmarks.sort((a,b)=>a.sum-b.sum);
-       //benchmarks = benchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
        
-       
-		if(benchmarks.length > benchmarkCount) {
-          benchmarks = benchmarks.filter((x,i,a)=> ( x.userAction || x.score < min+(max-min)/2 || flipCoin() ) );
-    }
+       //benchmarks = benchmarks.filter((x,i,a)=> ( (x.score) !== ((a[i-1]||{}).score) ) );
+       benchmarks.sort((a,b)=>a.sum-b.sum);
+       benchmarks = benchmarks.filter((x,i,a)=> ( x.sum !== (a[i-1]||{}).sum ) );
+        nonuser = benchmarks.filter(x=>!x.userAction);
+        l = nonuser.length;
+        benchmarks.sort((a,b)=>a.score-b.score);
+        benchmarks = benchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
+
+		if(l > benchmarkCount) {
+            benchmarks = benchmarks.filter((x,i) => ( x.userAction || i<=1 ) )
+            //benchmarks = benchmarks.filter((x,i,a)=> ( x.userAction || x.score < min+(max-min)/2 ) );
+      }
+    console.log('add',l,benchmarks.length,sum)
   }
+  return newscore;
 }
 
 
