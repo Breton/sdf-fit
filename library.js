@@ -1123,6 +1123,17 @@ function thresholdKernelCiirckle(d, r, g, b) {
      
      return scoreKernel(dataobj.data,withbins);
  }
+ function sumPixels (imagedata) {
+      var hash = 0, i, chr, d = imagedata.data;
+      if (d.length === 0) return hash;
+      for (i = 0; i < d.length; i++) {
+        chr   = d[i];
+        hash  = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32bit integer
+      }
+      return hash;
+
+ }
 
  function scoreAsync(ctx,withbins=false) {
      let dataobj, w, h;
