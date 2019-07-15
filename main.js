@@ -1,13 +1,21 @@
-canvas = document.getElementsByTagName('canvas')[0];
+canvas = document.getElementById('prime');
 //ocanvas = new OffscreenCanvas(256,256);
-canvassmall = document.getElementsByTagName('canvas')[1];
-canvasresult = document.getElementsByTagName('canvas')[2];
+canvassmall = document.getElementById('small');
+canvasresult = document.getElementById('result');
+canvascheck = document.getElementById('check');
+canvasbenchmark = document.getElementById('benchmark');
+canvaschecksmall = document.getElementById('checksmall');
+canvasbenchmarksmall = document.getElementById('benchmarksmall');
 img = document.getElementsByTagName('img')[0];
 
 //octx = ocanvas.getContext('2d');
-ctx = canvas.getContext('2d');
+ctxmain = canvas.getContext('2d');
 ctxsmall = canvassmall.getContext('2d');
 ctxresult = canvasresult.getContext('2d');
+ctxcheck = canvascheck.getContext('2d');
+ctxbenchmark = canvasbenchmark.getContext('2d');
+ctxchecksmall = canvaschecksmall.getContext('2d');
+ctxbenchmarksmall = canvasbenchmarksmall.getContext('2d');
 letter = 'g';
 onepixel = 0;
 
