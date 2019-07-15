@@ -449,9 +449,9 @@ async function main() {
           debug('weightmutation', whichweights);
            
         if (scoreDebug && scoreDebug.nscores && flipCoin()) {
-          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,needsMostImprovement,1);
+          newweights = await optimiseWeightsForInstructions(ctxmain, ctxsmall, weights, instructions,needsMostImprovement,1);
         } else {
-          newweights = await optimiseWeightsForInstructions(ctx, ctxsmall, weights, instructions,(updatecount%instructions.length),1);
+          newweights = await optimiseWeightsForInstructions(ctxmain, ctxsmall, weights, instructions,(updatecount%instructions.length),1);
         }
     } else {
 
