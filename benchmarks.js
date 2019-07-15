@@ -15,6 +15,9 @@ function sumInstructions (instructions) {
 
 async function addBenchmark(data,weights,newscore,userAction) {
 
+function cloneImageData(data) {
+  return new ImageData(new Uint8ClampedArray(data.data), 16, 16);
+}
   if(weights && benchmarks && typeof benchmarks.push === 'function' ){
        let sum; 
        let range = 10;
