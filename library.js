@@ -1373,7 +1373,22 @@ function thresholdKernelCiirckle(d, r, g, b) {
      return a.map((a, i) => ([a[0] - b[i][0], a[1] - b[i][1], a[2] - b[i][2]]))
  }
  function sumWeights(a) {
-    return ( a.reduce((a,b)=> a.concat(b)).map((x,i)=>Math.floor(((i+1 )*x*255))).map((x)=>x*x).reduce((a,b)=>a+b));
+
+    var hash = 0, i, j, chr, chra,chrb, a
+    if (a.length === 0) return hash;
+      for (i = 0; i < a.length; i++) {
+        for(j = 0; j < 3; j++) {
+        chr   = Math.round((a[i][j])*65536);
+        chra = chr%256;
+        chrb = Math.floor(chr/256);
+        hash  = ((hash << 5) - hash) + chra;
+        hash |= 0; // Convert to 32bit integer
+        hash  = ((hash << 5) - hash) + chrb;
+        hash |= 0; // Convert to 32bit integer
+        }
+      }
+    return hash;   
+    //return '('+a.map(x=>x.map(y=>Math.floor(y*100000) ).join(';')).join(':')+')';
 
     //return Math.sqrt(a.reduce((a,b)=>( a[0]*a[9] + a[1]*a[1] + a[2]*a[2] + b[0]*b[9] + b[1]*b[1] + b[2]*b[2] )) )
  }
