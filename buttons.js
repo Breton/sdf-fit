@@ -163,7 +163,7 @@
           setDataImg(lowestPixelBenchmark(),'optim lowest');
         } else {
           modebias = 1;
-          setWeights(cloneWeights(weightBenchmarks[0].weights));
+          setWeights(cloneWeights(lowestWeightBenchmark()));
         }
       },
       'reset instructions': function () {

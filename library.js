@@ -280,6 +280,10 @@ function setWeights(w) {
 }
 function cloneWeights(w) {
     if(w.length > 0 && w[0] && w[0].length) {
+        // console.log('cloneweights', w);
+        if(typeof w[0][0] !== 'number'){
+            console.log(w);
+        }
         let c = Array.from(w.map((x)=>Array.from(x).map(x=> x.mod(1)  ) ));
         
         return c;
@@ -1523,8 +1527,8 @@ function thresholdKernelCiirckle(d, r, g, b) {
      let r, g, b;
      let phi = Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(2))))));// 
      
-     let inc = Math.pow(2,rollDie(6)+1)/512;
-     // inc = inc*Math.random();
+     let inc = (1/512);
+     inc = inc*Math.random();
      let f = (x) => (Math.floor(x * 1000) / 1000);
      let minr = 1000000,
          ming = 1000000,
@@ -2562,7 +2566,8 @@ function nthPixels(n) {
 
 //function nth possible RGB values
 
-function nthPossibleRGB(n,threshold=0.1){
+function nthPossibleRGB(n,threshold=0.1,weights=[]){
+    
     let ret = nthPixels(n).map(function(val,i){
         let ret = 0;
         let keys = Object.keys(invertThresholdMapXUVW);
@@ -2578,6 +2583,9 @@ function nthPossibleRGB(n,threshold=0.1){
         
         ret = ret.reduce((a,b)=>a.concat(b));
         ret = ret.filter(fuzzymatch(i,threshold));
+        let uvw = ret.map(x=> (x.slice(3).map(x=>Math.round(+x)/255)) );
+        weights[i]=uvw[rollDie(uvw.length)];
+        console.log('uvw',weights[i]);
         ret = ret.map(x=> (x.slice(-3)).map(x=>Math.round(x) ) );
 
 
@@ -2596,6 +2604,7 @@ function nthPossibleRGB(n,threshold=0.1){
     });
     //return ret;
     // intersect sets
+
     return ret.reduce(function(a,b){
         let set1 = new Set(a.map(x=>x.toString())), set2 = new Set(b.map(x=>x.toString()));
         return [...set1].filter(x => set2.has(x));

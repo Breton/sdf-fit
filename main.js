@@ -62,7 +62,7 @@ letters = '0123456789ABCDEFGHIJKLMNOP';
 letters = '1';
 
 
-letters = '012';
+letters = '01234';
 
 lowestScorePerIndex = [];
 evalSize = 16  ;
@@ -223,30 +223,30 @@ ctxsmall.globalCompositeOperation = "source-over";
 {
 
   let m;
-  m = pop(3);
+  m = pop(6);
 
-  for(let i=0;i<3**6;i++){
+  for(let i=0;i<6**6;i++){
       let r = m.next();
       if(!r.done){
           addInvertKey(...r.value);
       }
   }
-  m = pop(4);
+  // m = pop(4);
 
-  for(let i=0;i<4**6;i++){
-      let r = m.next();
-      if(!r.done){
-          addInvertKey(...r.value);
-      }
-  }
-  m = pop(5);
+  // for(let i=0;i<4**6;i++){
+  //     let r = m.next();
+  //     if(!r.done){
+  //         addInvertKey(...r.value);
+  //     }
+  // }
+  // m = pop(5);
 
-  for(let i=0;i<5**6;i++){
-      let r = m.next();
-      if(!r.done){
-          addInvertKey(...r.value);
-      }
-  }
+  // for(let i=0;i<5**6;i++){
+  //     let r = m.next();
+  //     if(!r.done){
+  //         addInvertKey(...r.value);
+  //     }
+  // }
 
 }
 
@@ -476,19 +476,27 @@ async function main() {
           onepixel=onepixel.pixel;
 
           let possible;
-          possible = nthPossibleRGB(onepixel,0.025);
-          if(possible.length === 0) {
-            possible = nthPossibleRGB(onepixel,0.1);
-          }
-          if(possible.length === 0) {
-            possible = nthPossibleRGB(onepixel,0.15);
-          }
-
+          let w = [];
+          possible = nthPossibleRGB(onepixel,0.08,w);
+ 
+          // if(possible.length === 0) {
+          //   possible = nthPossibleRGB(onepixel,0.1,w);
+          // } else {
+          //   console.log("0.08 teir", possible.length);
+          // }
+          // if(possible.length === 0) {
+          //   possible = nthPossibleRGB(onepixel,0.2,w);
+          //   console.log("0.2 teir", possible.length);
+          // } else {
+          //   console.log("0.1 teir", possible.length);
+          // }
+          // newweights = weights=avgWeights(w,weights);
           possiblelength = possible.length;
           if(possible.length > 0) {
 
             let dataobj = ctxsmall.getImageData(0, 0,16, 16);
             let rgb = possible[rollDie(possible.length)];
+            console.log("possible",onepixel,...rgb)
             dataobj.data[(onepixel*4+0).mod(dataobj.data.length)]=rgb[0];
             dataobj.data[(onepixel*4+1).mod(dataobj.data.length)]=rgb[1];
             dataobj.data[(onepixel*4+2).mod(dataobj.data.length)]=rgb[2];
@@ -552,8 +560,8 @@ async function main() {
         weights.forEach(function(weight){
           let m;
 
-          m = popuvw(16,...weight);
-          for(let i=0;i<16**3;i++){
+          m = popuvw(6,...weight);
+          for(let i=0;i<6**3;i++){
               let r = m.next();
               if(!r.done){
                   addInvertKey(...r.value);
