@@ -1529,8 +1529,9 @@ function thresholdKernelCiirckle(d, r, g, b) {
      let r, g, b;
      let phi = Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(Math.sqrt(2))))));// 
      
-     let inc = 1/8;
+     let inc = 1/16;
      inc = inc*Math.random();
+     // inc = inc*inc;
      let f = (x) => (Math.floor(x * 1000) / 1000);
      let minr = 1000000,
          ming = 1000000,
