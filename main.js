@@ -62,10 +62,10 @@ letters = '0123456789ABCDEFGHIJKLMNOP';
 letters = '1';
 
 
-letters = '01234';
+letters = '01';
 
 lowestScorePerIndex = [];
-evalSize = 16  ;
+evalSize = 32  ;
 modelock = false;
 scoreDebug = {};
 scoreWindowSize = 100;
@@ -123,9 +123,9 @@ for (let i = 0; i < letters.length; i++) {
         ["font", "256px sans-serif"],
         ["textAlign", "center"],
         ["translate", 128, 128],
-        ["rotate",  rotation + (i) * ( 2*( Math.PI )/ (letters.length ))],
-        ["fillRect", 0, 0, 96, 96]
-        //["fillText", letters[i], 20, 90, 256]
+        // ["rotate",  rotation + (i) * ( 2*( Math.PI )/ (letters.length ))],
+        // ["fillRect", 0, 0, 96, 96]
+        ["fillText", letters[i], 20, 90, 256]
     ];
 }
 console.log("instructions populated",instructions.length, instructions[0][6][1]);
@@ -137,9 +137,9 @@ function resetInstructions(){
           ['fillStyle', 'black'],
           ["fillRect", 0, 0, 256, 256],
           ["fillStyle", "white"],
-          // ["translate", 128, 128],
-          //["rotate", rotation + (i) * ( 2*( Math.PI )/ (letters.length ))],
-          //["fillRect", 0, 0, 96, 96]
+          ["translate", 128, 128],
+          // ["rotate", rotation + (i) * ( 2*( Math.PI )/ (letters.length ))],
+          // ["fillRect", 0, 0, 96, 96]
           ["fillText", letters[i], 20, 20, 256]
       ];
   }
@@ -186,8 +186,9 @@ function primeCanvas() {
   setDataImg(canvas,'userAction');
 }
 
-//primeCanvas();
+// primeCanvas();
 buttons['load and average']();
+// buttons['random pixels']();
 
 ctxmain.globalCompositeOperation = "source-over";
 ctxsmall.globalCompositeOperation = "source-over";
@@ -541,9 +542,19 @@ async function main() {
   //  let weightsum = score(newdata);
    // let sum = `${newscore.score}-${scoremy}-${weightsum}`;
    // console.log("adding", newscore);
+   let oldlowest= lowestBenchmark();
    newscore = await addBenchmark(newdata,newweights,newscore);
    // console.log('checkscore2',sum,newscore.score);
-  
+    
+    let newlowest= lowestBenchmark();
+    if(oldlowest && newlowest) {
+      console.log('improvement',oldlowest.score,newlowest.score)
+      if(oldlowest.score > newlowest.score) {
+          lastimprovement=0;
+      } else {
+          lastimprovement++;
+      }
+    }
 
     gradient = newscore.bins.map((x,i)=> Math.floor(x*0.5+gradient[i]*0.5) );
     scoreDebug = newscore;
@@ -632,18 +643,21 @@ async function main() {
 
 
     
+
     if (newscore >= globalscore) {
         let m = 0.0273015
         let k = 0.260159
         let o = 1.00663
         let b = -m*Math.pow(lastimprovement,k)+o;
-        lastimprovement++;
+        // lastimprovement++;
 
         globalscore = globalscore * b + newscore * (1-b);
     } 
+
+
     if(newscore < globalscore) {
         globalscore = newscore;
-        lastimprovement = 1;
+        
     }
     
     if (lowestever > globalscore) {
