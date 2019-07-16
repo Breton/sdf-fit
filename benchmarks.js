@@ -60,7 +60,13 @@ async function addBenchmark(data,weights,nscore,userAction) {
        sum = `${instructionssum}-${newscore.score}-d${newscore.checksumd}-${newscore.checksumsa.join(':')}-${newscore.checksumsb.join(':')}-${newscore.checksumsc.join(':')}-${weightsum}-${pixsum}`;
        //console.log('checkscore',sum,newscore,checkscore);
        //console.log('new',newscore,nonuser && nonuser.length && nonuser[l-1].score)
-       if(l>=1 && newscore.score > nonuser[l-1].score && !userAction && !willAdjustWeights) {
+       if(l>2 && nonuser[l-1]) {
+        min =nonuser[0].score;
+        max = nonuser[l-1].score;
+        range = max-min;
+       }
+
+       if(l>=1 && newscore.score > (nonuser[l-1].score + range * (lastimprovement/100) ) && !userAction && !willAdjustWeights) {
           console.log("didn't add", newscore.score);
             return newscore;
        }
@@ -97,7 +103,7 @@ async function addBenchmark(data,weights,nscore,userAction) {
         benchmarks.sort((a,b)=>a.score-b.score);
         benchmarks = benchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
 
-		if(l > benchmarkCount || lastimprovement > 100) {
+		if(l > benchmarkCount + lastimprovement ) {
             benchmarks = benchmarks.filter((x,i) => ( x.userAction || i<=1 ) )
             //benchmarks = benchmarks.filter((x,i,a)=> ( x.userAction || x.score < min+(max-min)/2 ) );
       }
