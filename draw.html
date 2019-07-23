@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>Fit SDF</title>
+	<style>
+		canvas {
+  border: 1px solid black;
+
+}
+
+.dsize {
+  width: 258px;
+  height: 258px;
+    border: 1px solid black;
+    image-rendering: pixelated;
+}
+
+img {
+  border: 1px solid black;
+  
+}
+.weight {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: blue;
+  color: white;
+  padding: 1px;
+  width:16px;
+  height:16px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+#panel {
+ 
+  top:0;
+  left:0px;
+  right:0px;
+  margin: 5em 0 12em;
+  padding: 1em 0 12em;
+  overflow: scroll;
+  
+}
+#weights{
+  position:relative;
+  width:256px;
+  height:256px;
+  display: inline-block;
+  border: 1px solid black;
+}
+.debug2d {
+  display:inline-block;
+}
+.debugImages {
+  display:inline-block;
+}
+#variables {
+  display: flex;
+  flex-flow: wrap;
+  justify-content: space-between;
+  background: #ddd;
+}
+#variables span dl, #variables span dd, #variables span dt {
+  display: inline-block;
+  padding: 3px;
+  margin-inline-start: 0px;
+
+}
+#variables ol {
+  height: 1em;
+  overflow:scroll;
+}
+#variables span dl {
+  border: 1px solid #555;
+  background: #ddd;
+  font-family: sans-serif;
+  margin: 3px;
+
+}
+#variables span {
+  display: inline-block;
+  white-space: nowrap;
+}
+body {
+  font-family: sans-serif;
+}
+:root {
+    --blue: #007bff;
+    --indigo: #6610f2;
+    --purple: #6f42c1;
+    --pink: #e83e8c;
+    --red: #dc3545;
+    --orange: #fd7e14;
+    --yellow: #ffc107;
+    --green: #28a745;
+    --teal: #20c997;
+    --cyan: #17a2b8;
+    --white: #fff;
+    --gray: #6c757d;
+    --gray-dark: #343a40;
+    --primary: #007bff;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --info: #17a2b8;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --breakpoint-xs: 0;
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+    --font-family-sans-serif: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+    --font-family-monospace: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+}
+
+/*! CSS Used from: https://getbootstrap.com/docs/4.0/dist/css/bootstrap.min.css */
+*,::after,::before{box-sizing:border-box;}
+button{border-radius:0;}
+button:focus{outline:1px dotted;outline:5px auto -webkit-focus-ring-color;}
+button{margin:0;font-family:inherit;font-size:inherit;line-height:inherit;}
+button{overflow:visible;}
+button{text-transform:none;}
+button,html [type=button]{-webkit-appearance:button;}
+[type=button]::-moz-focus-inner,button::-moz-focus-inner{padding:0;border-style:none;}
+.btn{display:inline-block;font-weight:400;text-align:center;white-space:nowrap;vertical-align:middle;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;border:1px solid transparent;padding:.375rem .75rem;font-size:1rem;line-height:1.5;border-radius:.25rem;transition:color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;}
+.btn:focus,.btn:hover{text-decoration:none;}
+.btn:focus{outline:0;box-shadow:0 0 0 .2rem rgba(0,123,255,.25);}
+.btn:disabled{opacity:.65;}
+.btn:not(:disabled):not(.disabled){cursor:pointer;}
+.btn-primary{color:#fff;background-color:#007bff;border-color:#007bff;}
+.btn-primary:hover{color:#fff;background-color:#0069d9;border-color:#0062cc;}
+.btn-primary:focus{box-shadow:0 0 0 .2rem rgba(0,123,255,.5);}
+.btn-primary:disabled{color:#fff;background-color:#007bff;border-color:#007bff;}
+@media print{
+*,::after,::before{text-shadow:none!important;box-shadow:none!important;}
+}
+
+
+input[type=range].slider {
+  -webkit-appearance: none;
+  width: 100%;
+  margin: 13.8px 0;
+}
+input[type=range].slider:focus {
+  outline: none;
+}
+input[type=range].slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8.4px;
+  cursor: pointer;
+  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+  background: #3071a9;
+  border-radius: 1.3px;
+  border: 0.2px solid #010101;
+}
+input[type=range].slider::-webkit-slider-thumb {
+  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+  border: 1px solid #000000;
+  height: 36px;
+  width: 16px;
+  border-radius: 3px;
+  background: #ffffff;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -14px;
+}
+input[type=range].slider:focus::-webkit-slider-runnable-track {
+  background: #367ebd;
+}
+input[type=range].slider::-moz-range-track {
+  width: 100%;
+  height: 8.4px;
+  cursor: pointer;
+  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+  background: #3071a9;
+  border-radius: 1.3px;
+  border: 0.2px solid #010101;
+}
+input[type=range].slider::-moz-range-thumb {
+  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+  border: 1px solid #000000;
+  height: 36px;
+  width: 16px;
+  border-radius: 3px;
+  background: #ffffff;
+  cursor: pointer;
+}
+input[type=range].slider::-ms-track {
+  width: 100%;
+  height: 8.4px;
+  cursor: pointer;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+input[type=range].slider::-ms-fill-lower {
+  background: #2a6495;
+  border: 0.2px solid #010101;
+  border-radius: 2.6px;
+  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+}
+input[type=range].slider::-ms-fill-upper {
+  background: #3071a9;
+  border: 0.2px solid #010101;
+  border-radius: 2.6px;
+  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+}
+input[type=range].slider::-ms-thumb {
+  box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+  border: 1px solid #000000;
+  height: 36px;
+  width: 16px;
+  border-radius: 3px;
+  background: #ffffff;
+  cursor: pointer;
+  height: 8.4px;
+}
+input[type=range].slider:focus::-ms-fill-lower {
+  background: #3071a9;
+}
+input[type=range].slider:focus::-ms-fill-upper {
+  background: #367ebd;
+}
+#buttons {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100vw;
+  z-index: 1;
+   white-space: nowrap;
+   overflow: auto;
+   padding-bottom:10px;
+   background: #ccc;
+   box-shadow: 0px -10px 30px
+     -webkit-overflow-scrolling: touch;
+
+}
+
+
+#bottom-panel {
+  overflow:scroll;
+  max-height:20vh;
+    bottom:0;
+  left:0px;
+  right:0px;
+  margin: 0;
+  position: fixed;
+}
+#variables {
+  
+  
+
+  
+  
+  
+}
+textarea#debug {
+  font-family: monospace;
+  width: -webkit-fill-available;
+}
+#img-gradient {
+  width:256px;
+  height:256px;
+  image-rendering: pixelated;
+  
+}
+
+.btn  {
+  margin:0.2em;
+}
+
+	</style>
+</head>
+<body>
+  <div id="buttons"></div>
+  
+<div id="panel">
+
+
+  <label for="u">u</label><input type="range" class="slider" min=0 max=1 step="0.00391256" id='u' name='u'/>
+  <label for="v">v</label><input type="range" class="slider" min=0 max=1 step="0.00391256" id='v' name='v'/>
+  <label for="w">w</label><input type="range" class="slider" min=0 max=1 step="0.00391256" id='w' name='w'/>
+  <label for="i">i</label><input type="range" class="slider" min=0 max=7 step='1' id='i' name='i'/>
+  <input type="text" id="uv">
+  <br>
+  <canvas id="prime" width="256" height="256" ></canvas>
+  <canvas id="small" class="dsize" width="16" height="16"></canvas>
+  <canvas id="scratch" width="256" height="256" style="display:none"></canvas>
+
+  <div id="debugImages">
+  
+  </div>
+
+  <div id="debugtables"></div>
+    
+<div id="bottom-panel">
+<div id="variables">
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script
+  src="https://code.jquery.com/jquery-1.9.1.min.js"
+  
+  crossorigin="anonymous"></script>
+<script src="jquery.kontrol.js"></script>
+
+<script> let pollution = {window:new Set(Object.getOwnPropertyNames(window)) }
+
+//{let names = Object.getOwnPropertyNames(window), descriptors = Object.getOwnPropertyDescriptors(window);  names.filter( (x)=>descriptors[x].enumerable && typeof window[x] === "number" ); }
+</script>
+<script src='buttons-draw.js'></script>
+<script> pollution.buttons = Object.getOwnPropertyNames(window).filter((x)=>(!pollution.window.has(x)));</script>
+<script> pollution.window = new Set(Object.getOwnPropertyNames(window)) </script>
+<script src="library.js"></script>
+<script> pollution.library = Object.getOwnPropertyNames(window).filter((x)=>(!pollution.window.has(x)));</script>
+<script> pollution.window= new Set(Object.getOwnPropertyNames(window)) </script>
+<script src="draw.js"></script>
+<script> pollution.main = Object.getOwnPropertyNames(window).filter((x)=>(!pollution.window.has(x)));</script>
+<script> pollution.window = new Set(Object.getOwnPropertyNames(window))</script>
+</body>
+</html>
