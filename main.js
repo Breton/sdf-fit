@@ -65,7 +65,7 @@ letters = '1';
 letters = '869';
 
 lowestScorePerIndex = [];
-evalSize = 16  ;
+evalSize = 32  ;
 modelock = false;
 scoreDebug = {};
 scoreWindowSize = 100;
@@ -270,7 +270,8 @@ function updatePixel(onepixel,diff=0) {
 			grange = gmax-gmin;
 			
 
-			gindex = (gradient.map((x, i) => ( x===gmax || x !== gmin && ((x-gmin)/grange < Math.random()) ? i : 0) )).filter(x => !!x);
+			// gindex = (gradient.map((x, i) => ( x===gmax || x !== gmin && ((x-gmin)/grange < Math.random()) ? i : 0) )).filter(x => !!x);
+      gindex = (gradient.map((x, i) => ( x!== gmin && x-gmin < grange/2) ? i : 0) ).filter(x => !!x);
 		
 			let onepixelmod = onepixel.mod(gradient.length);
 
@@ -283,7 +284,7 @@ function updatePixel(onepixel,diff=0) {
 
 			//debug(`gindex, ${gindex} oindex: ${oindex}, gmin: ${gmin} gmax: ${gmax} gran: ${grange} gindindex.lneght ${gindex.length}`);
 			if (gindex.length > 0) {
-					onepixel = gindex[(oindex+1).mod(gindex.length)];  
+					onepixel = gindex[(oindex).mod(gindex.length)];  
 			} 
 		 
 		}

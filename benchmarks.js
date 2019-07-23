@@ -103,7 +103,7 @@ async function addBenchmark(data,weights,nscore,userAction) {
         benchmarks.sort((a,b)=>a.score-b.score);
         benchmarks = benchmarks.filter((x,i,a)=> ( x.score !== (a[i-1]||{}).score ) );
 
-		if(l > benchmarkCount + lastimprovement ) {
+		if(l > benchmarkCount  ) {
             benchmarks = benchmarks.filter((x,i) => ( x.userAction || i<=1 ) )
             //benchmarks = benchmarks.filter((x,i,a)=> ( x.userAction || x.score < min+(max-min)/2 ) );
       }
