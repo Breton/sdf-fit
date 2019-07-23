@@ -51,9 +51,6 @@ let maxpixelcounter = 50;
 
  }
  function debugVariable(name,value){
-    if(!debugVariable.cache) { debugVariable.cache = {} }
-    if(!debugVariable.counter) { debugVariable.counter = {} }
-    if(!debugVariable.widths) { debugVariable.widths = {} }
     if(Array.isArray(value)) {
         return debugTable(name,value);    
     }
@@ -95,9 +92,14 @@ let maxpixelcounter = 50;
         varel.style.width=debugVariable.widths[name]+'px';
         
 
-        
-        sortVariables(debugVariable.counter,container)
-    }
+		if(name && value !== undefined) {
+				if(!debugVariable.cache) { debugVariable.cache = {} }
+				if(!debugVariable.counter) { debugVariable.counter = {} }
+				if(!debugVariable.widths) { debugVariable.widths = {} }
+						
+						sortVariables(debugVariable.counter,container)
+				}   
+		}
 
  }
 
@@ -105,13 +107,15 @@ let maxpixelcounter = 50;
     let buttonorder = Object.keys(counts).sort((a,b)=> counts[b]-counts[a] );
     if(buttonorder.join()!==sortVariables.buttonorder){
         sortVariables.buttonorder=buttonorder.join();
-        buttonorder.forEach(function (key){
-          let id = '#v-'+key;
-          let el = container.querySelector(id);
-          container.removeChild(el);
-          container.appendChild(el);
-        });
     }
+				buttonorder.forEach(function (key){
+					let id = '#v-'+key;
+					let el = container.querySelector(id);
+						if(el) {
+							container.removeChild(el);
+							container.appendChild(el);
+						}
+				});
  }
 
  function debugTable (table,columns) {
