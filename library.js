@@ -51,12 +51,6 @@ let maxpixelcounter = 50;
 
  }
  function debugVariable(name,value){
-    if(Array.isArray(value)) {
-        return debugTable(name,value);    
-    }
-    if(undefined === debugVariable.cache[name]) {debugVariable.cache[name]=0}
-
-    if( debugVariable.cache[name].toString() !== value.toString()) {
         debugVariable.cache[name] = value;
         debugVariable.counter[name] = debugVariable.counter[name] || 0;
         debugVariable.counter[name]++;
@@ -86,16 +80,22 @@ let maxpixelcounter = 50;
 
         let offsetWidth=varel.offsetWidth;
 
-        if(offsetWidth > debugVariable.widths[name] || debugVariable.widths[name] === undefined ){
-            debugVariable.widths[name] = offsetWidth;
-        }
-        varel.style.width=debugVariable.widths[name]+'px';
-        
-
 		if(name && value !== undefined) {
 				if(!debugVariable.cache) { debugVariable.cache = {} }
 				if(!debugVariable.counter) { debugVariable.counter = {} }
 				if(!debugVariable.widths) { debugVariable.widths = {} }
+				if(Array.isArray(value)) {
+						return debugTable(name,value);    
+				}
+				if(undefined === debugVariable.cache[name]) {debugVariable.cache[name]=0}
+
+				if( debugVariable.cache[name].toString() !== value.toString()) {
+						if(offsetWidth > debugVariable.widths[name] || debugVariable.widths[name] === undefined ){
+								debugVariable.widths[name] = offsetWidth;
+						}
+						varel.style.width=debugVariable.widths[name]+'px';
+						
+
 						
 						sortVariables(debugVariable.counter,container)
 				}   
@@ -104,10 +104,9 @@ let maxpixelcounter = 50;
  }
 
  function sortVariables(counts,container) {
-    let buttonorder = Object.keys(counts).sort((a,b)=> counts[b]-counts[a] );
-    if(buttonorder.join()!==sortVariables.buttonorder){
-        sortVariables.buttonorder=buttonorder.join();
-    }
+		let buttonorder = Object.keys(counts).sort((a,b)=> counts[b]-counts[a] );
+		if(buttonorder.join()!==sortVariables.buttonorder){
+				sortVariables.buttonorder=buttonorder.join();
 				buttonorder.forEach(function (key){
 					let id = '#v-'+key;
 					let el = container.querySelector(id);
@@ -116,6 +115,7 @@ let maxpixelcounter = 50;
 							container.appendChild(el);
 						}
 				});
+		}
  }
 
  function debugTable (table,columns) {
