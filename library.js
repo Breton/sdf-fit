@@ -727,25 +727,25 @@ function thresholdKernelMedian(d, r, g, b) {
 
      
 
-     const u = r.mod(1)*2-1;
-     const v = g.mod(1)*2-1;
-     const w = b.mod(1)*2-1;
-     const s = Math.sqrt(u*u+v*v);
-     const a = Math.atan2(u,v);
+		 const u = r.mod(1)*2;
+		 const v = g.mod(1)*2;
+		 const w = b.mod(1)*2;
+		 const s = Math.sqrt(u*u+v*v);
+		 const a = Math.atan2(u,v);
 
-     const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
+		 const C = (r,g,b) => (Math.min(R(r,1),R(g,2),R(b,3)));
 
-     for (let i = 0; i < d.length; i += 4) {
-         let r = d[i + 0] / 255;
-         let g = d[i + 1] / 255;
-         let b = d[i + 2] / 255;
-         d[i + 0] = d[i + 1] = d[i + 2] = 
-         (Math.max(Math.min(u+r,v+g), Math.min(Math.max(u+r,v+g),w+b))/0.03 + 0.5)*255;
+		 for (let i = 0; i < d.length; i += 4) {
+				 let r = d[i + 0] / 255 - u;
+				 let g = d[i + 1] / 255 - v;
+				 let b = (d[i + 2] / 255) - w;
+				 d[i + 0] = d[i + 1] = d[i + 2] = 
+				 (Math.min(Math.min(Math.min(r,g), Math.max(r,g))/b) )*255;
 
-         
-               
     }
     return d;
+				 
+							 
  }
  
 
@@ -999,24 +999,6 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
      const max = Math.max;
      const abs = Math.abs;
      
-     
-     
-
-     const u = (((r%1)+1)%1)*2-1;
-     const v = (((g%1)+1)%1)*2-1;
-     const w = (((b%1)+1)%1)*2-1;
-     const s = Math.sqrt(u*u+v*v);
-     
-
-     
-    
-    for (let i = 0; i < d.length; i += 4) {
-        const r = (d[i + 0] / 255)*2-1;
-        const g = (d[i + 1] / 255)*2-1;
-        const b = (d[i + 2] / 255)*2-1;
-        
-
-
         const s = b;//Math.sqrt((u-b)*(u-b)+(v-w)*(v-w))-1;
         const t = ((-abs(s*2)+1 ) * pi) / 4 ;
         const maxormin = (s > 0 ? min : max) ;
@@ -1024,19 +1006,103 @@ function thresholdKernelMinMaxBlend(d, r, g, b) {
 
         /* r,g,b,u,v,w -> a,t,s*/
         
-        
-        const left = (r - u) * cos(a - t) - (g - v) * sin(a - t);
-        const rite = (r - u) * sin(a + t) + (g - v) * cos(a + t);
-        d[i + 0] = d[i + 1] = d[i + 2] = (maxormin( left , rite ) / 0.01 + 0.5) * 255;
-        
-
-        
     }
     
 
 
+		 
+		 
 
-    return d;
+		 const u = (((r%1)+1)%1)*8-4;
+		 const v = (((g%1)+1)%1)*8-4;
+		 const w = (((b%1)+1)%1)*8-4;
+		 const s = Math.sqrt(u*u+v*v);
+		 
+
+		 
+		
+		for (let i = 0; i < d.length; i += 4) {
+				const r = (1-((1-(d[i + 0] / 255))**2))-0.5;
+				const g = (1-((1-(d[i + 1] / 255))**2))-0.5;
+				const b = (1-((1-(d[i + 2] / 255))**2))*0.25-0.125;
+				
+
+
+				
+				const left = (r - u) * cos(a - t) - (g - v) * sin(a - t);
+				const rite = (r - u) * sin(a + t) + (g - v) * cos(a + t);
+				d[i + 0] = d[i + 1] = d[i + 2] = (maxormin( left , rite ) / 0.1 + 0.5) * 255;
+				
+
+				
+
+		return d;
+ }
+
+	function thresholdKernelMinMaxSpot(data, u, v, w, d=0.1, rf=1,bf=1,gf=1,af=1,rb=0,gb=0,bb=0,ab=1) {
+		/*
+				d: a number
+
+		*/
+		 const pi = Math.PI;
+		 Number.prototype.mod = function(n) {
+			return ((this%n)+n)%n;
+		 };
+		 const sin = Math.sin;
+		 const cos = Math.cos;
+		 const min = Math.min;
+		 const max = Math.max;
+		 const abs = Math.abs;
+		 
+		 
+		 
+
+		 u = (((u%1)+1)%1)*2-1;
+		 v = (((v%1)+1)%1)*2-1;
+		 w = (((w%1)+1)%1)*2-1;
+		 const s = Math.sqrt(u*u+v*v);
+		 
+
+		 
+		
+		for (let i = 0; i < data.length; i += 4) {
+				const r = (1-((1-(data[i + 0] / 255))))-0.5;
+				const g = (1-((1-(data[i + 1] / 255))))-0.5;
+				const b = (1-((1-(data[i + 2] / 255))))-0.5;
+				
+
+
+				const s = w;//Math.sqrt((u-b)*(u-b)+(v-w)*(v-w))-1;
+				const t = ((-abs(s*2)+1 ) * pi) / 4 ;
+				const maxormin = (s > 0 ? min : max) ;
+				const a1 = u*pi;//Math.atan2(u-b,v-w);
+				const a2 = v*pi;//Math.atan2(u-b,v-w);
+
+				const x = 0;
+				const y = 0;
+				/* r,g,b,u,v,w -> a,t,s*/
+				
+				
+				const left1 = (r - x) * cos(a1 - t) - (g - y) * sin(a1 - t);
+				const rite1 = (r - x) * sin(a1 + t) + (g - y) * cos(a1 + t);
+				const left2 = (b - x) * cos(a2 - t) - (g - y) * sin(a2 - t);
+				const rite2 = (b - x) * sin(a2 + t) + (g - y) * cos(a2 + t);
+				const val = (max( maxormin( left1 , rite1 ),maxormin( left2 , rite2 )) / d + 0.5);
+                const cval = min(max(val,0),1);
+
+				data[i + 0] = (cval*rf + (1-cval)*rb)*255
+                data[i + 1] = (cval*gf + (1-cval)*gb)*255
+                data[i + 2] = (cval*bf + (1-cval)*bb)*255
+                data[i + 3] = (cval*af + (1-cval)*ab)*255
+				
+
+				
+		}
+		
+
+
+
+		return data;
  }
 function thresholdKernelCiirckle(d, r, g, b) {
 
