@@ -183,6 +183,7 @@
         }
         setDataImg(lowest.data,'show best');
         ctxresult.drawImage(canvassmall, 0, 0, 256, 256);
+        debugCanvas(ctxsmall,'bestdata-small');
         debugCanvas(ctxresult,'bestdata');
         let weights = lowest.weights;
         for(let i = 0; i < weights.length; i++ ) {
@@ -224,6 +225,7 @@
               bestdata.data[i + 0] = Math.random() * 255
               bestdata.data[i + 1] = Math.random() * 255
               bestdata.data[i + 2] = Math.random() * 255
+              bestdata.data[i + 3] =  255
 
           }
           setDataImg(bestdata,'userAction');
